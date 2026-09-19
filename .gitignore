@@ -40,3 +40,21 @@ target/
 build/
 dist/
 out/
+
+# Android / Gradle generated files
+.gradle/
+.kotlin/
+*.iml
+*.hprof
+.externalNativeBuild/
+.cxx/
+captures/
+
+# Machine-specific Android SDK configuration
+local.properties
+
+# Signing material
+*.jks
+*.keystore
+*.p12
+*.pfx

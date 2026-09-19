@@ -65,3 +65,7 @@ Result: —
 - Google Maps requires API key configuration
 - Firebase requires google-services.json
 - Font files need to be downloaded (Poppins + Inter)
+
+## Repository Hygiene
+- `.gitignore` excludes Android/Gradle caches, local SDK configuration, and signing material.
+- Gradle wrapper, version catalog, source files, resources, and Room schemas remain eligible for version control.

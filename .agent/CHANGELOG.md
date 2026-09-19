@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-09-20
+
+### Changed
+- Completed Android-specific Git ignore rules while retaining source files, Gradle wrapper files, version catalog, and Room schemas for version control.
+
 ## 2026-09-11
 
 ### Added
