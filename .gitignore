@@ -71,6 +71,7 @@ env/
 prisma/*.db
 prisma/*.db-journal
 
+
 # ---- Docker (ignore volumes, not config) ----
 docker-data/
 .docker/
