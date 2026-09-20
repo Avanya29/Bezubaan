@@ -1,0 +1,635 @@
+// ============================================
+// Bezubaan Helping Hands — Prisma Schema
+// ============================================
+// Phase 3: Core Domain Foundation (P1-P11)
+// Run: npx prisma format
+// Run: npx prisma migrate dev --name init_core_domain
+// ============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===========================================
+// ENUMS
+// ===========================================
+
+enum Role {
+  USER
+  VOLUNTEER
+  VETERINARIAN
+  NGO_ADMIN
+  ADMIN
+}
+
+enum RescueStatus {
+  REPORTED
+  UNDER_REVIEW
+  AI_ANALYZING
+  PENDING_VERIFICATION
+  VERIFIED
+  REJECTED
+  VOLUNTEER_SEARCH
+  VOLUNTEER_ASSIGNED
+  VOLUNTEER_ACCEPTED
+  ON_THE_WAY
+  RESCUE_IN_PROGRESS
+  RESCUED
+  AT_VET
+  UNDER_TREATMENT
+  RECOVERING
+  READY_FOR_ADOPTION
+  ADOPTED
+  FOSTERED
+  RELEASED
+  CLOSED
+  CANCELLED
+}
+
+enum VolunteerApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum VolunteerAvailabilityStatus {
+  AVAILABLE
+  UNAVAILABLE
+}
+
+enum AssignmentStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  CANCELLED
+  REASSIGNED
+}
+
+enum VetApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum FosterAssignmentStatus {
+  ACTIVE
+  COMPLETED
+  EXTENDED
+  CANCELLED
+}
+
+// ===========================================
+// MODELS
+// ===========================================
+
+// -------------------------------------------
+// User & Authentication (P1, P2)
+// -------------------------------------------
+model User {
+  id               String                @id @default(cuid())
+  email            String                @unique
+  passwordHash     String? // Nullable for OAuth-only
+  googleId         String?               @unique // OAuth mapping
+  role             Role // Inverse relations
+  profile          UserProfile?
+  volunteerProfile VolunteerProfile?
+  vetProfile       VetProfile?
+  reportedCases    RescueCase[]          @relation("ReportedCases")
+  verifiedCases    RescueCase[]          @relation("VerifiedCases")
+  assignments      RescueAssignment[]    @relation("AdminAssignments")
+  vetRecords       MedicalRecord[]       @relation("VetRecords")
+  adoptionApps     AdoptionApplication[]
+  fosterApps       FosterApplication[]
+
+  // Phase 9 Community + Notifications
+  communityPosts     CommunityPost[]          @relation("CommunityPosts")
+  postLikes          PostLike[]               @relation("UserLikes")
+  postComments       PostComment[]            @relation("UserComments")
+  postSaves          PostSave[]               @relation("UserSaves")
+  followers          UserFollow[]             @relation("Followers")
+  following          UserFollow[]             @relation("Following")
+  moderationReports  ModerationReport[]       @relation("UserReports")
+  lostFoundIncidents LostFoundIncident[]      @relation("LostFoundIncidents")
+  campaigns          Campaign[]               @relation("Campaigns")
+  donations          Donation[]               @relation("Donations")
+  notifications      Notification[]           @relation("UserNotifications")
+  notificationPrefs  NotificationPreference[] @relation("UserPreferences")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+// -------------------------------------------
+// User Profile & PII (P10)
+// -------------------------------------------
+model UserProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  phoneNumber String?
+  address     String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("user_profiles")
+}
+
+// -------------------------------------------
+// Animal (P4)
+// -------------------------------------------
+model Animal {
+  id               String  @id @default(cuid())
+  species          String // Required
+  breed            String?
+  sex              String?
+  approximateAge   String?
+  color            String?
+  size             String?
+  identifyingMarks String?
+  name             String?
+  description      String?
+
+  rescueCases    RescueCase[]
+  medicalRecords MedicalRecord[]
+  campaigns      Campaign[]
+
+  createdAt           DateTime              @default(now()) @map("created_at")
+  updatedAt           DateTime              @updatedAt @map("updated_at")
+  AdoptionApplication AdoptionApplication[]
+  FosterApplication   FosterApplication[]
+
+  @@map("animals")
+}
+
+// -------------------------------------------
+// Rescue Case (P3, P5, P6, P7, P9)
+// -------------------------------------------
+model RescueCase {
+  id          String @id @default(cuid())
+  description String // Required (P6)
+
+  // Location (P7)
+  latitude  Float
+  longitude Float
+  address   String?
+
+  status RescueStatus @default(REPORTED)
+
+  // Reporter (P3: Anonymous reporting allowed -> Nullable)
+  reporterId String?
+  reporter   User?   @relation("ReportedCases", fields: [reporterId], references: [id])
+
+  animalId String?
+  animal   Animal? @relation(fields: [animalId], references: [id])
+
+  // Verification (P9: AI and Human distinct)
+  aiTriageData      Json?
+  humanVerifiedById String?
+  humanVerifiedBy   User?     @relation("VerifiedCases", fields: [humanVerifiedById], references: [id])
+  humanVerifiedAt   DateTime?
+
+  media          Media[]
+  medicalRecords MedicalRecord[]
+  assignments    RescueAssignment[]
+  campaigns      Campaign[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([latitude, longitude]) // Support spatial querying (P7)
+  @@map("rescue_cases")
+}
+
+// -------------------------------------------
+// Media (P8)
+// -------------------------------------------
+model Media {
+  id        String  @id @default(cuid())
+  url       String
+  mimeType  String
+  sizeBytes Int
+  bucketKey String?
+
+  rescueCaseId String?
+  rescueCase   RescueCase? @relation(fields: [rescueCaseId], references: [id], onDelete: SetNull)
+
+  medicalRecordId String?
+  medicalRecord   MedicalRecord? @relation("MedicalAttachments", fields: [medicalRecordId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("media")
+}
+
+// -------------------------------------------
+// Medical Record (P11)
+// -------------------------------------------
+model MedicalRecord {
+  id            String   @id @default(cuid())
+  notes         String
+  treatmentDate DateTime @default(now())
+
+  diagnosis   String?
+  medications String?
+  cost        Float?
+
+  // Tied to Animal lifetime (P11)
+  animalId String
+  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  // Optionally references specific incident (P11)
+  rescueCaseId String?
+  rescueCase   RescueCase? @relation(fields: [rescueCaseId], references: [id], onDelete: SetNull)
+
+  // Explicit tracking of Vet
+  vetId String?
+  vet   User?   @relation("VetRecords", fields: [vetId], references: [id])
+
+  attachments Media[] @relation("MedicalAttachments")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("medical_records")
+}
+
+// -------------------------------------------
+// Volunteer Profile (Phase 7)
+// -------------------------------------------
+model VolunteerProfile {
+  id                   String                      @id @default(cuid())
+  userId               String                      @unique
+  user                 User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approvalStatus       VolunteerApprovalStatus     @default(PENDING)
+  availabilityStatus   VolunteerAvailabilityStatus @default(UNAVAILABLE)
+  serviceArea          String?
+  capabilities         String[]
+  bio                  String?
+  experience           String?
+  emergencyContact     String?
+  preferredRescueTypes String?
+  currentLatitude      Float?
+  currentLongitude     Float?
+  additionalNotes      String?
+
+  assignments RescueAssignment[] @relation("VolunteerAssignments")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("volunteer_profiles")
+}
+
+// -------------------------------------------
+// Rescue Assignment (Phase 7)
+// -------------------------------------------
+model RescueAssignment {
+  id              String           @id @default(cuid())
+  rescueCaseId    String
+  rescueCase      RescueCase       @relation(fields: [rescueCaseId], references: [id], onDelete: Cascade)
+  volunteerId     String
+  volunteer       VolunteerProfile @relation("VolunteerAssignments", fields: [volunteerId], references: [id], onDelete: Cascade)
+  assignedById    String
+  assignedBy      User             @relation("AdminAssignments", fields: [assignedById], references: [id])
+  status          AssignmentStatus @default(PENDING)
+  isPrimary       Boolean          @default(true)
+  assignedAt      DateTime         @default(now())
+  respondedAt     DateTime?
+  rejectionReason String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("rescue_assignments")
+}
+
+// -------------------------------------------
+// Vet Profile (Phase 8)
+// -------------------------------------------
+model VetProfile {
+  id             String            @id @default(cuid())
+  userId         String            @unique
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approvalStatus VetApprovalStatus @default(PENDING)
+  licenseNumber  String?
+  clinicName     String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("vet_profiles")
+}
+
+// -------------------------------------------
+// Adoption Application (Phase 8)
+// -------------------------------------------
+model AdoptionApplication {
+  id          String @id @default(cuid())
+  applicantId String
+  applicant   User   @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  animalId    String
+  animal      Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  status                ApplicationStatus @default(PENDING)
+  motivation            String
+  housingType           String
+  householdInformation  String
+  previousPetExperience String
+  existingAnimals       String
+
+  additionalNotes String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("adoption_applications")
+}
+
+// -------------------------------------------
+// Foster Application (Phase 8)
+// -------------------------------------------
+model FosterApplication {
+  id          String @id @default(cuid())
+  applicantId String
+  applicant   User   @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  animalId    String
+  animal      Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  status                    ApplicationStatus @default(PENDING)
+  reason                    String
+  housingInformation        String
+  householdInformation      String
+  existingAnimals           String
+  priorAnimalCareExperience String
+  availability              String
+  additionalNotes           String?
+
+  assignments FosterAssignment[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("foster_applications")
+}
+
+// -------------------------------------------
+// Foster Assignment (Phase 8)
+// -------------------------------------------
+model FosterAssignment {
+  id                  String            @id @default(cuid())
+  fosterApplicationId String
+  application         FosterApplication @relation(fields: [fosterApplicationId], references: [id], onDelete: Cascade)
+
+  startDate       DateTime               @default(now())
+  expectedEndDate DateTime
+  actualEndDate   DateTime?
+  status          FosterAssignmentStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("foster_assignments")
+}
+
+// -------------------------------------------
+// Phase 9 Enums
+// -------------------------------------------
+enum PostType {
+  POST
+  STORY
+}
+
+enum PostPrivacy {
+  PUBLIC
+  PRIVATE
+}
+
+enum ModerationStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  DISMISSED
+}
+
+enum LostFoundStatus {
+  LOST
+  SEARCHING
+  FOUND
+  REUNITED
+  CLOSED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum NotificationChannel {
+  IN_APP
+  PUSH
+  EMAIL
+}
+
+enum NotificationCategory {
+  RESCUE
+  MEDICAL
+  ADOPTION
+  FOSTER
+  COMMUNITY
+  DONATION
+  PROXIMITY
+  SECURITY
+}
+
+// -------------------------------------------
+// Phase 9 Models
+// -------------------------------------------
+
+model CommunityPost {
+  id       String      @id @default(cuid())
+  authorId String
+  author   User        @relation("CommunityPosts", fields: [authorId], references: [id], onDelete: Cascade)
+  type     PostType    @default(POST)
+  privacy  PostPrivacy @default(PUBLIC)
+  content  String
+
+  likes    PostLike[]
+  comments PostComment[]
+  saves    PostSave[]
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("community_posts")
+}
+
+model PostLike {
+  userId String
+  user   User          @relation("UserLikes", fields: [userId], references: [id], onDelete: Cascade)
+  postId String
+  post   CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([userId, postId])
+  @@map("post_likes")
+}
+
+model PostComment {
+  id       String        @id @default(cuid())
+  postId   String
+  post     CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId String
+  author   User          @relation("UserComments", fields: [authorId], references: [id], onDelete: Cascade)
+  content  String
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("post_comments")
+}
+
+model PostSave {
+  userId String
+  user   User          @relation("UserSaves", fields: [userId], references: [id], onDelete: Cascade)
+  postId String
+  post   CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([userId, postId])
+  @@map("post_saves")
+}
+
+model UserFollow {
+  followerId  String
+  follower    User   @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User   @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([followerId, followingId])
+  @@map("user_follows")
+}
+
+model ModerationReport {
+  id          String           @id @default(cuid())
+  reporterId  String
+  reporter    User             @relation("UserReports", fields: [reporterId], references: [id], onDelete: Cascade)
+  targetType  String // e.g., "POST", "COMMENT"
+  targetId    String
+  reason      String
+  description String?
+  status      ModerationStatus @default(PENDING)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("moderation_reports")
+}
+
+model LostFoundIncident {
+  id               String          @id @default(cuid())
+  reporterId       String
+  reporter         User            @relation("LostFoundIncidents", fields: [reporterId], references: [id], onDelete: Cascade)
+  status           LostFoundStatus @default(LOST)
+  animalType       String
+  description      String
+  lastSeenLocation String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("lost_found_incidents")
+}
+
+model Campaign {
+  id           String @id @default(cuid())
+  creatorId    String
+  creator      User   @relation("Campaigns", fields: [creatorId], references: [id], onDelete: Cascade)
+  title        String
+  description  String
+  goalAmount   Int?
+  raisedAmount Int    @default(0)
+
+  rescueCaseId String?
+  rescueCase   RescueCase? @relation(fields: [rescueCaseId], references: [id])
+  animalId     String?
+  animal       Animal?     @relation(fields: [animalId], references: [id])
+
+  donations Donation[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("campaigns")
+}
+
+model Donation {
+  id                String        @id @default(cuid())
+  donorId           String?
+  donor             User?         @relation("Donations", fields: [donorId], references: [id], onDelete: SetNull)
+  campaignId        String?
+  campaign          Campaign?     @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  isAnonymous       Boolean       @default(false)
+  amount            Int // in minor units (paise)
+  currency          String        @default("INR")
+  status            PaymentStatus @default(PENDING)
+  providerOrderId   String?       @unique
+  providerPaymentId String?       @unique
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("donations")
+}
+
+model Notification {
+  id       String               @id @default(cuid())
+  userId   String
+  user     User                 @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  category NotificationCategory
+  channel  NotificationChannel
+  title    String
+  message  String
+  payload  Json?
+  isRead   Boolean              @default(false)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  userId    String
+  user      User                 @relation("UserPreferences", fields: [userId], references: [id], onDelete: Cascade)
+  category  NotificationCategory
+  isEnabled Boolean              @default(true)
+
+  @@id([userId, category])
+  @@map("notification_preferences")
+}

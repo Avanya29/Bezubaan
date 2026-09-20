@@ -1,4 +1,8 @@
-# OS generated files
+# ========================================
+# Bezubaan Helping Hands - .gitignore
+# ========================================
+
+# ---- OS Generated Files ----
 .DS_Store
 .DS_Store?
 ._*
@@ -6,20 +10,51 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# IDE / Editor
+# ---- IDE / Editor ----
 .idea/
 .vscode/
 *.swp
 *.swo
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
 
-# Node.js
+# ---- Node.js ----
 node_modules/
-npm-debug.log
-yarn-error.log
-.env
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.pnp.*
 
-# Python
+# ---- TypeScript ----
+*.tsbuildinfo
+
+# ---- NestJS / Build Output ----
+dist/
+build/
+out/
+
+# ---- Test Coverage ----
+coverage/
+.nyc_output/
+
+# ---- Environment Files ----
+.env
+.env.local
+.env.*.local
+.env.development
+.env.staging
+.env.production
+# NOTE: .env.example should be committed (NOT ignored)
+
+# ---- Python ----
 __pycache__/
 *.py[cod]
 *$py.class
@@ -27,16 +62,30 @@ __pycache__/
 venv/
 env/
 .pytest_cache/
+*.egg-info/
+*.egg
+.mypy_cache/
+.ruff_cache/
 
-# Java
-*.class
+# ---- Prisma ----
+prisma/*.db
+prisma/*.db-journal
+
+# ---- Docker (ignore volumes, not config) ----
+docker-data/
+.docker/
+
+# ---- Logs ----
+logs/
 *.log
+
+# ---- Temp Files ----
+tmp/
+temp/
+
+# ---- Generated / Binary ----
 *.jar
 *.war
 *.ear
+*.class
 target/
-
-# Build directories
-build/
-dist/
-out/
