@@ -19,6 +19,7 @@ from fastapi.responses import JSONResponse
 from app.config import settings
 from app.schemas.triage import TriageRequest, TriageResponse
 from app.providers.mock import MockProvider
+from app.providers.gemini import GeminiProvider
 from app.providers.base import AIProvider
 from app.services.triage import TriageService
 
@@ -41,11 +42,13 @@ def _create_provider() -> AIProvider:
     if provider_name == "mock":
         logger.info("Using MockProvider for AI triage")
         return MockProvider()
+    elif provider_name == "gemini":
+        logger.info("Using GeminiProvider (gemini-2.5-flash) for AI triage")
+        return GeminiProvider()
     else:
         raise ValueError(
             f"Unknown AI_PROVIDER: '{settings.ai_provider}'. "
-            f"Currently only 'mock' is supported. "
-            f"LLM provider selection is UNKNOWN — REQUIRES DECISION (Q14)."
+            f"Currently 'mock' and 'gemini' are supported."
         )
 
 
