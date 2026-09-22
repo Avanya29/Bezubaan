@@ -2,6 +2,7 @@ package com.bezubaan.app.feature.auth.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -109,15 +110,15 @@ fun SplashScreen(
             Box(
                 modifier = Modifier
                     .size(120.dp)
-                    .background(brutalYellow, RoundedCornerShape(12.dp))
+                    .background(Color.Black, RoundedCornerShape(12.dp))
                     .border(3.dp, Color.Black, RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
+                Image(
                     painter = painterResource(id = R.drawable.logo),
                     contentDescription = "Logo",
-                    tint = Color.Unspecified,
-                    modifier = Modifier.size(64.dp)
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
                 )
             }
             // Tag

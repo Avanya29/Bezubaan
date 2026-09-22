@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, Optional, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { UpdatePreferenceDto } from './dto/update-preference.dto';
 import { ClientProxy } from '@nestjs/microservices';
@@ -6,9 +6,11 @@ import { NotificationCategory, NotificationChannel } from '@prisma/client';
 
 @Injectable()
 export class NotificationsService {
+  private readonly logger = new Logger(NotificationsService.name);
+
   constructor(
     private prisma: PrismaService,
-    @Inject('RABBITMQ_SERVICE') private rabbitClient: ClientProxy,
+    @Optional() @Inject('RABBITMQ_SERVICE') private rabbitClient?: ClientProxy,
   ) {}
 
   async getUserNotifications(userId: string) {
@@ -96,13 +98,19 @@ export class NotificationsService {
     }
 
     // Dispatch to RabbitMQ for async processing (email/push)
-    this.rabbitClient.emit('notification.dispatch', {
-      userId,
-      category,
-      channel,
-      title,
-      message,
-      payload,
-    });
+    if (this.rabbitClient) {
+      this.rabbitClient.emit('notification.dispatch', {
+        userId,
+        category,
+        channel,
+        title,
+        message,
+        payload,
+      });
+    } else {
+      this.logger.warn(
+        `RabbitMQ is not configured — skipping async dispatch for notification [${category}] to user ${userId}`,
+      );
+    }
   }
 }

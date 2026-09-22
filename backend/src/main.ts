@@ -42,9 +42,10 @@ async function bootstrap() {
     new LoggingInterceptor(),
   );
 
-  await app.listen(port);
-  logger.log(`🚀 Bezubaan API is running on http://localhost:${port}`);
-  logger.log(`📋 Health check: http://localhost:${port}/health`);
+  const host = '0.0.0.0';
+  await app.listen(port, host);
+  logger.log(`🚀 Bezubaan API is running on http://${host}:${port}`);
+  logger.log(`📋 Health check: http://${host}:${port}/health`);
 }
 
 bootstrap();

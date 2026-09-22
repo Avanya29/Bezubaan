@@ -17,26 +17,17 @@ data class BottomNavItem(
 
 // Define different bottom navigation bars depending on the user role
 
-val citizenBottomNavItems = listOf(
-    BottomNavItem("HOME", Icons.Default.Home, HomeRoute),
-    BottomNavItem("RESCUE", Icons.Default.AddCircle, RescueReportRoute),
-    BottomNavItem("COMMUNITY", Icons.Default.List, CommunityFeedRoute),
-    BottomNavItem("DONATE", Icons.Default.Star, DonateRoute),
-    BottomNavItem("PROFILE", Icons.Default.AccountCircle, ProfileRoute)
-)
+import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material.icons.outlined.VolunteerActivism
 
-val volunteerBottomNavItems = listOf(
-    BottomNavItem("HOME", Icons.Default.Home, HomeRoute),
-    BottomNavItem("RESCUE", Icons.Default.AddCircle, VolunteerDashboardRoute),
-    BottomNavItem("AI VET", Icons.Default.Star, AiChatRoute),
-    BottomNavItem("SQUAD", Icons.Default.List, CommunityFeedRoute),
-    BottomNavItem("PROFILE", Icons.Default.AccountCircle, ProfileRoute)
-)
-
-val ngoBottomNavItems = listOf(
-    BottomNavItem("Dashboard", Icons.Default.Home, NgoDashboardRoute),
-    BottomNavItem("Cases", Icons.Default.AddCircle, HomeRoute), // Generic placeholder for active cases
-    BottomNavItem("Volunteers", Icons.Default.AccountCircle, VolunteerDashboardRoute), // Placeholder for volunteer mgmt
-    BottomNavItem("Community", Icons.Default.List, CommunityFeedRoute),
-    BottomNavItem("Profile", Icons.Default.AccountCircle, ProfileRoute)
+// Define universal bottom navigation bar matching the design
+val universalBottomNavItems = listOf(
+    BottomNavItem("HOME", Icons.Outlined.Home, HomeRoute),
+    BottomNavItem("RESCUE", Icons.Outlined.LocationOn, RescueReportRoute),
+    BottomNavItem("AI VET", Icons.Outlined.Psychology, AiChatRoute),
+    BottomNavItem("SQUAD", Icons.Outlined.Groups, CommunityFeedRoute),
+    BottomNavItem("DONATE", Icons.Outlined.VolunteerActivism, DonateRoute)
 )

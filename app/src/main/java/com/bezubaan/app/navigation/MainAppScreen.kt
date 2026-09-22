@@ -55,12 +55,11 @@ fun MainAppScreen(mainViewModel: MainViewModel) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color.White)
-                        .border(3.dp, Color.Black)
                         .padding(horizontal = 8.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.SpaceAround,
                     verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                 ) {
-                    val currentNavItems = if (isVolunteerModeActive) volunteerBottomNavItems else citizenBottomNavItems
+                    val currentNavItems = universalBottomNavItems
                     
                     currentNavItems.forEach { item ->
                         val itemRouteName = item.route::class.qualifiedName ?: ""
@@ -80,31 +79,21 @@ fun MainAppScreen(mainViewModel: MainViewModel) {
                                         restoreState = true
                                     }
                                 }
-                                .let {
-                                    if (isSelected) {
-                                        val darkGreen = Color(0xFF0D3311)
-                                        it.background(darkGreen, shape = RectangleShape)
-                                          .padding(horizontal = 12.dp, vertical = 6.dp)
-                                    } else {
-                                        it.padding(horizontal = 12.dp, vertical = 6.dp)
-                                    }
-                                }
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
                         ) {
                             Icon(
                                 item.icon, 
                                 contentDescription = item.title,
-                                tint = if (isSelected) Color.White else Color.Gray,
-                                modifier = Modifier.size(24.dp)
+                                tint = if (isSelected) Color.Black else Color.DarkGray,
+                                modifier = Modifier.size(28.dp)
                             )
-                            if (isSelected) {
-                                Text(
-                                    text = item.title,
-                                    color = Color.White,
-                                    fontSize = 9.sp,
-                                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Black
-                                )
-                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = item.title,
+                                color = if (isSelected) Color.Black else Color.DarkGray,
+                                fontSize = 10.sp,
+                                fontWeight = if (isSelected) androidx.compose.ui.text.font.FontWeight.Black else androidx.compose.ui.text.font.FontWeight.Bold
+                            )
                         }
                     }
                 }
