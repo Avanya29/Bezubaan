@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as admin from 'firebase-admin';
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getMessaging } from 'firebase-admin/messaging';
 
 @Injectable()
 export class FirebaseService implements OnModuleInit {
@@ -24,8 +25,8 @@ export class FirebaseService implements OnModuleInit {
         return;
       }
 
-      admin.initializeApp({
-        credential: admin.credential.cert({
+      initializeApp({
+        credential: cert({
           projectId,
           clientEmail,
           privateKey,
@@ -62,10 +63,10 @@ export class FirebaseService implements OnModuleInit {
         }
       };
 
-      const response = await admin.messaging().sendEachForMulticast(message);
+      const response = await getMessaging().sendEachForMulticast(message);
       this.logger.log(`Successfully sent ${response.successCount} emergency push notifications.`);
       if (response.failureCount > 0) {
-        response.responses.forEach((res, idx) => {
+        response.responses.forEach((res: any, idx: number) => {
           if (!res.success) {
             this.logger.warn(`Failed to send to token at index ${idx}: ${res.error?.message}`);
           }
