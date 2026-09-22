@@ -30,12 +30,56 @@ export class AiService {
       1000;
   }
 
+  async analyzeImage(imageUrl: string) {
+    try {
+      // NOTE: Update endpoint to match FastAPI when you build it
+      const response = await fetch(`${this.aiServiceUrl}/api/v1/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image_url: imageUrl })
+      });
+      if (!response.ok) throw new Error('AI Service failed');
+      return await response.json();
+    } catch (error) {
+      this.logger.error('Analyze failed', error);
+      // Fallback response for Android to parse
+      return {
+        breed: "Unknown (Backend Fallback)",
+        urgency: "Medium",
+        firstAid: "Keep the animal warm. Analysis failed."
+      };
+    }
+  }
+
+  async sendChatMessage(text: string) {
+    try {
+      // NOTE: Update endpoint to match FastAPI when you build it
+      const response = await fetch(`${this.aiServiceUrl}/api/v1/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+      if (!response.ok) throw new Error('AI Service failed');
+      const data = await response.json();
+      return {
+        id: Date.now().toString(),
+        text: data.reply || "I didn't understand that.",
+        isUser: false,
+        timestamp: Date.now()
+      };
+    } catch (error) {
+      this.logger.error('Chat failed', error);
+      return {
+        id: Date.now().toString(),
+        text: "I am having trouble connecting to my brain. Please try again.",
+        isUser: false,
+        timestamp: Date.now()
+      };
+    }
+  }
+
   /**
    * Request AI triage analysis for a rescue case.
-   *
-   * On success: returns typed TriageResponseDto.
-   * On failure: returns a safe error response (never throws to corrupt business data).
-   */
   async requestTriage(params: {
     rescueId: string;
     description: string;
