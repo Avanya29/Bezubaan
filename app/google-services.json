@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "410784317019",
+    "project_id": "bezubaan-1b20b",
+    "storage_bucket": "bezubaan-1b20b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:410784317019:android:04fd5abff65b859f28497e",
+        "android_client_info": {
+          "package_name": "com.bezubaan.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4sDt-3NvVVA0QHpjLY3rkOorMUVxYwbw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

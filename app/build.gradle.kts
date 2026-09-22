@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt.gradle)
     alias(libs.plugins.ksp)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -19,7 +20,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
-        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/api/v1/\"")
+        buildConfigField("String", "API_BASE_URL", "\"https://bezubaan-api.onrender.com/api/v1/\"")
         buildConfigField("String", "MAPS_API_KEY", "\"\"")
         
         manifestPlaceholders["mapsApiKey"] = ""
@@ -69,6 +70,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
@@ -91,14 +93,17 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
 
-    // Firebase — Uncomment after adding google-services.json
-    // implementation(platform(libs.firebase.bom))
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    
     // implementation(libs.firebase.analytics)
     // implementation(libs.firebase.crashlytics)
-    // implementation(libs.firebase.messaging)
+    implementation(libs.firebase.messaging)
 
     implementation(libs.maps.compose)
     implementation(libs.places)
+
+    implementation("io.socket:socket.io-client:2.1.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -108,4 +113,12 @@ dependencies {
     
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jetbrains.kotlin" && requested.name.startsWith("kotlin-stdlib")) {
+            useVersion("2.1.20")
+        }
+    }
 }

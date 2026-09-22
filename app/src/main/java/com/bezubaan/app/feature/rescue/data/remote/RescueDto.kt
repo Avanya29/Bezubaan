@@ -1,34 +1,66 @@
 package com.bezubaan.app.feature.rescue.data.remote
 
 import kotlinx.serialization.Serializable
+import com.bezubaan.app.feature.rescue.domain.model.RescueCase
+import com.bezubaan.app.feature.rescue.domain.model.AnimalDetails
+
+@Serializable
+data class AnimalDto(
+    val species: String,
+    val breed: String? = null,
+    val sex: String? = null,
+    val approximateAge: String? = null,
+    val color: String? = null,
+    val size: String? = null,
+    val identifyingMarks: String? = null,
+    val name: String? = null,
+    val description: String? = null
+)
 
 @Serializable
 data class RescueDto(
     val id: String,
-    val title: String,
-    val description: String,
-    val location: String,
+    val reporterId: String? = null,
     val status: String,
-    val urgency: String
+    val description: String,
+    val latitude: Double,
+    val longitude: Double,
+    val address: String? = null,
+    val createdAt: String? = null,
+    val animal: AnimalDto? = null
 )
 
 @Serializable
-data class RescueReportRequest(
-    val title: String,
+data class CreateRescueRequest(
     val description: String,
-    val location: String,
-    val lat: Double,
-    val lng: Double,
-    val urgency: String
+    val latitude: Double,
+    val longitude: Double,
+    val address: String? = null,
+    val animal: AnimalDto? = null
 )
 
-fun RescueDto.toDomain(): com.bezubaan.app.feature.rescue.domain.model.RescueCase {
-    return com.bezubaan.app.feature.rescue.domain.model.RescueCase(
+fun RescueDto.toDomain(): RescueCase {
+    return RescueCase(
         id = id,
-        title = title,
-        description = description,
-        location = location,
+        reporterId = reporterId,
         status = status,
-        urgency = urgency
+        description = description,
+        latitude = latitude,
+        longitude = longitude,
+        address = address,
+        createdAt = createdAt,
+        animal = animal?.let {
+            AnimalDetails(
+                species = it.species,
+                breed = it.breed,
+                sex = it.sex,
+                approximateAge = it.approximateAge,
+                color = it.color,
+                size = it.size,
+                identifyingMarks = it.identifyingMarks,
+                name = it.name,
+                description = it.description
+            )
+        }
     )
 }

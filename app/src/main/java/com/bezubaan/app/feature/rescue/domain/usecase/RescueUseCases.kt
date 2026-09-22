@@ -18,14 +18,29 @@ class ReportRescueUseCase @Inject constructor(
     private val repository: RescueRepository
 ) {
     operator fun invoke(
-        title: String,
         description: String,
-        location: String,
         lat: Double,
         lng: Double,
-        urgency: String
+        address: String? = null,
+        animalSpecies: String,
+        animalBreed: String? = null,
+        animalSex: String? = null,
+        animalAge: String? = null,
+        animalColor: String? = null,
+        animalSize: String? = null
     ): Flow<Resource<RescueCase>> {
-        return repository.reportRescue(title, description, location, lat, lng, urgency)
+        return repository.reportRescue(
+            description = description,
+            lat = lat,
+            lng = lng,
+            address = address,
+            animalSpecies = animalSpecies,
+            animalBreed = animalBreed,
+            animalSex = animalSex,
+            animalAge = animalAge,
+            animalColor = animalColor,
+            animalSize = animalSize
+        )
     }
 }
 

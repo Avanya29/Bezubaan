@@ -11,14 +11,21 @@ import {
 } from './dto/create-rescue.dto';
 import { Role, RescueStatus } from '@prisma/client';
 
+import { EventsGateway } from '../events/events.gateway';
+import { FirebaseService } from '../firebase/firebase.service';
+
 @Injectable()
 export class RescuesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventsGateway: EventsGateway,
+    private readonly firebaseService: FirebaseService,
+  ) {}
 
   async create(createRescueDto: CreateRescueDto, reporterId: string | null) {
     const { animal, ...rescueData } = createRescueDto;
 
-    return this.prisma.rescueCase.create({
+    const newRescue = await this.prisma.rescueCase.create({
       data: {
         ...rescueData,
         reporter: reporterId ? { connect: { id: reporterId } } : undefined,
@@ -26,6 +33,36 @@ export class RescuesService {
         animal: animal ? { create: animal as any } : undefined,
       },
     });
+
+    // 1) WebSocket Broadcast (for users with the app OPEN)
+    this.eventsGateway.broadcastEmergency(newRescue);
+
+    // 2) FCM Push Notification (for users with the app CLOSED)
+    try {
+      // Find all volunteers that are available and have an fcmToken
+      const availableVolunteers = await this.prisma.user.findMany({
+        where: {
+          role: 'VOLUNTEER',
+          fcmToken: { not: null },
+          volunteerProfile: {
+            availabilityStatus: 'AVAILABLE'
+          }
+        },
+        select: { fcmToken: true }
+      });
+
+      const tokens = availableVolunteers
+        .map(v => v.fcmToken)
+        .filter((t): t is string => t !== null);
+
+      if (tokens.length > 0) {
+        await this.firebaseService.sendEmergencyPush(tokens, newRescue);
+      }
+    } catch (fcmError) {
+      console.error('Failed to send FCM push for new rescue', fcmError);
+    }
+
+    return newRescue;
   }
 
   // Applies confirmed Phase 7 Privacy Masking rules

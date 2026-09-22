@@ -15,17 +15,24 @@ import androidx.navigation.toRoute
 import com.bezubaan.app.feature.ai.presentation.AiAssistantScreen
 import com.bezubaan.app.feature.ai.presentation.AiChatScreen
 import com.bezubaan.app.feature.community.presentation.CommunityFeedScreen
+import com.bezubaan.app.feature.community.presentation.CommunityFollowingScreen
+import com.bezubaan.app.feature.community.presentation.SavedPostsScreen
 import com.bezubaan.app.feature.community.presentation.CreatePostScreen
+import com.bezubaan.app.feature.notifications.presentation.NotificationCenterScreen
 import com.bezubaan.app.feature.adoption.presentation.AdoptionScreen
 import com.bezubaan.app.feature.adoption.presentation.AnimalDetailsScreen
 import com.bezubaan.app.feature.foster.presentation.FosterScreen
 import com.bezubaan.app.feature.lostfound.presentation.LostFoundScreen
 import com.bezubaan.app.feature.volunteer.presentation.VolunteerDashboardScreen
+import com.bezubaan.app.feature.volunteer.presentation.EmergencyDispatchScreen
+import com.bezubaan.app.feature.volunteer.presentation.ActiveRescueScreen
+import com.bezubaan.app.feature.volunteer.presentation.RescueTrackingScreen
 import com.bezubaan.app.feature.ngo.presentation.NgoDashboardScreen
 import com.bezubaan.app.feature.map.presentation.MapScreen
 import com.bezubaan.app.feature.vet.presentation.VetSearchScreen
 import com.bezubaan.app.feature.notifications.presentation.NotificationsScreen
 import com.bezubaan.app.feature.profile.presentation.ProfileScreen
+import com.bezubaan.app.feature.profile.presentation.VolunteerActivationScreen
 import com.bezubaan.app.feature.profile.presentation.EditProfileScreen
 import com.bezubaan.app.feature.profile.presentation.SettingsScreen
 import com.bezubaan.app.feature.auth.presentation.ForgotPasswordScreen
@@ -52,9 +59,18 @@ fun BezubaanNavHost(
         navigation<AuthGraph>(startDestination = SplashRoute) {
             composable<SplashRoute> {
                 SplashScreen(
+                    onNavigateToNext = {
+                        navController.navigate(WelcomeRoute) {
+                            popUpTo<SplashRoute> { inclusive = true }
+                        }
+                    }
+                )
+            }
+            composable<WelcomeRoute> {
+                com.bezubaan.app.feature.auth.presentation.WelcomeScreen(
                     onNavigateToOnboarding = {
                         navController.navigate(OnboardingRoute) {
-                            popUpTo<SplashRoute> { inclusive = true }
+                            popUpTo<WelcomeRoute> { inclusive = true }
                         }
                     },
                     onNavigateToHome = {
@@ -126,7 +142,8 @@ fun BezubaanNavHost(
 
             composable<AiAssistantRoute> { 
                 AiAssistantScreen(
-                    onNavigateToChat = { navController.navigate(AiChatRoute) }
+                    onNavigateToChat = { navController.navigate(AiChatRoute()) },
+                    onNavigateToPhotoUpload = { navController.navigate(AiPhotoUploadRoute) }
                 )
             }
             
@@ -136,8 +153,53 @@ fun BezubaanNavHost(
                 )
             }
 
+            composable<AiPhotoUploadRoute> {
+                com.bezubaan.app.feature.ai.presentation.AiPhotoUploadScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            
+            composable<AiPhotoReviewRoute> {
+                com.bezubaan.app.feature.ai.presentation.AiPhotoReviewScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            
+            composable<RescueActionSelectionRoute> {
+                com.bezubaan.app.feature.ai.presentation.RescueActionSelectionScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<RescueAnimalDetailsRoute> {
+                com.bezubaan.app.feature.rescue.presentation.RescueAnimalDetailsScreen(
+                    onBack = { navController.popBackStack() },
+                    onContinue = { /* TODO */ }
+                )
+            }
+
+            composable<RescueAnimalLocationRoute> {
+                com.bezubaan.app.feature.rescue.presentation.RescueAnimalLocationScreen(
+                    onBack = { navController.popBackStack() },
+                    onContinue = { navController.navigate(RescueReportSentRoute) }
+                )
+            }
+
+            composable<RescueReportSentRoute> {
+                com.bezubaan.app.feature.rescue.presentation.RescueReportSentScreen(
+                    onTrackRescue = { /* TODO */ },
+                    onBackToDashboard = { navController.popBackStack(HomeRoute, inclusive = false) }
+                )
+            }
+
             composable<CommunityFeedRoute> { 
                 CommunityFeedScreen(onNavigateToCreatePost = { navController.navigate(CreatePostRoute) }) 
+            }
+            composable<CommunityFollowingRoute> {
+                CommunityFollowingScreen(onBack = { navController.popBackStack() })
+            }
+            composable<SavedPostsRoute> {
+                SavedPostsScreen(onBack = { navController.popBackStack() })
             }
             composable<CreatePostRoute> { 
                 CreatePostScreen(
@@ -160,18 +222,60 @@ fun BezubaanNavHost(
             composable<FosterRoute> { FosterScreen() }
             composable<LostFoundRoute> { LostFoundScreen() }
 
-            composable<VolunteerDashboardRoute> { VolunteerDashboardScreen() }
+            composable<VolunteerDashboardRoute> { 
+                VolunteerDashboardScreen(
+                    onNavigateToEmergencyDispatch = { navController.navigate(EmergencyDispatchRoute) }
+                ) 
+            }
+            composable<EmergencyDispatchRoute> { 
+                EmergencyDispatchScreen(
+                    onAccept = { 
+                        navController.popBackStack()
+                        navController.navigate(ActiveRescueRoute)
+                    },
+                    onDecline = { navController.popBackStack() },
+                    onBack = { navController.popBackStack() }
+                ) 
+            }
+            composable<ActiveRescueRoute> {
+                ActiveRescueScreen(
+                    onMarkRescued = { navController.popBackStack() },
+                    onCallVet = { },
+                    onChat = { },
+                    onIssue = { }
+                )
+            }
+            composable<RescueTrackingRoute> {
+                RescueTrackingScreen(
+                    onCallVolunteer = { },
+                    onChat = { },
+                    onBack = { navController.popBackStack() }
+                )
+            }
             composable<NgoDashboardRoute> { NgoDashboardScreen() }
 
             composable<MapRoute> { MapScreen() }
             composable<VetSearchRoute> { VetSearchScreen() }
-            composable<NotificationsRoute> { NotificationsScreen() }
+            composable<NotificationsRoute> { NotificationCenterScreen(onBack = { navController.popBackStack() }) }
 
             composable<ProfileRoute> { 
                 ProfileScreen(
                     onNavigateToEditProfile = { navController.navigate(EditProfileRoute) },
-                    onNavigateToSettings = { navController.navigate(SettingsRoute) }
+                    onNavigateToSettings = { navController.navigate(SettingsRoute) },
+                    onNavigateToVolunteerActivation = { navController.navigate(VolunteerActivationRoute) }
                 ) 
+            }
+            composable<VolunteerActivationRoute> {
+                val viewModel: com.bezubaan.app.feature.volunteer.presentation.VolunteerSetupViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+                VolunteerActivationScreen(
+                    onBack = { navController.popBackStack() },
+                    onActivate = {
+                        viewModel.activateVolunteerMode()
+                        navController.navigate(VolunteerDashboardRoute) {
+                            popUpTo(HomeRoute) { inclusive = true }
+                        }
+                    }
+                )
             }
             composable<EditProfileRoute> { EditProfileScreen() }
             composable<SettingsRoute> { SettingsScreen() }

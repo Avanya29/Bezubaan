@@ -10,7 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.bezubaan.app.navigation.BezubaanNavHost
+import com.bezubaan.app.navigation.MainAppScreen
 import com.bezubaan.app.ui.theme.BezubaanTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -28,7 +28,8 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    BezubaanNavHost()
+                    val mainViewModel: MainViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+                    MainAppScreen(mainViewModel)
                 }
             }
         }

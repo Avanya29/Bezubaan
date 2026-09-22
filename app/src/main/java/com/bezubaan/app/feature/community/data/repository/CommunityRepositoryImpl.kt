@@ -14,7 +14,7 @@ class CommunityRepositoryImpl @Inject constructor(
 ) : CommunityRepository {
 
     override fun getPosts(): Flow<Resource<List<Post>>> = flow {
-        emit(Resource.Loading())
+        emit(Resource.Loading)
         delay(1000)
         // Mocking logic
         val mockPosts = listOf(
@@ -25,7 +25,7 @@ class CommunityRepositoryImpl @Inject constructor(
     }
 
     override fun createPost(content: String, imageUrl: String?): Flow<Resource<Post>> = flow {
-        emit(Resource.Loading())
+        emit(Resource.Loading)
         delay(1000)
         val newPost = Post(
             id = System.currentTimeMillis().toString(),

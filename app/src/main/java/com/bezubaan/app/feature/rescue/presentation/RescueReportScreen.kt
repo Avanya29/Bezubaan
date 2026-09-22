@@ -49,12 +49,13 @@ fun RescueReportScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            NeoInput(
-                value = uiState.urgency,
-                onValueChange = viewModel::updateUrgency,
-                label = "Urgency (Normal, High, Critical)",
-                modifier = Modifier.fillMaxWidth()
-            )
+            if (uiState.error != null) {
+                Text(
+                    text = "ERROR: ${uiState.error}",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
 
             Spacer(modifier = Modifier.weight(1f))
 

@@ -16,29 +16,52 @@ class AuthRepositoryImpl @Inject constructor(
 ) : AuthRepository {
 
     override suspend fun login(request: LoginRequest): Resource<User> {
-        // Mock backend implementation
-        delay(1500)
-        tokenManager.saveToken("mock_token_12345")
-        return Resource.Success(
-            User(
-                id = "1",
-                name = "Test User",
-                email = request.email
-            )
-        )
+        return try {
+            val response = api.login(request)
+            if (response.isSuccessful && response.body() != null) {
+                val token = response.body()!!.access_token
+                tokenManager.saveToken(token)
+                
+                // Now fetch user profile
+                val profileResponse = api.getProfile()
+                if (profileResponse.isSuccessful && profileResponse.body() != null) {
+                    val userDto = profileResponse.body()!!
+                    Resource.Success(
+                        User(
+                            id = userDto.id,
+                            name = userDto.name,
+                            email = userDto.email
+                        )
+                    )
+                } else {
+                    Resource.Error(profileResponse.message() ?: "Failed to fetch user profile")
+                }
+            } else {
+                Resource.Error(response.message() ?: "Login failed")
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.localizedMessage ?: "An unexpected error occurred")
+        }
     }
 
     override suspend fun register(request: RegisterRequest): Resource<User> {
-        // Mock backend implementation
-        delay(1500)
-        tokenManager.saveToken("mock_token_12345")
-        return Resource.Success(
-            User(
-                id = "1",
-                name = request.name,
-                email = request.email
-            )
-        )
+        return try {
+            val response = api.register(request)
+            if (response.isSuccessful && response.body() != null) {
+                val userDto = response.body()!!
+                Resource.Success(
+                    User(
+                        id = userDto.id,
+                        name = userDto.name,
+                        email = userDto.email
+                    )
+                )
+            } else {
+                Resource.Error(response.message() ?: "Registration failed")
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.localizedMessage ?: "An unexpected error occurred")
+        }
     }
 
     override suspend fun logout() {

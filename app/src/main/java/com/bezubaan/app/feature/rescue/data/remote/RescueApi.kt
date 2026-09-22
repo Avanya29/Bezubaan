@@ -6,14 +6,14 @@ import retrofit2.http.POST
 import retrofit2.http.Query
 
 interface RescueApi {
-    @GET("rescues/nearby")
+    @GET("api/rescues")
     suspend fun getNearbyRescues(
         @Query("lat") lat: Double,
         @Query("lng") lng: Double
-    ): List<RescueDto>
+    ): retrofit2.Response<List<RescueDto>>
 
-    @POST("rescues")
+    @POST("api/rescues")
     suspend fun reportRescue(
-        @Body request: RescueReportRequest
-    ): RescueDto
+        @Body request: CreateRescueRequest
+    ): retrofit2.Response<RescueDto>
 }

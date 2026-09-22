@@ -18,19 +18,19 @@ data class BottomNavItem(
 // Define different bottom navigation bars depending on the user role
 
 val citizenBottomNavItems = listOf(
-    BottomNavItem("Home", Icons.Default.Home, HomeRoute),
-    BottomNavItem("Rescue", Icons.Default.AddCircle, RescueReportRoute),
-    BottomNavItem("AI", Icons.Default.Star, AiAssistantRoute),
-    BottomNavItem("Community", Icons.Default.List, CommunityFeedRoute),
-    BottomNavItem("Profile", Icons.Default.AccountCircle, ProfileRoute)
+    BottomNavItem("HOME", Icons.Default.Home, HomeRoute),
+    BottomNavItem("RESCUE", Icons.Default.AddCircle, RescueReportRoute),
+    BottomNavItem("COMMUNITY", Icons.Default.List, CommunityFeedRoute),
+    BottomNavItem("DONATE", Icons.Default.Star, DonateRoute),
+    BottomNavItem("PROFILE", Icons.Default.AccountCircle, ProfileRoute)
 )
 
 val volunteerBottomNavItems = listOf(
-    BottomNavItem("Home", Icons.Default.Home, HomeRoute),
-    BottomNavItem("Requests", Icons.Default.AddCircle, VolunteerDashboardRoute),
-    BottomNavItem("Community", Icons.Default.List, CommunityFeedRoute),
-    BottomNavItem("Notifications", Icons.Default.Notifications, NotificationsRoute),
-    BottomNavItem("Profile", Icons.Default.AccountCircle, ProfileRoute)
+    BottomNavItem("HOME", Icons.Default.Home, HomeRoute),
+    BottomNavItem("RESCUE", Icons.Default.AddCircle, VolunteerDashboardRoute),
+    BottomNavItem("AI VET", Icons.Default.Star, AiChatRoute),
+    BottomNavItem("SQUAD", Icons.Default.List, CommunityFeedRoute),
+    BottomNavItem("PROFILE", Icons.Default.AccountCircle, ProfileRoute)
 )
 
 val ngoBottomNavItems = listOf(

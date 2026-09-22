@@ -66,7 +66,7 @@ val darkBezubaanColors = BezubaanColors(
     textPrimary = Color(0xFFE0E0E0),
     textSecondary = Color(0xFFA0A0A0),
     textTertiary = Color(0xFF757575),
-    highPriority = Color = Color(0xFFEF5350),
+    highPriority = Color(0xFFEF5350),
     mediumPriority = Color(0xFFFF9800),
     lowPriority = Color(0xFF4CAF50),
     cardBackground = Color(0xFF1E1E1E),

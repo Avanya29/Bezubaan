@@ -45,6 +45,19 @@ import androidx.compose.ui.window.DialogProperties
 import coil3.compose.AsyncImage
 import com.bezubaan.app.ui.theme.BezubaanTheme
 
+@Composable
+fun NeoSurface(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .background(BezubaanTheme.colors.background)
+    ) {
+        content()
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NeoTopBar(

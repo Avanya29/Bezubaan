@@ -33,6 +33,8 @@ fun NeoInput(
     placeholder: String = "",
     isError: Boolean = false,
     errorMessage: String? = null,
+    leadingIcon: @Composable (() -> Unit)? = null,
+    trailingIcon: @Composable (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val shape = RoundedCornerShape(0.dp)
@@ -44,6 +46,8 @@ fun NeoInput(
             onValueChange = onValueChange,
             label = { Text(text = label) },
             placeholder = { Text(text = placeholder) },
+            leadingIcon = leadingIcon,
+            trailingIcon = trailingIcon,
             isError = isError,
             modifier = Modifier.fillMaxWidth(),
             shape = shape,
@@ -55,10 +59,7 @@ fun NeoInput(
                 unfocusedContainerColor = BezubaanTheme.colors.surface,
                 focusedLabelColor = BezubaanTheme.colors.onBackground,
                 unfocusedLabelColor = BezubaanTheme.colors.onBackground,
-                cursorColor = BezubaanTheme.colors.primary,
-                unfocusedBorderThickness = borderThick,
-                focusedBorderThickness = borderThick,
-                errorBorderThickness = borderThick
+                cursorColor = BezubaanTheme.colors.primary
             )
         )
         if (isError && errorMessage != null) {

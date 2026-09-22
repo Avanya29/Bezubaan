@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { AnimalsModule } from './animals/animals.module';
 import { RescuesModule } from './rescues/rescues.module';
+import { FirebaseModule } from './firebase/firebase.module';
 import { AiModule } from './ai/ai.module';
 import { VolunteersModule } from './volunteers/volunteers.module';
 import { AssignmentsModule } from './assignments/assignments.module';
@@ -28,6 +29,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     UsersModule,
     AnimalsModule,
     RescuesModule,
+    FirebaseModule,
     AiModule,
     VolunteersModule,
     AssignmentsModule,

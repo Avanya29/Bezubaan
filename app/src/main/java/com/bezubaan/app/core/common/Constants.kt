@@ -1,7 +1,7 @@
 package com.bezubaan.app.core.common
 
 object Constants {
-    const val API_BASE_URL = "http://10.0.2.2:3000/api/v1/"
+    const val API_BASE_URL = "https://bezubaan-api.onrender.com/api/v1/"
     const val PREFERENCES_NAME = "bezubaan_preferences"
     const val DATABASE_NAME = "bezubaan_db"
     const val JWT_TOKEN_KEY = "jwt_token"

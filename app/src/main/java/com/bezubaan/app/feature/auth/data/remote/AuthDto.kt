@@ -21,14 +21,14 @@ data class ForgotPasswordRequest(
 )
 
 @Serializable
-data class AuthResponse(
-    val token: String,
-    val user: UserDto
+data class LoginResponse(
+    val access_token: String
 )
 
 @Serializable
 data class UserDto(
     val id: String,
     val name: String,
-    val email: String
+    val email: String,
+    val role: String? = null
 )

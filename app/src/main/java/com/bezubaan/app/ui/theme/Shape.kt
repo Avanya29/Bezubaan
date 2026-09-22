@@ -18,7 +18,7 @@ data class BezubaanShapes(
     val card: RoundedCornerShape = RoundedCornerShape(16.dp),
     val input: RoundedCornerShape = RoundedCornerShape(12.dp),
     val chip: RoundedCornerShape = RoundedCornerShape(8.dp),
-    val avatar: CircleShape = CircleShape,
+    val avatar: RoundedCornerShape = CircleShape,
     val bottomSheet: RoundedCornerShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
 )
 
