@@ -1,15 +1,25 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { OAuth2Client } from 'google-auth-library';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+  private readonly googleClient: OAuth2Client;
+
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-  ) {}
+    private configService: ConfigService,
+  ) {
+    const clientId =
+      this.configService.get<string>('GOOGLE_CLIENT_ID') || 'mock-id';
+    this.googleClient = new OAuth2Client(clientId);
+  }
 
   async validateUser(email: string, pass: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
@@ -36,6 +46,36 @@ export class AuthService {
       user.googleId = googleId;
     }
     return user;
+  }
+
+  /**
+   * Verify a Google ID token received from Android Credential Manager.
+   * Returns a JWT access token on success.
+   */
+  async validateGoogleIdToken(idToken: string) {
+    try {
+      const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken,
+        audience: clientId,
+      });
+
+      const payload = ticket.getPayload();
+      if (!payload || !payload.email) {
+        throw new UnauthorizedException('Invalid Google token: no email');
+      }
+
+      const user = await this.validateGoogleUser(payload.email, payload.sub);
+      this.logger.log(
+        `Google sign-in successful for ${payload.email} (sub=${payload.sub})`,
+      );
+      return this.login(user);
+    } catch (error: any) {
+      this.logger.error(`Google token verification failed: ${error.message}`);
+      throw new UnauthorizedException(
+        'Google authentication failed: ' + error.message,
+      );
+    }
   }
 
   async login(user: any) {

@@ -11,6 +11,7 @@ import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RegisterDto } from './dto/register.dto';
 import { GoogleOauthGuard } from './guards/google-oauth.guard';
+import { GoogleTokenDto } from './dto/google-token.dto';
 import { CurrentUser } from './decorators/current-user.decorator';
 
 @Controller('auth')
@@ -28,20 +29,25 @@ export class AuthController {
     return this.authService.login(user);
   }
 
+  /**
+   * Native mobile Google Sign-In (Android Credential Manager).
+   * Receives the Google ID token, verifies it server-side, and returns a JWT.
+   */
+  @Post('google/token')
+  async googleIdToken(@Body() dto: GoogleTokenDto) {
+    return this.authService.validateGoogleIdToken(dto.idToken);
+  }
+
   @UseGuards(GoogleOauthGuard)
   @Get('google')
   async googleAuth() {
-    // Initiates Google OAuth flow
+    // Initiates Google OAuth flow (web browser redirect)
   }
 
   @UseGuards(GoogleOauthGuard)
   @Get('google/callback')
   async googleAuthRedirect(@CurrentUser() user: any, @Res() res: any) {
     const token = await this.authService.login(user);
-    // Standard approach: redirect to frontend with token in query or secure cookie
-    // Since we are building API, we'll return JSON for now, or redirect.
-    // Assuming frontend URL in env, for simplicity returning JSON here,
-    // though in production you'd redirect to `frontend_url?token=${token.access_token}`
     return res.status(HttpStatus.OK).json(token);
   }
 }
