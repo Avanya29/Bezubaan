@@ -33,6 +33,26 @@ export class AiService {
   async analyzeImage(imageUrl: string) {
     try {
       const rescueId = `img-${Date.now()}`;
+      
+      let finalImageUrl = imageUrl;
+      if (imageUrl.startsWith('data:image')) {
+        const fs = require('fs');
+        const path = require('path');
+        const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, "");
+        const buffer = Buffer.from(base64Data, 'base64');
+        const filename = `${rescueId}.jpg`;
+        const publicDir = path.join(__dirname, '..', '..', 'public');
+        if (!fs.existsSync(publicDir)) {
+          fs.mkdirSync(publicDir, { recursive: true });
+        }
+        fs.writeFileSync(path.join(publicDir, filename), buffer);
+        
+        // Since we are running on Render, the host is usually available via env or we can construct it
+        // As a fallback for Render, the host is usually the app name
+        const host = process.env.RENDER_EXTERNAL_HOSTNAME ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}` : 'https://bezubaan-api.onrender.com';
+        finalImageUrl = `${host}/uploads/${filename}`;
+      }
+
       const response = await fetch(`${this.aiServiceUrl}/api/v1/triage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -40,7 +60,7 @@ export class AiService {
           rescue_id: rescueId,
           description: 'User uploaded image for AI vet analysis.',
           location: { latitude: 12.9716, longitude: 77.5946 }, // Bangalore default
-          image_url: imageUrl,
+          image_url: finalImageUrl,
         }),
         signal: AbortSignal.timeout(this.timeoutMs),
       });
