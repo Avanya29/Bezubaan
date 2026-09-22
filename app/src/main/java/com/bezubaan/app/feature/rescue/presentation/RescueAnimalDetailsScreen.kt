@@ -356,7 +356,7 @@ private fun CoatColorPattern() {
         Spacer(modifier = Modifier.height(8.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             ColorBox(modifier = Modifier.weight(1f), color = Color(0xFFD2B48C), label = "FAWN / GOLD", isSelected = false)
-            ColorBox(modifier = Modifier.weight(1.5f), color = Color.Gray, label = "BRINDLE / MULTI-PATCH", isSelected = false, showPattern = true)
+            ColorBox(modifier = Modifier.weight(1.5f), color = Color.DarkGray, label = "BRINDLE / MULTI-PATCH", isSelected = false, showPattern = true)
         }
     }
 }

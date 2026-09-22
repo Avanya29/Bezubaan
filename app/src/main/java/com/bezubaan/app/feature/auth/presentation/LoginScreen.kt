@@ -199,7 +199,8 @@ fun LoginScreen(
                 "■ EMAIL // RESCUER ID",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                color = Color.Black
             )
             Box(modifier = Modifier.background(Color.Black).padding(horizontal = 4.dp, vertical = 2.dp)) {
                 Text("SYS_AUTH", color = yellow, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
@@ -224,7 +225,8 @@ fun LoginScreen(
                 "■ SECURITY CODE // PASSWORD",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                color = Color.Black
             )
             Text(
                 "FORGOT?",
@@ -263,9 +265,9 @@ fun LoginScreen(
                     }
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Keep dispatch session active", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                Text("Keep dispatch session active", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color.Black)
             }
-            Text("NODE: MH-02", fontSize = 10.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = Color.Gray)
+            Text("NODE: MH-02", fontSize = 10.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = Color.DarkGray)
         }
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -300,7 +302,8 @@ fun LoginScreen(
                 " OR AUTHENTICATE VIA ",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
-                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                color = Color.Black
             )
             HorizontalDivider(modifier = Modifier.weight(1f), color = Color.Black, thickness = 2.dp)
         }
@@ -342,7 +345,8 @@ fun LoginScreen(
                     "NEW CITIZEN OR VOLUNTEER?",
                     fontWeight = FontWeight.Black,
                     fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    color = Color.Black
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Button(

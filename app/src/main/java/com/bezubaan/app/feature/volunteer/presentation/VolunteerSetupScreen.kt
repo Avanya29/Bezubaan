@@ -163,7 +163,7 @@ fun VolunteerSetupScreen(
                 Text("[ KEEP VOLUNTEER MODE OFF ]", fontSize = 14.sp, fontWeight = FontWeight.Black)
             }
             
-            Text("AWAITING LOCATION AUTHORIZATION", fontSize = 8.sp, color = Color.Gray, modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 8.dp))
+            Text("AWAITING LOCATION AUTHORIZATION", fontSize = 8.sp, color = Color.DarkGray, modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 8.dp))
         }
     }
 }

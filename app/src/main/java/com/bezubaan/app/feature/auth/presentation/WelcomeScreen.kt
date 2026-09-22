@@ -171,7 +171,7 @@ fun WelcomeScreen(
                 Box(modifier = Modifier.size(10.dp).background(brutalRed).border(1.dp, Color.Black))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("ACTIVE UNIT 04 DISPATCHED TO KORAMANGALA 5TH", fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f))
-                Text("3M AGO", fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.Gray)
+                Text("3M AGO", fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.DarkGray)
             }
         }
 
@@ -269,17 +269,17 @@ fun WelcomeScreen(
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
                     Text("4,820+", fontSize = 16.sp, fontWeight = FontWeight.Black)
-                    Text("ANIMALS SAVED", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.Gray, letterSpacing = 1.sp)
+                    Text("ANIMALS SAVED", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray, letterSpacing = 1.sp)
                 }
                 Box(modifier = Modifier.height(24.dp).width(1.dp).background(Color.LightGray))
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
                     Text("100%", fontSize = 16.sp, fontWeight = FontWeight.Black)
-                    Text("VOLUNTEER RUN", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.Gray, letterSpacing = 1.sp)
+                    Text("VOLUNTEER RUN", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray, letterSpacing = 1.sp)
                 }
                 Box(modifier = Modifier.height(24.dp).width(1.dp).background(Color.LightGray))
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
                     Text("~18 MIN", fontSize = 16.sp, fontWeight = FontWeight.Black, color = brutalRed)
-                    Text("AVG RESPONSE", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.Gray, letterSpacing = 1.sp)
+                    Text("AVG RESPONSE", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray, letterSpacing = 1.sp)
                 }
             }
         }

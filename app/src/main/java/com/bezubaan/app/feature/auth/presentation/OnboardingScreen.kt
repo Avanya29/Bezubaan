@@ -202,11 +202,11 @@ fun OnboardingPageOne(yellow: Color, red: Color, darkGreen: Color) {
         }
 
         Spacer(modifier = Modifier.height(24.dp))
-        Text("SPOT.", fontSize = 36.sp, fontWeight = FontWeight.Black)
+        Text("SPOT.", fontSize = 36.sp, fontWeight = FontWeight.Black, color = Color.Black)
         Box(modifier = Modifier.background(yellow).border(3.dp, Color.Black).padding(horizontal = 8.dp)) {
-            Text("REPORT.", fontSize = 36.sp, fontWeight = FontWeight.Black)
+            Text("REPORT.", fontSize = 36.sp, fontWeight = FontWeight.Black, color = Color.Black)
         }
-        Text("RESCUE.", fontSize = 36.sp, fontWeight = FontWeight.Black)
+        Text("RESCUE.", fontSize = 36.sp, fontWeight = FontWeight.Black, color = Color.Black)
 
         Spacer(modifier = Modifier.height(16.dp))
         Text(
@@ -285,7 +285,7 @@ fun OnboardingPageTwo(yellow: Color, red: Color, darkGreen: Color) {
         }
 
         Spacer(modifier = Modifier.height(24.dp))
-        Text("AI CAN HELP YOU", fontSize = 28.sp, fontWeight = FontWeight.Black)
+        Text("AI CAN HELP YOU", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color.Black)
         Box(modifier = Modifier.background(yellow).border(3.dp, Color.Black).padding(horizontal = 8.dp)) {
             Text("WHAT YOU SEE.", fontSize = 36.sp, fontWeight = FontWeight.Black)
         }
@@ -332,8 +332,8 @@ fun OnboardingPageTwo(yellow: Color, red: Color, darkGreen: Color) {
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
-                    Text("ETHICAL SAFEGUARD", fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                    Text("Preliminary triage assistance only. VetVision AI does not provide definitive veterinary diagnosis or replace licensed clinical examination.", fontSize = 12.sp)
+                    Text("ETHICAL SAFEGUARD", fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.Black)
+                    Text("Preliminary triage assistance only. VetVision AI does not provide definitive veterinary diagnosis or replace licensed clinical examination.", fontSize = 12.sp, color = Color.Black)
                 }
             }
         }
@@ -343,7 +343,7 @@ fun OnboardingPageTwo(yellow: Color, red: Color, darkGreen: Color) {
 @Composable
 fun OnboardingPageThree(yellow: Color, red: Color, darkGreen: Color) {
     Column {
-        Text("PEOPLE MAKE THE", fontSize = 28.sp, fontWeight = FontWeight.Black)
+        Text("PEOPLE MAKE THE", fontSize = 28.sp, fontWeight = FontWeight.Black, color = Color.Black)
         Box(modifier = Modifier.background(yellow).border(3.dp, Color.Black).padding(horizontal = 8.dp)) {
             Text("RESCUE HAPPEN.", fontSize = 36.sp, fontWeight = FontWeight.Black)
         }

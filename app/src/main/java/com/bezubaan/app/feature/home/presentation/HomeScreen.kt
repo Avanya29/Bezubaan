@@ -183,11 +183,11 @@ fun NamasteCard() {
         Spacer(modifier = Modifier.height(12.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Column {
-                Text("COVERAGE AREA", fontSize = 9.sp, color = Color.Gray, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                Text("COVERAGE AREA", fontSize = 9.sp, color = Color.DarkGray, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
                 Text("Indiranagar, Bengaluru (1.2 km radius)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text("SECTOR", fontSize = 9.sp, color = Color.Gray, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                Text("SECTOR", fontSize = 9.sp, color = Color.DarkGray, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
                 Text("GRID #04-E", fontSize = 12.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
             }
         }
@@ -430,7 +430,7 @@ fun NearbyRescuesSection(cases: List<RescueCase>, onNavigateToDetails: (String) 
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text("INDIE PUPPY W/ FRACTURED PAW", fontSize = 12.sp, fontWeight = FontWeight.Black)
-                    Text("100ft Rd, Indiranagar • 800m away", fontSize = 10.sp, color = Color.Gray)
+                    Text("100ft Rd, Indiranagar • 800m away", fontSize = 10.sp, color = Color.DarkGray)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text("Dr. Rekha V. • STABLE", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = darkGreen)
                 }
@@ -460,7 +460,7 @@ fun NearbyRescuesSection(cases: List<RescueCase>, onNavigateToDetails: (String) 
                     Text("P3 STABLE", fontSize = 8.sp, fontWeight = FontWeight.Black)
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Domlur Flyover Underpass • 1.9 km away", fontSize = 10.sp, color = Color.Gray)
+                Text("Domlur Flyover Underpass • 1.9 km away", fontSize = 10.sp, color = Color.DarkGray)
             }
             Spacer(modifier = Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

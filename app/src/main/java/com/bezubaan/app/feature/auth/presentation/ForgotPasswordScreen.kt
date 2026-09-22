@@ -101,7 +101,7 @@ fun ForgotPasswordScreen(
                 )
                 Text(
                     "DISPATCH RESCUER ID // V2.4 KEY RECOVERY", 
-                    color = Color.Gray, 
+                    color = Color.DarkGray, 
                     fontSize = 10.sp, 
                     fontWeight = FontWeight.Bold,
                     fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
@@ -194,7 +194,7 @@ fun ForgotPasswordScreen(
             value = email, 
             onValueChange = { email = it }, 
             label = "rescuer@bezubaan.org",
-            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = Color.Gray) },
+            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = Color.DarkGray) },
             trailingIcon = { 
                 if(email.isNotEmpty()) {
                     Box(modifier = Modifier.background(lightGreen).border(1.dp, Color.Black).padding(horizontal = 6.dp, vertical = 2.dp)) {

@@ -158,7 +158,7 @@ private fun UnitCallsignCard(isOffline: Boolean) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
-            Text("CALL-SIGN", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.Gray, fontFamily = FontFamily.Monospace)
+            Text("CALL-SIGN", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.DarkGray, fontFamily = FontFamily.Monospace)
             Spacer(modifier = Modifier.height(2.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(modifier = Modifier.size(8.dp).background(if (isOffline) Color.Gray else darkGreen, CircleShape).border(1.dp, Color.Black, CircleShape))
@@ -310,7 +310,7 @@ private fun ProximityRadarCard() {
                 Text("PROXIMITY RADAR [STANDBY]", fontSize = 11.sp, fontWeight = FontWeight.Black)
             }
             Box(modifier = Modifier.border(1.dp, Color.Black).padding(horizontal = 6.dp, vertical = 2.dp)) {
-                Text("MUTED", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.Gray)
+                Text("MUTED", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
             }
         }
         Spacer(modifier = Modifier.height(12.dp))
@@ -395,7 +395,7 @@ private fun OfflineChecklistItem(title: String, subtitle: String) {
                 Text(subtitle, fontSize = 10.sp, color = Color.DarkGray)
             }
         }
-        Icon(Icons.Default.AddBox, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(20.dp))
+        Icon(Icons.Default.AddBox, contentDescription = null, tint = Color.DarkGray, modifier = Modifier.size(20.dp))
     }
 }
 
@@ -446,7 +446,7 @@ private fun ShiftLogCard() {
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text("3H AGO", fontSize = 9.sp, fontWeight = FontWeight.Black)
-                Text("14:12 IST", fontSize = 9.sp, color = Color.Gray)
+                Text("14:12 IST", fontSize = 9.sp, color = Color.DarkGray)
             }
         }
     }
@@ -533,7 +533,7 @@ private fun RadarActiveStrip() {
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("RADAR ACTIVE // 3.5 KM", fontSize = 10.sp, fontWeight = FontWeight.Black)
-                Text("  •  AUTO-DISPATCH", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.Gray)
+                Text("  •  AUTO-DISPATCH", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text("Scanning: Indiranagar 100ft, Halasuru Lake & Do...", fontSize = 11.sp, color = Color.DarkGray, maxLines = 1)

@@ -272,7 +272,7 @@ private fun ActiveIncidentReports() {
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("ACTIVE INCIDENT REPORTS", fontSize = 12.sp, fontWeight = FontWeight.Black)
             }
-            Text("2 CASES LOGGED", fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.Gray)
+            Text("2 CASES LOGGED", fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.DarkGray)
         }
         Spacer(modifier = Modifier.height(12.dp))
         // Case 1
@@ -308,9 +308,9 @@ private fun ActiveIncidentReports() {
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Event, contentDescription = null, modifier = Modifier.size(10.dp), tint = Color.Gray)
+                        Icon(Icons.Default.Event, contentDescription = null, modifier = Modifier.size(10.dp), tint = Color.DarkGray)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("TODAY, 11:20 AM • INDIRANAGAR", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                        Text("TODAY, 11:20 AM • INDIRANAGAR", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text("INDIE PUP (FRACTURE)", fontSize = 14.sp, fontWeight = FontWeight.Black)
@@ -411,7 +411,7 @@ private fun FosterHistoryCard() {
         }
         Spacer(modifier = Modifier.height(16.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("PAST FOSTERS: BRUNO (ADOPTED), RANI\n(ADOPTED)", fontSize = 8.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.Gray, modifier = Modifier.weight(1f))
+            Text("PAST FOSTERS: BRUNO (ADOPTED), RANI\n(ADOPTED)", fontSize = 8.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.DarkGray, modifier = Modifier.weight(1f))
             Text("VIEW LOG BOOK", fontSize = 9.sp, fontWeight = FontWeight.Black, textDecoration = TextDecoration.Underline, color = darkGreen)
         }
     }
@@ -494,7 +494,7 @@ private fun SettingsActionCard(onLogoutClick: () -> Unit) {
                 Icon(Icons.Default.VpnKey, contentDescription = null, modifier = Modifier.size(12.dp), tint = darkGreen)
                 Spacer(modifier = Modifier.width(8.dp))
                 Column {
-                    Text("RESCUER DISPATCH KEY", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                    Text("RESCUER DISPATCH KEY", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
                     Text("#KEY-9942-SEC-BLR", fontSize = 10.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
                 }
             }
@@ -536,6 +536,6 @@ private fun SettingsItem(icon: androidx.compose.ui.graphics.vector.ImageVector, 
             Spacer(modifier = Modifier.width(16.dp))
             Text(title, fontSize = 10.sp, fontWeight = FontWeight.Black)
         }
-        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.Gray)
+        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.DarkGray)
     }
 }

@@ -125,7 +125,7 @@ private fun TopHeader() {
                 }
             }
             Spacer(modifier = Modifier.height(4.dp))
-            Text("MODEL: VETVISION-2.4B MULTIMODAL", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.Gray, fontFamily = FontFamily.Monospace)
+            Text("MODEL: VETVISION-2.4B MULTIMODAL", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.DarkGray, fontFamily = FontFamily.Monospace)
             Spacer(modifier = Modifier.height(8.dp))
             Box(
                 modifier = Modifier
@@ -178,9 +178,9 @@ private fun UserMessage(text: String, time: String) {
                 Text(text, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(modifier = Modifier.align(Alignment.End), verticalAlignment = Alignment.CenterVertically) {
-                    Text(time, fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.Gray)
+                    Text(time, fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
                     Spacer(modifier = Modifier.width(4.dp))
-                    Icon(Icons.Default.DoneAll, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color.Gray)
+                    Icon(Icons.Default.DoneAll, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color.DarkGray)
                 }
             }
         }
@@ -226,9 +226,9 @@ private fun UserMessageWithImage(text: String, time: String) {
                 Text(text, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(modifier = Modifier.align(Alignment.End), verticalAlignment = Alignment.CenterVertically) {
-                    Text(time, fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.Gray)
+                    Text(time, fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
                     Spacer(modifier = Modifier.width(4.dp))
-                    Icon(Icons.Default.DoneAll, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color.Gray)
+                    Icon(Icons.Default.DoneAll, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color.DarkGray)
                 }
             }
         }
@@ -468,7 +468,7 @@ private fun BottomInputArea() {
                     .border(2.dp, Color.Black)
                     .padding(12.dp)
             ) {
-                Text("Describe what you see...", fontSize = 12.sp, color = Color.Gray)
+                Text("Describe what you see...", fontSize = 12.sp, color = Color.DarkGray)
             }
             Box(
                 modifier = Modifier

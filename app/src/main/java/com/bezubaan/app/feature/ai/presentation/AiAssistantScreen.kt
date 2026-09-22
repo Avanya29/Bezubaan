@@ -138,7 +138,7 @@ private fun HeroSection() {
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column {
-                Text("BEZUBAAN FIELD AI", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.Gray)
+                Text("BEZUBAAN FIELD AI", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
                 Text("CLINICAL TRIAGE", fontSize = 16.sp, fontWeight = FontWeight.Black, color = darkGreen)
             }
         }

@@ -125,7 +125,7 @@ fun RegisterScreen(
             Column {
                 Text(
                     "BEZUBAAN OPS V2.4 // RECRUIT", 
-                    color = Color.Gray, 
+                    color = Color.DarkGray, 
                     fontSize = 12.sp, 
                     fontWeight = FontWeight.Bold,
                     fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
@@ -185,7 +185,7 @@ fun RegisterScreen(
 
         // Full Name Field
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("■ FULL LEGAL NAME // CALLSIGN", fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+            Text("■ FULL LEGAL NAME // CALLSIGN", fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = Color.Black)
             Box(modifier = Modifier.background(redAlert).padding(horizontal = 4.dp, vertical = 2.dp)) {
                 Text("REQUIRED", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
             }
@@ -195,14 +195,14 @@ fun RegisterScreen(
             value = name, 
             onValueChange = { name = it }, 
             label = "Aditi Sharma",
-            leadingIcon = { Icon(Icons.Default.Badge, contentDescription = null, tint = Color.Gray) }
+            leadingIcon = { Icon(Icons.Default.Badge, contentDescription = null, tint = Color.DarkGray) }
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
         // Email Field
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("■ RESCUER EMAIL ADDRESS", fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+            Text("■ RESCUER EMAIL ADDRESS", fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = Color.Black)
             Box(modifier = Modifier.background(lightGreen).padding(horizontal = 4.dp, vertical = 2.dp).border(1.dp, Color.Black)) {
                 Text("VERIFIED DOMAIN", color = greenText, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
             }
@@ -212,7 +212,7 @@ fun RegisterScreen(
             value = email, 
             onValueChange = { email = it }, 
             label = "aditi.rescue@gmail.com",
-            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = Color.Gray) },
+            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = Color.DarkGray) },
             trailingIcon = { 
                 if(email.isNotEmpty()) {
                     Box(modifier = Modifier.background(lightGreen).border(1.dp, Color.Black).padding(horizontal = 6.dp, vertical = 2.dp)) {
@@ -226,7 +226,7 @@ fun RegisterScreen(
 
         // Password Field
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("■ SECURITY CODE // PASSWORD", fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+            Text("■ SECURITY CODE // PASSWORD", fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = Color.Black)
             Box(modifier = Modifier.background(Color.Black).padding(horizontal = 4.dp, vertical = 2.dp)) {
                 Text("MIN 8 CHARS", color = yellow, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
             }
@@ -236,13 +236,13 @@ fun RegisterScreen(
             value = password, 
             onValueChange = { password = it }, 
             label = "••••••••••••",
-            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = Color.Gray) }
+            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = Color.DarkGray) }
         )
 
         // Strength Meter
         Spacer(modifier = Modifier.height(8.dp))
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text("CRYPT-STRENGTH:", fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+            Text("CRYPT-STRENGTH:", fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = Color.Black)
             Spacer(modifier = Modifier.width(8.dp))
             Box(modifier = Modifier.background(lightGreen).border(1.dp, Color.Black).padding(horizontal = 4.dp, vertical = 2.dp)) {
                 Text("HIGH (88%)", color = greenText, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
@@ -260,7 +260,7 @@ fun RegisterScreen(
 
         // Confirm Password
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("■ CONFIRM SECURITY CODE", fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+            Text("■ CONFIRM SECURITY CODE", fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = Color.Black)
         }
         Spacer(modifier = Modifier.height(8.dp))
         NeoInput(value = confirmPassword, onValueChange = { confirmPassword = it }, label = "••••••••••••")
@@ -295,7 +295,7 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         // Role Selection
-        Text("■ SELECT PRIMARY OPERATIONAL ROLE", fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+        Text("■ SELECT PRIMARY OPERATIONAL ROLE", fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = Color.Black)
         Spacer(modifier = Modifier.height(12.dp))
         RoleCard(
             title = "CITIZEN REPORTER",
@@ -338,7 +338,8 @@ fun RegisterScreen(
                 "I declare that all rescue alerts submitted will be genuine and accept the Bezubaan Code of Ethics and volunteer liability protocol.",
                 fontSize = 12.sp,
                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                lineHeight = 16.sp
+                lineHeight = 16.sp,
+                color = Color.Black
             )
         }
 

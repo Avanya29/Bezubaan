@@ -175,8 +175,8 @@ fun SplashScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("INITIALIZING TELEMETRY", fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.Gray)
-            Text(if(progress >= 1f) "READY" else "${(progress*100).toInt()}%", fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.Gray)
+            Text("INITIALIZING TELEMETRY", fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.DarkGray)
+            Text(if(progress >= 1f) "READY" else "${(progress*100).toInt()}%", fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.DarkGray)
         }
         Spacer(modifier = Modifier.height(4.dp))
         Box(
@@ -201,7 +201,7 @@ fun SplashScreen(
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
             Box(modifier = Modifier.size(6.dp).background(brutalYellow).border(1.dp, Color.Black))
             Spacer(modifier = Modifier.width(6.dp))
-            Text("BEZUBAAN FOUNDATION • BENGALURU", fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.Gray)
+            Text("BEZUBAAN FOUNDATION • BENGALURU", fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.DarkGray)
             Spacer(modifier = Modifier.width(6.dp))
             Box(modifier = Modifier.size(6.dp).background(brutalRed).border(1.dp, Color.Black))
         }
