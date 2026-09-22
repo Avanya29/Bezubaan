@@ -14,7 +14,13 @@ export class UsersController {
     const fullUser = await this.usersService.findById(user.id);
     if (!fullUser) return null;
     const { passwordHash, ...result } = fullUser;
-    return result;
+    
+    // The Android app's UserDto expects a 'name' field, but the Prisma
+    // schema currently doesn't store one. Fall back to email prefix for now.
+    return {
+      ...result,
+      name: result.email.split('@')[0],
+    };
   }
 
   @Patch('me/profile')
