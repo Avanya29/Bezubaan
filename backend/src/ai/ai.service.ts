@@ -32,48 +32,80 @@ export class AiService {
 
   async analyzeImage(imageUrl: string) {
     try {
-      // NOTE: Update endpoint to match FastAPI when you build it
-      const response = await fetch(`${this.aiServiceUrl}/api/v1/analyze`, {
+      const rescueId = `img-${Date.now()}`;
+      const response = await fetch(`${this.aiServiceUrl}/api/v1/triage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image_url: imageUrl })
+        body: JSON.stringify({
+          rescue_id: rescueId,
+          description: 'User uploaded image for AI vet analysis.',
+          location: { latitude: 12.9716, longitude: 77.5946 }, // Bangalore default
+          image_url: imageUrl,
+        }),
+        signal: AbortSignal.timeout(this.timeoutMs),
       });
-      if (!response.ok) throw new Error('AI Service failed');
-      return await response.json();
+      if (!response.ok) throw new Error(`AI Service returned ${response.status}`);
+      const data = await response.json();
+      // Map triage response to a format the Android AI chat can display
+      const lines: string[] = [];
+      if (data.preliminary_assessment) lines.push(data.preliminary_assessment);
+      if (data.observations?.length) lines.push('\n🔍 Observations:\n• ' + data.observations.join('\n• '));
+      if (data.recommended_actions?.length) lines.push('\n✅ Recommended Actions:\n• ' + data.recommended_actions.join('\n• '));
+      if (data.safety_warnings?.length) lines.push('\n⚠️ Safety Warnings:\n• ' + data.safety_warnings.join('\n• '));
+      if (data.confidence_note) lines.push('\n📋 ' + data.confidence_note);
+      return {
+        id: Date.now().toString(),
+        text: lines.join('\n') || 'Analysis complete. Please consult a vet.',
+        isUser: false,
+        timestamp: Date.now(),
+        severity: data.severity_estimate || 'UNKNOWN',
+      };
     } catch (error) {
       this.logger.error('Analyze failed', error);
-      // Fallback response for Android to parse
       return {
-        breed: "Unknown (Backend Fallback)",
-        urgency: "Medium",
-        firstAid: "Keep the animal warm. Analysis failed."
+        id: Date.now().toString(),
+        text: 'I was unable to analyze the image right now. Please describe the animal\'s condition and I will help you.',
+        isUser: false,
+        timestamp: Date.now(),
       };
     }
   }
 
   async sendChatMessage(text: string) {
     try {
-      // NOTE: Update endpoint to match FastAPI when you build it
-      const response = await fetch(`${this.aiServiceUrl}/api/v1/chat`, {
+      const rescueId = `chat-${Date.now()}`;
+      const response = await fetch(`${this.aiServiceUrl}/api/v1/triage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text })
+        body: JSON.stringify({
+          rescue_id: rescueId,
+          description: text,
+          location: { latitude: 12.9716, longitude: 77.5946 }, // Bangalore default
+        }),
+        signal: AbortSignal.timeout(this.timeoutMs),
       });
-      if (!response.ok) throw new Error('AI Service failed');
+      if (!response.ok) throw new Error(`AI Service returned ${response.status}`);
       const data = await response.json();
+      // Build a readable reply from the triage response
+      const lines: string[] = [];
+      if (data.preliminary_assessment) lines.push(data.preliminary_assessment);
+      if (data.observations?.length) lines.push('\n🔍 Observations:\n• ' + data.observations.join('\n• '));
+      if (data.recommended_actions?.length) lines.push('\n✅ Recommended Actions:\n• ' + data.recommended_actions.join('\n• '));
+      if (data.safety_warnings?.length) lines.push('\n⚠️ Safety Warnings:\n• ' + data.safety_warnings.join('\n• '));
+      if (data.confidence_note) lines.push('\n📋 ' + data.confidence_note);
       return {
         id: Date.now().toString(),
-        text: data.reply || "I didn't understand that.",
+        text: lines.join('\n') || "I've reviewed the situation. Please consult a vet for professional advice.",
         isUser: false,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
     } catch (error) {
       this.logger.error('Chat failed', error);
       return {
         id: Date.now().toString(),
-        text: "I am having trouble connecting to my brain. Please try again.",
+        text: 'I am having trouble connecting right now. If this is an emergency, please contact a local animal rescue organization immediately.',
         isUser: false,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
     }
   }
