@@ -22,4 +22,11 @@ export interface TriageResponseDto {
   confidence_note: string;
   model_metadata: ModelMetadata;
   correlation_id: string | null;
+  nearby_veterinary_help?: any;
+  recommended_volunteers?: Array<{
+    volunteer_id: string;
+    name: string;
+    reason: string;
+    match_score: number;
+  }>;
 }

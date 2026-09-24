@@ -132,6 +132,7 @@ export class AiService {
 
   /**
    * Request AI triage analysis for a rescue case.
+   */
   async requestTriage(params: {
     rescueId: string;
     description: string;
@@ -141,6 +142,13 @@ export class AiService {
     imageUrl?: string;
     animalSpecies?: string;
     correlationId?: string;
+    volunteers?: Array<{
+      id: string;
+      name: string;
+      distance_meters?: number;
+      experience_level?: string;
+      capabilities?: string[];
+    }>;
   }): Promise<TriageResponseDto> {
     const correlationId =
       params.correlationId ||
@@ -158,6 +166,7 @@ export class AiService {
       animal_info: params.animalSpecies
         ? { species: params.animalSpecies }
         : undefined,
+      volunteers: params.volunteers,
       correlation_id: correlationId,
     };
 

@@ -112,7 +112,7 @@
   - `image_url` (optional string)
   - `animal_info` (optional species object)
   - `correlation_id` (string)
-- **Success Response**: `200 OK` with structured `TriageResponse` (observations, preliminary_assessment, severity_estimate, recommended_actions, safety_warnings, model_metadata).
+- **Success Response**: `200 OK` with structured `TriageResponse` (observations, preliminary_assessment, severity_estimate, recommended_actions, safety_warnings, model_metadata, nearby_veterinary_help, recommended_volunteers).
 - **Failure Handling**: NestJS intercepts all 4xx/5xx/Timeouts from this endpoint and injects a safe fallback response to prevent rescue workflow failure.
 
 ### 3.5 Notifications Endpoints

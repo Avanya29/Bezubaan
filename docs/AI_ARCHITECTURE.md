@@ -28,10 +28,19 @@ All communication is HTTP POST to `/api/v1/triage`.
 - **Resilience**: If the AI Service is down, times out, or returns malformed JSON, NestJS catches the failure and injects a "Safe Error Response" into the triage flow. **AI failure never blocks a rescue report from being created.**
 - **Correlation**: Every request includes a `correlation_id` to trace logs across both services via OpenTelemetry (future).
 
-## 4. Deferred Capabilities
-The following are NOT implemented in the current foundation due to missing requirements:
-- **RAG System / Vector Database**: (Q16, Q17) Deferred. No domain corpus is defined.
-- **LangGraph Multi-Agent**: Deferred. Deterministic parsing handles current triage needs. 
+## 4. Multi-Agent & Guardrails Orchestration
+The AI Service utilizes **LangGraph** to coordinate multiple specialized agents:
+- **Vision Agent**: Evaluates image quality and extracts observable evidence.
+- **RAG Agent**: Retrieves Standard Operating Procedures (SOPs) from an in-memory vector store to ground the triage response in official guidelines.
+- **Triage Agent**: Analyzes extracted evidence and RAG context using `gemini-1.5-flash` to formulate a severity priority.
+- **Location Agent**: Uses Google Places API (New) to securely fetch nearby veterinary clinics if the case is deemed urgent (High/Critical severity).
+- **Volunteer Agent**: Analyzes backend-provided volunteer lists and recommends the best match based on proximity, experience, and case severity.
+- **Safety Node**: Custom Bezubaan validation to detect unsafe definitive diagnoses and executes NeMo Guardrails checks for prompt injection.
+
+It also integrates **NeMo Guardrails** for:
+- **Input Rails**: Prompt injection and jailbreak defense executed natively within the LangGraph Safety Node.
+- **Output Rails**: Safety bounds on model outputs.
+
 
 ## 5. Security & Privacy
 - **Stateless**: The AI service stores no state, no PII, and no images.

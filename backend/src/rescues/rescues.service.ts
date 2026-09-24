@@ -13,6 +13,7 @@ import { Role, RescueStatus } from '@prisma/client';
 
 import { EventsGateway } from '../events/events.gateway';
 import { FirebaseService } from '../firebase/firebase.service';
+import { AiService } from '../ai/ai.service';
 
 @Injectable()
 export class RescuesService {
@@ -20,6 +21,7 @@ export class RescuesService {
     private readonly prisma: PrismaService,
     private readonly eventsGateway: EventsGateway,
     private readonly firebaseService: FirebaseService,
+    private readonly aiService: AiService,
   ) {}
 
   async create(createRescueDto: CreateRescueDto, reporterId: string | null) {
@@ -137,6 +139,53 @@ export class RescuesService {
     if (!c) throw new NotFoundException('Rescue case not found');
 
     return this.maskLocationIfNotAuthorized(c, user);
+  }
+
+  async triggerAiTriage(rescueId: string) {
+    const rescue = await this.prisma.rescueCase.findUnique({
+      where: { id: rescueId },
+      include: { animal: true, media: true },
+    });
+
+    if (!rescue) throw new NotFoundException('Rescue case not found');
+
+    // Fetch available volunteers to pass to AI for recommendation
+    const availableVolunteers = await this.prisma.volunteerProfile.findMany({
+      where: { availabilityStatus: 'AVAILABLE' },
+      include: { user: true },
+    });
+
+    const mappedVolunteers = availableVolunteers.map(v => ({
+      id: v.id,
+      name: v.user.email, // using email as a fallback, should use user profile name if available
+      experience_level: v.experience || 'Unknown',
+      capabilities: v.capabilities,
+      // We could calculate distance using Haversine formula here if needed
+      // distance_meters: 1000 
+    }));
+
+    // Trigger the AI service
+    const aiResponse = await this.aiService.requestTriage({
+      rescueId: rescue.id,
+      description: rescue.description,
+      latitude: rescue.latitude,
+      longitude: rescue.longitude,
+      address: rescue.address || undefined,
+      imageUrl: rescue.media[0]?.url, // Pass first media URL if exists
+      animalSpecies: rescue.animal?.species,
+      volunteers: mappedVolunteers,
+    });
+
+    // Save AI output to aiTriageData JSON field
+    await this.prisma.rescueCase.update({
+      where: { id: rescueId },
+      data: {
+        aiTriageData: aiResponse as any,
+        status: RescueStatus.PENDING_VERIFICATION, // Move status after analysis
+      },
+    });
+
+    return aiResponse;
   }
 
   // Exact Graph Implementation
