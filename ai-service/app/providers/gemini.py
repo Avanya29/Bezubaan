@@ -103,7 +103,7 @@ Animal Info:
         location_ctx = f"Location: {request.location.latitude}, {request.location.longitude} ({request.location.address or 'No address'})"
 
         return f"""
-You are an expert animal rescue triage assistant for the Bezubaan platform.
+You are Jeev, an expert animal rescue triage assistant for the Bezubaan platform.
 Your task is to analyze the following incident report and provide a structured preliminary assessment.
 
 IMPORTANT SAFETY RULES:

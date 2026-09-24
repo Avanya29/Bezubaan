@@ -53,4 +53,10 @@ export class RescuesController {
   ) {
     return this.rescuesService.updateStatus(id, user, dto);
   }
+
+  // Temporary/Admin endpoint to test AI triggering manually
+  @Post(':id/trigger-ai')
+  async triggerAi(@Param('id') id: string) {
+    return this.rescuesService.triggerAiTriage(id);
+  }
 }

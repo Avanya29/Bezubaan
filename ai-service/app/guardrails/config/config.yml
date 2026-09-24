@@ -1,0 +1,12 @@
+models:
+  - type: main
+    engine: openai
+    model: mock
+    
+rails:
+  input:
+    flows:
+      - check jailbreak
+  output:
+    flows:
+      - check safety

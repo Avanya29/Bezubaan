@@ -23,6 +23,15 @@ class AnimalInfo(BaseModel):
     approximate_age: Optional[str] = None
     description: Optional[str] = None
 
+class VolunteerData(BaseModel):
+    """Available volunteer data passed by NestJS for recommendation matching."""
+    id: str
+    name: str
+    distance_meters: Optional[int] = None
+    experience_level: Optional[str] = None
+    capabilities: list[str] = Field(default_factory=list)
+
+
 
 class LocationInfo(BaseModel):
     """Location of the rescue incident."""
@@ -48,6 +57,7 @@ class TriageRequest(BaseModel):
     location: LocationInfo
     image_url: Optional[str] = None
     animal_info: Optional[AnimalInfo] = None
+    volunteers: list[VolunteerData] = Field(default_factory=list)
     correlation_id: Optional[str] = None
 
 
@@ -58,6 +68,27 @@ class ModelMetadata(BaseModel):
     provider: str = Field(description="AI provider name (e.g. 'mock', 'openai')")
     model: str = Field(description="Model identifier")
     processing_time_ms: int = Field(description="Wall-clock processing time in milliseconds")
+
+class VeterinaryProvider(BaseModel):
+    id: str
+    name: str
+    address: str
+    distance_meters: int
+    phone: Optional[str] = None
+    maps_uri: Optional[str] = None
+    business_status: Optional[str] = None
+
+class NearbyVeterinaryHelp(BaseModel):
+    status: str
+    providers: list[VeterinaryProvider] = Field(default_factory=list)
+
+class VolunteerRecommendation(BaseModel):
+    volunteer_id: str
+    name: str
+    reason: str
+    match_score: int
+
+
 
 
 class TriageResponse(BaseModel):
@@ -87,8 +118,10 @@ class TriageResponse(BaseModel):
     )
     recommended_actions: list[str] = Field(default_factory=list)
     safety_warnings: list[str] = Field(default_factory=list)
+    recommended_volunteers: list[VolunteerRecommendation] = Field(default_factory=list)
     confidence_note: str = Field(
         default="This is an AI-generated preliminary assessment. It is NOT a verified diagnosis.",
     )
     model_metadata: ModelMetadata
     correlation_id: Optional[str] = None
+    nearby_veterinary_help: Optional[NearbyVeterinaryHelp] = None
