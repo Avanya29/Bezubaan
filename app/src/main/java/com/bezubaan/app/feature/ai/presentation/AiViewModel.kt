@@ -13,24 +13,63 @@ import kotlinx.coroutines.launch
 import com.bezubaan.app.feature.ai.domain.model.ChatMessage
 import java.util.UUID
 import javax.inject.Inject
+import com.bezubaan.app.feature.ai.domain.repository.AiRepository
+import com.bezubaan.app.core.common.Resource
 
 @HiltViewModel
-class AiViewModel @Inject constructor() : ViewModel() {
+class AiViewModel @Inject constructor(
+    private val repository: AiRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AiUiState())
     val uiState: StateFlow<AiUiState> = _uiState.asStateFlow()
 
-    fun analyzeImage(uri: Uri?) {
-        if (uri == null) return
+    fun analyzeImage(localUri: String, base64Data: String) {
+        val userMessage = ChatMessage(
+            id = UUID.randomUUID().toString(),
+            text = "Please analyze this image.",
+            isUser = true,
+            timestamp = System.currentTimeMillis(),
+            imageUrl = localUri
+        )
+        
+        _uiState.update { state ->
+            state.copy(
+                chatMessages = state.chatMessages + userMessage,
+                isLoading = true,
+                result = null
+            )
+        }
+        
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, result = null) }
-            // Mock delay
-            delay(2000)
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    result = "Analysis Complete:\n- Breed: Indie Dog\n- Urgency: Low\n- Suggestion: Needs food and water."
-                )
+            val result = repository.analyzeImage(base64Data)
+            when (result) {
+                is Resource.Success -> {
+                    val aiReply = result.data
+                    if (aiReply != null) {
+                        _uiState.update { state ->
+                            state.copy(
+                                chatMessages = state.chatMessages + aiReply,
+                                isLoading = false
+                            )
+                        }
+                    }
+                }
+                is Resource.Error -> {
+                    val errorReply = ChatMessage(
+                        id = UUID.randomUUID().toString(),
+                        text = "Error: ${result.message}",
+                        isUser = false,
+                        timestamp = System.currentTimeMillis()
+                    )
+                    _uiState.update { state ->
+                        state.copy(
+                            chatMessages = state.chatMessages + errorReply,
+                            isLoading = false
+                        )
+                    }
+                }
+                is Resource.Loading -> {}
             }
         }
     }
@@ -53,19 +92,34 @@ class AiViewModel @Inject constructor() : ViewModel() {
         }
         
         viewModelScope.launch {
-            // Mock delay for AI response
-            delay(1500)
-            val aiReply = ChatMessage(
-                id = UUID.randomUUID().toString(),
-                text = "This is a simulated AI response to: \"$text\"",
-                isUser = false,
-                timestamp = System.currentTimeMillis()
-            )
-            _uiState.update { state ->
-                state.copy(
-                    chatMessages = state.chatMessages + aiReply,
-                    isLoading = false
-                )
+            val result = repository.sendChatMessage(text)
+            when (result) {
+                is Resource.Success -> {
+                    val aiReply = result.data
+                    if (aiReply != null) {
+                        _uiState.update { state ->
+                            state.copy(
+                                chatMessages = state.chatMessages + aiReply,
+                                isLoading = false
+                            )
+                        }
+                    }
+                }
+                is Resource.Error -> {
+                    val errorReply = ChatMessage(
+                        id = UUID.randomUUID().toString(),
+                        text = "Error: ${result.message}",
+                        isUser = false,
+                        timestamp = System.currentTimeMillis()
+                    )
+                    _uiState.update { state ->
+                        state.copy(
+                            chatMessages = state.chatMessages + errorReply,
+                            isLoading = false
+                        )
+                    }
+                }
+                is Resource.Loading -> {}
             }
         }
     }

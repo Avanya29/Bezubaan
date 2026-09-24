@@ -39,6 +39,8 @@ fun NeoButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    containerColor: Color? = null,
+    contentColor: Color? = null,
     icon: @Composable (() -> Unit)? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -50,8 +52,9 @@ fun NeoButton(
     val shape = RoundedCornerShape(0.dp) // Neo-brutalist typically uses sharp corners or specific rounding
     val borderThick = BezubaanTheme.dimens.borderThick
     val shadowColor = BezubaanTheme.colors.shadow
-    val backgroundColor = if (enabled) BezubaanTheme.colors.primary else Color.Gray
-    val contentColor = BezubaanTheme.colors.onPrimary
+    val resolvedBgColor = containerColor ?: BezubaanTheme.colors.primary
+    val resolvedContentColor = contentColor ?: BezubaanTheme.colors.onPrimary
+    val finalBgColor = if (enabled) resolvedBgColor else Color.Gray
 
     Box(modifier = modifier) {
         // Shadow
@@ -66,7 +69,7 @@ fun NeoButton(
             modifier = Modifier
                 .offset(x = xOffset, y = yOffset)
                 .border(borderThick, BezubaanTheme.colors.onBackground, shape)
-                .background(backgroundColor, shape)
+                .background(finalBgColor, shape)
                 .clip(shape)
                 .clickable(
                     interactionSource = interactionSource,
@@ -84,7 +87,7 @@ fun NeoButton(
                 }
                 Text(
                     text = text,
-                    color = contentColor,
+                    color = resolvedContentColor,
                     style = MaterialTheme.typography.labelLarge
                 )
             }

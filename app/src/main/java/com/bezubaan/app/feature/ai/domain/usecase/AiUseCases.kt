@@ -9,7 +9,7 @@ import javax.inject.Inject
 class AnalyzeImageUseCase @Inject constructor(
     private val repository: AiRepository
 ) {
-    suspend operator fun invoke(imageUrl: String): Resource<AiAnalysis> {
+    suspend operator fun invoke(imageUrl: String): Resource<ChatMessage> {
         return repository.analyzeImage(imageUrl)
     }
 }

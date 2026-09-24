@@ -211,7 +211,7 @@ fun OnboardingPageOne(yellow: Color, red: Color, darkGreen: Color) {
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             "Notice an animal in distress? Snap a photo, drop the location, and alert our 24/7 volunteer veterinary response network across the city within seconds.",
-            fontSize = 14.sp, color = Color.DarkGray
+            fontSize = 14.sp, color = Color.Black
         )
         
         Spacer(modifier = Modifier.height(24.dp))
@@ -293,7 +293,7 @@ fun OnboardingPageTwo(yellow: Color, red: Color, darkGreen: Color) {
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             "VetVision AI instantly analyzes visible symptoms, providing preliminary observations, severity markers, and immediate safe first-aid protocols while emergency responders are en route.",
-            fontSize = 14.sp, color = Color.DarkGray
+            fontSize = 14.sp, color = Color.Black
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -351,7 +351,7 @@ fun OnboardingPageThree(yellow: Color, red: Color, darkGreen: Color) {
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             "Behind this app sits an agile human frontline: everyday citizens, active field dispatchers, licensed veterinary trauma teams, and verified fosters united in real-time response.",
-            fontSize = 14.sp, color = Color.DarkGray
+            fontSize = 14.sp, color = Color.Black
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -381,7 +381,7 @@ fun OnboardingPageThree(yellow: Color, red: Color, darkGreen: Color) {
                     Text("100% PUBLIC VERIFIABILITY", fontSize = 14.sp, fontWeight = FontWeight.Black)
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Every rescue case receives a cryptographic public tracking ledger. Trace initial SOS telemetry down to clinic bills and final adoption updates.", fontSize = 12.sp, color = Color.DarkGray)
+                Text("Every rescue case receives a cryptographic public tracking ledger. Trace initial SOS telemetry down to clinic bills and final adoption updates.", fontSize = 12.sp, color = Color.Black)
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Box(modifier = Modifier.background(Color.White).border(1.dp, Color.Black).padding(horizontal = 6.dp, vertical = 2.dp)) {
@@ -424,7 +424,7 @@ fun PipelineStep(tag: String, title: String, desc: String, color: Color, emoji: 
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(title, fontSize = 16.sp, fontWeight = FontWeight.Black)
                 }
-                Text(desc, fontSize = 12.sp, color = Color.DarkGray)
+                Text(desc, fontSize = 12.sp, color = Color.Black)
             }
         }
     }

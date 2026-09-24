@@ -125,7 +125,7 @@ fun RegisterScreen(
             Column {
                 Text(
                     "BEZUBAAN OPS V2.4 // RECRUIT", 
-                    color = Color.DarkGray, 
+                    color = Color.Black, 
                     fontSize = 12.sp, 
                     fontWeight = FontWeight.Bold,
                     fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
@@ -195,7 +195,7 @@ fun RegisterScreen(
             value = name, 
             onValueChange = { name = it }, 
             label = "Aditi Sharma",
-            leadingIcon = { Icon(Icons.Default.Badge, contentDescription = null, tint = Color.DarkGray) }
+            leadingIcon = { Icon(Icons.Default.Badge, contentDescription = null, tint = Color.Black) }
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -212,7 +212,7 @@ fun RegisterScreen(
             value = email, 
             onValueChange = { email = it }, 
             label = "aditi.rescue@gmail.com",
-            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = Color.DarkGray) },
+            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = Color.Black) },
             trailingIcon = { 
                 if(email.isNotEmpty()) {
                     Box(modifier = Modifier.background(lightGreen).border(1.dp, Color.Black).padding(horizontal = 6.dp, vertical = 2.dp)) {
@@ -236,7 +236,7 @@ fun RegisterScreen(
             value = password, 
             onValueChange = { password = it }, 
             label = "••••••••••••",
-            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = Color.DarkGray) }
+            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = Color.Black) }
         )
 
         // Strength Meter

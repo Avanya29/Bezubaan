@@ -23,6 +23,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.clickable
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.content.Context
+import android.util.Base64
+import androidx.compose.ui.platform.LocalContext
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import java.io.ByteArrayOutputStream
 
 val bgOffWhite = Color(0xFFF9F9F9)
 val yellow = Color(0xFFE2F163)
@@ -36,7 +48,11 @@ val thickBorder = 3.dp
 @Composable
 fun AiChatScreen(
     onBack: () -> Unit,
+    viewModel: AiViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -50,14 +66,66 @@ fun AiChatScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             item { SessionBadge() }
-            item { UserMessage(text = "I found an injured dog.", time = "14:22") }
-            item { TriageEngineMessage() }
-            item { UserMessageWithImage(text = "He is shivering and holding his back leg up. Not aggressive but whining.", time = "14:24") }
-            item { MultimodalObservationMessage() }
-            item { Spacer(modifier = Modifier.height(16.dp)) }
+            
+            items(uiState.chatMessages.size) { index ->
+                val msg = uiState.chatMessages[index]
+                if (msg.isUser) {
+                    if (msg.imageUrl != null) {
+                        UserMessageWithImage(text = msg.text, imageUrl = msg.imageUrl, time = "Now")
+                    } else {
+                        UserMessage(text = msg.text, time = "Now")
+                    }
+                } else {
+                    AiMessage(text = msg.text)
+                }
+            }
+            
+            if (uiState.isLoading) {
+                item {
+                    Text("AI is typing...", color = Color.Black, fontSize = 12.sp, modifier = Modifier.padding(8.dp))
+                }
+            }
         }
         
-        BottomInputArea()
+        BottomInputArea(
+            onSend = { text -> viewModel.sendMessage(text) },
+            onImageSelect = { uri -> 
+                val base64 = uriToBase64(context, uri)
+                if (base64 != null) {
+                    val dataUri = "data:image/jpeg;base64,$base64"
+                    viewModel.analyzeImage(uri.toString(), dataUri)
+                }
+            }
+        )
+    }
+}
+
+private fun uriToBase64(context: Context, uri: Uri): String? {
+    return try {
+        val inputStream = context.contentResolver.openInputStream(uri)
+        val bitmap = BitmapFactory.decodeStream(inputStream)
+        inputStream?.close()
+        
+        if (bitmap == null) return null
+        
+        // Scale down to max 1024px to keep base64 string small
+        val maxDim = 1024f
+        val scale = Math.min(maxDim / bitmap.width, maxDim / bitmap.height)
+        
+        val scaledBitmap = if (scale < 1f) {
+            Bitmap.createScaledBitmap(bitmap, (bitmap.width * scale).toInt(), (bitmap.height * scale).toInt(), true)
+        } else {
+            bitmap
+        }
+        
+        val outputStream = ByteArrayOutputStream()
+        // Compress to JPEG with 80% quality
+        scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+        val bytes = outputStream.toByteArray()
+        
+        Base64.encodeToString(bytes, Base64.NO_WRAP)
+    } catch (e: Exception) {
+        null
     }
 }
 
@@ -83,7 +151,7 @@ private fun TopHeader() {
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
-                    Text("BEZUBAAN", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                    Text("BEZUBAAN", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                     Text("VETVISION AI", fontSize = 16.sp, fontWeight = FontWeight.Black)
                 }
             }
@@ -125,7 +193,7 @@ private fun TopHeader() {
                 }
             }
             Spacer(modifier = Modifier.height(4.dp))
-            Text("MODEL: VETVISION-2.4B MULTIMODAL", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.DarkGray, fontFamily = FontFamily.Monospace)
+            Text("MODEL: VETVISION-2.4B MULTIMODAL", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.Black, fontFamily = FontFamily.Monospace)
             Spacer(modifier = Modifier.height(8.dp))
             Box(
                 modifier = Modifier
@@ -165,7 +233,7 @@ private fun SessionBadge() {
 @Composable
 private fun UserMessage(text: String, time: String) {
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {
-        Text("YOU // ADITI (CITIZEN)", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
+        Text("YOU // ADITI (CITIZEN)", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.Black)
         Spacer(modifier = Modifier.height(4.dp))
         Box(
             modifier = Modifier
@@ -178,9 +246,9 @@ private fun UserMessage(text: String, time: String) {
                 Text(text, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(modifier = Modifier.align(Alignment.End), verticalAlignment = Alignment.CenterVertically) {
-                    Text(time, fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
+                    Text(time, fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.Black)
                     Spacer(modifier = Modifier.width(4.dp))
-                    Icon(Icons.Default.DoneAll, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color.DarkGray)
+                    Icon(Icons.Default.DoneAll, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color.Black)
                 }
             }
         }
@@ -188,9 +256,9 @@ private fun UserMessage(text: String, time: String) {
 }
 
 @Composable
-private fun UserMessageWithImage(text: String, time: String) {
+private fun UserMessageWithImage(text: String, imageUrl: String, time: String) {
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {
-        Text("YOU // ADITI (CITIZEN)", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
+        Text("YOU // ADITI (CITIZEN)", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.Black)
         Spacer(modifier = Modifier.height(4.dp))
         Box(
             modifier = Modifier
@@ -207,7 +275,7 @@ private fun UserMessageWithImage(text: String, time: String) {
                         .border(1.dp, Color.Black)
                 ) {
                     AsyncImage(
-                        model = "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=400&q=80",
+                        model = imageUrl,
                         contentDescription = "Injured Dog",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
@@ -226,9 +294,9 @@ private fun UserMessageWithImage(text: String, time: String) {
                 Text(text, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(modifier = Modifier.align(Alignment.End), verticalAlignment = Alignment.CenterVertically) {
-                    Text(time, fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
+                    Text(time, fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.Black)
                     Spacer(modifier = Modifier.width(4.dp))
-                    Icon(Icons.Default.DoneAll, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color.DarkGray)
+                    Icon(Icons.Default.DoneAll, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color.Black)
                 }
             }
         }
@@ -236,7 +304,7 @@ private fun UserMessageWithImage(text: String, time: String) {
 }
 
 @Composable
-private fun TriageEngineMessage() {
+private fun AiMessage(text: String) {
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.SmartToy, contentDescription = null, modifier = Modifier.size(12.dp), tint = darkGreen)
@@ -247,69 +315,16 @@ private fun TriageEngineMessage() {
         Box(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
-                .shadow(4.dp, androidx.compose.foundation.shape.RoundedCornerShape(0.dp))
-                .background(yellow)
-                .border(thickBorder, Color.Black)
-                .padding(12.dp)
+                .background(Color.White)
+                .border(2.dp, Color.Black)
+                .padding(16.dp)
         ) {
-            Column {
-                Box(
-                    modifier = Modifier.background(Color.White).border(2.dp, Color.Black).padding(16.dp)
-                ) {
-                    Text(
-                        "\"I can help you understand visible signs and suggest safe next steps. I cannot provide a veterinary diagnosis.\"",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        lineHeight = 18.sp
-                    )
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                Box(
-                    modifier = Modifier.background(bgOffWhite).border(2.dp, Color.Black).padding(16.dp)
-                ) {
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Shield, contentDescription = null, tint = redAlert, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("IMMEDIATE SAFETY RULES:", fontSize = 11.sp, fontWeight = FontWeight.Black)
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-                        RuleItem("1", "Keep safe distance — distressed or injured animals may bite from fear.")
-                        Spacer(modifier = Modifier.height(8.dp))
-                        RuleItem("2", "Do not offer food or water if shock or internal trauma is suspected.")
-                        Spacer(modifier = Modifier.height(8.dp))
-                        RuleItem("3", "Snap a clear photo of the injury and posture for real-time AI assessment.")
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
-                        onClick = { },
-                        modifier = Modifier.weight(1f).height(40.dp).border(2.dp, Color.Black),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(0.dp),
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(14.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("ANALYZE PHOTO WITH AI", fontSize = 9.sp, fontWeight = FontWeight.Black)
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ActionButton("CANINE POSTURE GUIDE", Modifier.weight(1f))
-                    ActionButton("⚠ SEVERE BLEEDING?", Modifier.weight(1f), textColor = redAlert, bgColor = lightPink)
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ActionButton("★ CALL AMBULANCE", Modifier.weight(1f), textColor = yellow, bgColor = darkGreen)
-                }
-            }
+            Text(text, fontSize = 14.sp, fontWeight = FontWeight.Medium)
         }
     }
 }
+
+
 
 @Composable
 private fun RuleItem(number: String, text: String) {
@@ -386,7 +401,7 @@ private fun MultimodalObservationMessage() {
                 
                 Spacer(modifier = Modifier.height(24.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
-                    Text("TRIAGED AT 14:24:41\nIST", fontSize = 8.sp, fontWeight = FontWeight.Black, color = Color.DarkGray, lineHeight = 10.sp)
+                    Text("TRIAGED AT 14:24:41\nIST", fontSize = 8.sp, fontWeight = FontWeight.Black, color = Color.Black, lineHeight = 10.sp)
                     Button(
                         onClick = { },
                         modifier = Modifier.height(48.dp).border(thickBorder, Color.Black),
@@ -432,7 +447,15 @@ private fun ObservationBlock(
 }
 
 @Composable
-private fun BottomInputArea() {
+private fun BottomInputArea(onSend: (String) -> Unit, onImageSelect: (Uri) -> Unit) {
+    var text by remember { mutableStateOf("") }
+    
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { onImageSelect(it) }
+    }
+
     Column(modifier = Modifier.fillMaxWidth().background(bgOffWhite)) {
         HorizontalDivider(thickness = thickBorder, color = Color.Black)
         
@@ -441,9 +464,9 @@ private fun BottomInputArea() {
             modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            item { SuggestionChip("🩸 HEAVY BLEEDING") }
-            item { SuggestionChip("🚕 VEHICLE HIT") }
-            item { SuggestionChip("🐶 PUPPY / HYPOTHERMIA") }
+            item { SuggestionChip("🩸 HEAVY BLEEDING", onClick = { text = "Heavy Bleeding" }) }
+            item { SuggestionChip("🚕 VEHICLE HIT", onClick = { text = "Vehicle Hit" }) }
+            item { SuggestionChip("🐶 PUPPY / HYPOTHERMIA", onClick = { text = "Puppy / Hypothermia" }) }
         }
         
         // Input Bar
@@ -455,10 +478,20 @@ private fun BottomInputArea() {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Box(modifier = Modifier.border(2.dp, Color.Black).padding(10.dp).background(Color.White)) {
+            Box(modifier = Modifier
+                .border(2.dp, Color.Black)
+                .clickable { /* Camera logic usually needs a temp file URI, just using gallery for now */ galleryLauncher.launch("image/*") }
+                .padding(10.dp)
+                .background(Color.White)
+            ) {
                 Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(20.dp))
             }
-            Box(modifier = Modifier.border(2.dp, Color.Black).padding(10.dp).background(Color.White)) {
+            Box(modifier = Modifier
+                .border(2.dp, Color.Black)
+                .clickable { galleryLauncher.launch("image/*") }
+                .padding(10.dp)
+                .background(Color.White)
+            ) {
                 Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(20.dp))
             }
             Box(
@@ -468,12 +501,26 @@ private fun BottomInputArea() {
                     .border(2.dp, Color.Black)
                     .padding(12.dp)
             ) {
-                Text("Describe what you see...", fontSize = 12.sp, color = Color.DarkGray)
+                if (text.isEmpty()) {
+                    Text("Describe what you see...", fontSize = 12.sp, color = Color.Black)
+                }
+                BasicTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp, color = Color.Black)
+                )
             }
             Box(
                 modifier = Modifier
                     .background(yellow)
                     .border(2.dp, Color.Black)
+                    .clickable { 
+                        if (text.isNotBlank()) {
+                            onSend(text)
+                            text = ""
+                        }
+                    }
                     .padding(12.dp)
             ) {
                 Icon(Icons.Default.Send, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.Black)
@@ -483,11 +530,12 @@ private fun BottomInputArea() {
 }
 
 @Composable
-private fun SuggestionChip(text: String) {
+private fun SuggestionChip(text: String, onClick: () -> Unit = {}) {
     Box(
         modifier = Modifier
             .background(Color.White)
             .border(2.dp, Color.Black)
+            .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         Text(text, fontSize = 9.sp, fontWeight = FontWeight.Black)

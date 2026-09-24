@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 // --- Top Level Graphs ---
 @Serializable data object AuthGraph
 @Serializable data object MainGraph
+@Serializable data object RescueFlowGraph
 
 // --- Auth Routes ---
 @Serializable data object SplashRoute
@@ -28,6 +29,8 @@ import kotlinx.serialization.Serializable
 @Serializable data object RescueAnimalDetailsRoute
 @Serializable data object RescueAnimalLocationRoute
 @Serializable data object RescueReportSentRoute
+@Serializable data object RescueCaseDetailsRoute
+@Serializable data object RescueTimelineRoute
 
 @Serializable data object CommunityFeedRoute
 @Serializable data object CommunityFollowingRoute

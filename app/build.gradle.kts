@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -20,10 +22,18 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
-        buildConfigField("String", "API_BASE_URL", "\"https://bezubaan-api.onrender.com/api/v1/\"")
-        buildConfigField("String", "MAPS_API_KEY", "\"\"")
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localProperties.load(localPropertiesFile.inputStream())
+        }
+        val mapsApiKey = localProperties.getProperty("MAPS_API_KEY") ?: ""
+
+        buildConfigField("String", "API_BASE_URL", "\"https://bezubaan-api.onrender.com/api/\"")
+        buildConfigField("String", "AI_BASE_URL", "\"https://bezubaan-ai.onrender.com/\"")
+        buildConfigField("String", "MAPS_API_KEY", "\"$mapsApiKey\"")
         
-        manifestPlaceholders["mapsApiKey"] = ""
+        manifestPlaceholders["mapsApiKey"] = mapsApiKey
     }
 
     buildFeatures {
@@ -102,8 +112,14 @@ dependencies {
 
     implementation(libs.maps.compose)
     implementation(libs.places)
+    implementation("com.google.android.gms:play-services-location:21.1.0")
 
     implementation("io.socket:socket.io-client:2.1.0")
+
+    // Google Sign-In (Credential Manager)
+    implementation("androidx.credentials:credentials:1.5.0-rc01")
+    implementation("androidx.credentials:credentials-play-services-auth:1.5.0-rc01")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

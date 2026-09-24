@@ -8,5 +8,7 @@ import com.bezubaan.app.feature.auth.domain.model.User
 interface AuthRepository {
     suspend fun login(request: LoginRequest): Resource<User>
     suspend fun register(request: RegisterRequest): Resource<User>
+    suspend fun googleSignIn(idToken: String): Resource<User>
+    suspend fun getProfile(): Resource<User>
     suspend fun logout()
 }

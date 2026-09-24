@@ -6,11 +6,11 @@ import com.bezubaan.app.feature.community.domain.repository.CommunityRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-class GetPostsUseCase @Inject constructor(
+class GetFeedUseCase @Inject constructor(
     private val repository: CommunityRepository
 ) {
     operator fun invoke(): Flow<Resource<List<Post>>> {
-        return repository.getPosts()
+        return repository.getFeed()
     }
 }
 
@@ -22,7 +22,35 @@ class CreatePostUseCase @Inject constructor(
     }
 }
 
+class LikePostUseCase @Inject constructor(
+    private val repository: CommunityRepository
+) {
+    operator fun invoke(postId: String): Flow<Resource<Unit>> = repository.likePost(postId)
+}
+
+class UnlikePostUseCase @Inject constructor(
+    private val repository: CommunityRepository
+) {
+    operator fun invoke(postId: String): Flow<Resource<Unit>> = repository.unlikePost(postId)
+}
+
+class GetCommentsUseCase @Inject constructor(
+    private val repository: CommunityRepository
+) {
+    operator fun invoke(postId: String): Flow<Resource<List<com.bezubaan.app.feature.community.domain.model.Comment>>> = repository.getComments(postId)
+}
+
+class CreateCommentUseCase @Inject constructor(
+    private val repository: CommunityRepository
+) {
+    operator fun invoke(postId: String, content: String): Flow<Resource<com.bezubaan.app.feature.community.domain.model.Comment>> = repository.createComment(postId, content)
+}
+
 data class CommunityUseCases(
-    val getPosts: GetPostsUseCase,
-    val createPost: CreatePostUseCase
+    val getFeed: GetFeedUseCase,
+    val createPost: CreatePostUseCase,
+    val likePost: LikePostUseCase,
+    val unlikePost: UnlikePostUseCase,
+    val getComments: GetCommentsUseCase,
+    val createComment: CreateCommentUseCase
 )

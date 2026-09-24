@@ -39,16 +39,43 @@ val thickBorder = 3.dp
 fun HomeScreen(
     onNavigateToReport: () -> Unit,
     onNavigateToDetails: (String) -> Unit,
+    onNavigateToProfile: () -> Unit = {},
+    onNavigateToNotifications: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    val locationPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                      permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (granted) {
+            viewModel.fetchLocation()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        locationPermissionLauncher.launch(
+            arrayOf(
+                android.Manifest.permission.ACCESS_FINE_LOCATION,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        )
+        // Also attempt to fetch in case permissions were already granted
+        viewModel.fetchLocation()
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(bgGray)
     ) {
-        TopBar()
+        TopBar(
+            locationName = uiState.locationName,
+            onProfileClick = onNavigateToProfile,
+            onNotificationsClick = onNavigateToNotifications
+        )
         LiveTicker()
 
         LazyColumn(
@@ -56,7 +83,7 @@ fun HomeScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            item { NamasteCard() }
+            item { NamasteCard(userName = uiState.userName) }
             item { PrimaryCalloutCard(onNavigateToReport) }
             item { QuickActionGrid() }
             item { ActiveRescueSection() }
@@ -69,7 +96,11 @@ fun HomeScreen(
 }
 
 @Composable
-fun TopBar() {
+fun TopBar(
+    locationName: String,
+    onProfileClick: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {}
+) {
     Column(modifier = Modifier.fillMaxWidth().background(Color.White)) {
         Row(
             modifier = Modifier
@@ -89,7 +120,7 @@ fun TopBar() {
             }
             Spacer(modifier = Modifier.width(8.dp))
             Column {
-                Text("INDIRANAGAR, BENGALURU", fontSize = 9.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
+                Text(locationName.ifEmpty { "LOCATING..." }, fontSize = 9.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
                 Text("Home", fontSize = 20.sp, fontWeight = FontWeight.Black)
             }
         }
@@ -97,6 +128,8 @@ fun TopBar() {
             Box(
                 modifier = Modifier
                     .size(40.dp)
+                    .clip(CircleShape)
+                    .clickable { onNotificationsClick() }
                     .background(Color.White, CircleShape)
                     .border(2.dp, Color.Black, CircleShape),
                 contentAlignment = Alignment.Center
@@ -115,13 +148,16 @@ fun TopBar() {
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .border(2.dp, Color.Black, CircleShape)
+                    .clickable { onProfileClick() }
+                    .background(Color.LightGray, CircleShape)
+                    .border(2.dp, Color.Black, CircleShape),
+                contentAlignment = Alignment.Center
             ) {
-                AsyncImage(
-                    model = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80",
+                Icon(
+                    Icons.Default.Person,
                     contentDescription = "Profile",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                    modifier = Modifier.size(26.dp),
+                    tint = Color.DarkGray
                 )
             }
         }
@@ -159,7 +195,8 @@ fun LiveTicker() {
 }
 
 @Composable
-fun NamasteCard() {
+fun NamasteCard(userName: String) {
+    val displayName = if (userName.isNotBlank()) userName.uppercase() else "CITIZEN"
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -168,7 +205,7 @@ fun NamasteCard() {
             .padding(16.dp)
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("NAMASTE, ADITI 👋", fontSize = 16.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
+            Text("NAMASTE, $displayName \uD83D\uDC4B", fontSize = 16.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
             Box(
                 modifier = Modifier
                     .background(mintGreen, RoundedCornerShape(4.dp))
@@ -183,11 +220,11 @@ fun NamasteCard() {
         Spacer(modifier = Modifier.height(12.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Column {
-                Text("COVERAGE AREA", fontSize = 9.sp, color = Color.DarkGray, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                Text("COVERAGE AREA", fontSize = 9.sp, color = Color.Black, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
                 Text("Indiranagar, Bengaluru (1.2 km radius)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text("SECTOR", fontSize = 9.sp, color = Color.DarkGray, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                Text("SECTOR", fontSize = 9.sp, color = Color.Black, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
                 Text("GRID #04-E", fontSize = 12.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
             }
         }
@@ -291,7 +328,7 @@ fun QuickActionCard(title: String, subtitle: String, icon: ImageVector, modifier
             Spacer(modifier = Modifier.height(12.dp))
             Text(title, fontSize = 12.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(subtitle, fontSize = 10.sp, color = Color.DarkGray)
+            Text(subtitle, fontSize = 10.sp, color = Color.Black)
         }
     }
 }
@@ -366,7 +403,7 @@ fun ActiveRescueSection() {
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text("Ambulance En Route (~6 mins away)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    Text("Lead Paramedic: Vikram S. • Mobile Trauma Kit #02", fontSize = 10.sp, color = Color.DarkGray)
+                    Text("Lead Paramedic: Vikram S. • Mobile Trauma Kit #02", fontSize = 10.sp, color = Color.Black)
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -390,7 +427,7 @@ fun NearbyRescuesSection(cases: List<RescueCase>, onNavigateToDetails: (String) 
     Column {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text("NEARBY RESCUES (4 WITHIN 3 KM)", fontSize = 12.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
-            Text("VIEW MAP ➔", fontSize = 10.sp, fontWeight = FontWeight.Bold, textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline, color = Color.DarkGray)
+            Text("VIEW MAP ➔", fontSize = 10.sp, fontWeight = FontWeight.Bold, textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline, color = Color.Black)
         }
         Spacer(modifier = Modifier.height(12.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -430,7 +467,7 @@ fun NearbyRescuesSection(cases: List<RescueCase>, onNavigateToDetails: (String) 
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text("INDIE PUPPY W/ FRACTURED PAW", fontSize = 12.sp, fontWeight = FontWeight.Black)
-                    Text("100ft Rd, Indiranagar • 800m away", fontSize = 10.sp, color = Color.DarkGray)
+                    Text("100ft Rd, Indiranagar • 800m away", fontSize = 10.sp, color = Color.Black)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text("Dr. Rekha V. • STABLE", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = darkGreen)
                 }
@@ -460,7 +497,7 @@ fun NearbyRescuesSection(cases: List<RescueCase>, onNavigateToDetails: (String) 
                     Text("P3 STABLE", fontSize = 8.sp, fontWeight = FontWeight.Black)
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Domlur Flyover Underpass • 1.9 km away", fontSize = 10.sp, color = Color.DarkGray)
+                Text("Domlur Flyover Underpass • 1.9 km away", fontSize = 10.sp, color = Color.Black)
             }
             Spacer(modifier = Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -547,7 +584,7 @@ fun RescueStoriesSection() {
                 Text(
                     "Rescued off Old Airport Road with a broken pelvic joint. 42 days of citizen-funded hydrotherapy and love restored Sheru to full sprints.",
                     fontSize = 12.sp,
-                    color = Color.DarkGray,
+                    color = Color.Black,
                     lineHeight = 18.sp
                 )
                 Spacer(modifier = Modifier.height(16.dp))

@@ -96,7 +96,7 @@ fun RescueTrackingScreen(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text("Aakash Verma", fontSize = 16.sp, fontWeight = FontWeight.Black)
-                                Text("CERTIFIED RESPONDER", fontSize = 10.sp, color = Color.DarkGray, fontWeight = FontWeight.Bold)
+                                Text("CERTIFIED RESPONDER", fontSize = 10.sp, color = Color.Black, fontWeight = FontWeight.Bold)
                             }
                         }
                         Box(modifier = Modifier.background(yellowBtn).padding(horizontal = 8.dp, vertical = 4.dp).border(1.dp, Color.Black)) {
@@ -167,7 +167,7 @@ private fun TimelineItem(title: String, time: String, isComplete: Boolean, isLas
         Spacer(modifier = Modifier.width(16.dp))
         Column {
             Text(title, fontSize = 14.sp, fontWeight = FontWeight.Black)
-            Text(time, fontSize = 10.sp, color = Color.DarkGray, fontWeight = FontWeight.Bold)
+            Text(time, fontSize = 10.sp, color = Color.Black, fontWeight = FontWeight.Bold)
         }
     }
 }

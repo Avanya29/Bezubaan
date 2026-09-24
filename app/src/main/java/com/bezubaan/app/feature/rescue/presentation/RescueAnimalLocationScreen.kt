@@ -3,6 +3,7 @@ package com.bezubaan.app.feature.rescue.presentation
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -27,9 +28,37 @@ import coil3.compose.AsyncImage
 
 @Composable
 fun RescueAnimalLocationScreen(
+    sharedViewModel: com.bezubaan.app.feature.rescue.presentation.SharedRescueViewModel,
     onBack: () -> Unit,
     onContinue: () -> Unit
 ) {
+    val state by sharedViewModel.state.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    
+    val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        if (permissions.getOrDefault(android.Manifest.permission.ACCESS_FINE_LOCATION, false) ||
+            permissions.getOrDefault(android.Manifest.permission.ACCESS_COARSE_LOCATION, false)
+        ) {
+            sharedViewModel.fetchCurrentLocation()
+        } else {
+            android.widget.Toast.makeText(context, "Location permission required", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    LaunchedEffect(state.successCase) {
+        if (state.successCase != null) {
+            onContinue()
+        }
+    }
+    
+    LaunchedEffect(state.error) {
+        if (state.error != null) {
+            android.widget.Toast.makeText(context, state.error, android.widget.Toast.LENGTH_LONG).show()
+        }
+    }
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -42,17 +71,34 @@ fun RescueAnimalLocationScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            item { StepTelemetry() }
+            item { StepTelemetry(isGpsSynced = state.latitude != null) }
             item { ScreenHeadline() }
-            item { LocationInputActions() }
-            item { MapVisualizer() }
-            item { ConfirmedAddressCard() }
+            item { 
+                LocationInputActions(
+                    address = state.address ?: "",
+                    onUseGps = {
+                        permissionLauncher.launch(
+                            arrayOf(
+                                android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                android.Manifest.permission.ACCESS_COARSE_LOCATION
+                            )
+                        )
+                    },
+                    onAddressChange = { sharedViewModel.updateLocation(state.latitude ?: 0.0, state.longitude ?: 0.0, it) }
+                ) 
+            }
+            item { MapVisualizer(state.latitude, state.longitude) }
+            item { ConfirmedAddressCard(state.latitude, state.longitude, state.address) }
             item { PrivacyGuarantee() }
             
             item { Spacer(modifier = Modifier.height(24.dp)) }
         }
         
-        BottomNavigationBar(onBack, onContinue)
+        BottomNavigationBar(
+            isLoading = state.isLoading,
+            onBack = onBack, 
+            onContinue = { sharedViewModel.submitRescue() }
+        )
     }
 }
 
@@ -78,7 +124,7 @@ private fun TopHeader() {
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
-                    Text("BEZUBAAN", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                    Text("BEZUBAAN", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                     Text("VETVISION AI TRIAGE", fontSize = 16.sp, fontWeight = FontWeight.Black)
                 }
             }
@@ -104,7 +150,7 @@ private fun TopHeader() {
 }
 
 @Composable
-private fun StepTelemetry() {
+private fun StepTelemetry(isGpsSynced: Boolean = false) {
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Row(
@@ -126,8 +172,8 @@ private fun StepTelemetry() {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Box(modifier = Modifier.size(8.dp).background(Color(0xFFC5AB00), CircleShape))
-                Text("CASE #BZ-804 • GPS SYNCED", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF414942))
+                Box(modifier = Modifier.size(8.dp).background(if (isGpsSynced) Color(0xFF00C853) else Color(0xFFC5AB00), CircleShape))
+                Text(if (isGpsSynced) "CASE #BZ-804 • GPS SYNCED" else "CASE #BZ-804 • LOCATION PENDING", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF414942))
             }
         }
         
@@ -192,7 +238,7 @@ private fun ScreenHeadline() {
 }
 
 @Composable
-private fun LocationInputActions() {
+private fun LocationInputActions(address: String, onUseGps: () -> Unit, onAddressChange: (String) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // GPS Button
         Row(
@@ -201,6 +247,7 @@ private fun LocationInputActions() {
                 .shadow(4.dp, androidx.compose.foundation.shape.RoundedCornerShape(0.dp))
                 .background(Color(0xFFFFE24E))
                 .border(3.dp, Color.Black)
+                .clickable(onClick = onUseGps)
                 .padding(19.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -226,27 +273,35 @@ private fun LocationInputActions() {
         }
         
         // Search Input
-        Row(
+        OutlinedTextField(
+            value = address,
+            onValueChange = onAddressChange,
             modifier = Modifier
                 .fillMaxWidth()
                 .shadow(3.dp, androidx.compose.foundation.shape.RoundedCornerShape(0.dp))
-                .background(Color.White)
-                .border(3.dp, Color.Black)
-                .padding(horizontal = 12.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.Default.Search, contentDescription = null, tint = Color.Black)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Connaught Place, Block C, Outer Circle", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF1C1B1B), modifier = Modifier.weight(1f))
-            Box(modifier = Modifier.background(Color(0xFFEBE7E7)).border(1.dp, Color.Black).padding(4.dp)) {
-                Icon(Icons.Default.Close, contentDescription = "Clear", modifier = Modifier.size(16.dp))
-            }
-        }
+                .background(Color.White),
+            placeholder = { Text("Search location or drop pin...", color = Color.Gray, fontSize = 14.sp) },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color.Black) },
+            trailingIcon = { 
+                if (address.isNotEmpty()) {
+                    Box(modifier = Modifier.background(Color(0xFFEBE7E7)).border(1.dp, Color.Black).clickable { onAddressChange("") }.padding(4.dp)) {
+                        Icon(Icons.Default.Close, contentDescription = "Clear", modifier = Modifier.size(16.dp))
+                    }
+                }
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.Black,
+                unfocusedBorderColor = Color.Black,
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+            ),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(0.dp)
+        )
     }
 }
 
 @Composable
-private fun MapVisualizer() {
+private fun MapVisualizer(latitude: Double?, longitude: Double?) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -277,7 +332,7 @@ private fun MapVisualizer() {
                     .align(Alignment.Center)
                     .size(44.dp)
                     .shadow(3.dp, CircleShape)
-                    .background(Color(0xFFFFE24E), CircleShape)
+                    .background(if (latitude != null) Color(0xFFFFE24E) else Color.LightGray, CircleShape)
                     .border(3.dp, Color.Black, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
@@ -290,19 +345,24 @@ private fun MapVisualizer() {
             }
             
             // Coordinate Tag
-            Box(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .offset(y = (-30).dp)
-                    .shadow(2.dp, androidx.compose.foundation.shape.RoundedCornerShape(0.dp))
-                    .background(Color(0xFF002210))
-                    .border(2.dp, Color.Black)
-                    .padding(horizontal = 10.dp, vertical = 4.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Pets, contentDescription = null, tint = Color(0xFFFFE24E), modifier = Modifier.size(12.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("28.6139° N, 77.2090° E", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFFFFE24E))
+            if (latitude != null && longitude != null) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .offset(y = (-30).dp)
+                        .shadow(2.dp, androidx.compose.foundation.shape.RoundedCornerShape(0.dp))
+                        .background(Color(0xFF002210))
+                        .border(2.dp, Color.Black)
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Pets, contentDescription = null, tint = Color(0xFFFFE24E), modifier = Modifier.size(12.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            "${String.format("%.4f", latitude)}° N, ${String.format("%.4f", longitude)}° E",
+                            fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFFFFE24E)
+                        )
+                    }
                 }
             }
         }
@@ -371,7 +431,7 @@ private fun MapControlButton(icon: androidx.compose.ui.graphics.vector.ImageVect
 }
 
 @Composable
-private fun ConfirmedAddressCard() {
+private fun ConfirmedAddressCard(latitude: Double?, longitude: Double?, address: String?) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -407,7 +467,7 @@ private fun ConfirmedAddressCard() {
                 Spacer(modifier = Modifier.width(8.dp))
                 Column {
                     Text(
-                        "Behind Sharma Tea Stall, Outer Circle", 
+                        address?.split(",")?.firstOrNull()?.takeIf { it.isNotBlank() } ?: "Location Pending", 
                         fontSize = 18.sp, 
                         fontWeight = FontWeight.Black, 
                         color = Color(0xFF002210),
@@ -415,7 +475,7 @@ private fun ConfirmedAddressCard() {
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        "Connaught Place Block C, New Delhi, Delhi 110001",
+                        address ?: "Please sync your GPS or search for a location above to confirm where the animal is.",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color(0xFF414942)
@@ -423,22 +483,22 @@ private fun ConfirmedAddressCard() {
                 }
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Geocode Pills
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFEBE7E7))
-                    .border(2.dp, Color.Black)
-                    .padding(10.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Text("LAT: 28.613904", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF002210))
-                Text("|", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF727972))
-                Text("LNG: 77.209021", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF002210))
-                Text("|", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF727972))
-                Text("ELEV: 216M", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF002210))
+            if (latitude != null && longitude != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Geocode Pills
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFEBE7E7))
+                        .border(2.dp, Color.Black)
+                        .padding(10.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Text("LAT: ${String.format("%.6f", latitude)}", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF002210))
+                    Text("|", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF727972))
+                    Text("LNG: ${String.format("%.6f", longitude)}", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF002210))
+                }
             }
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -460,7 +520,7 @@ private fun ConfirmedAddressCard() {
                         .padding(8.dp)
                 ) {
                     Text(
-                        "Near Metro Gate #4, tucked in alley behind the blue tea kiosk. Scooter or foot access recommended; ambulance van must park at Outer Circle perimeter.",
+                        "Please describe any access restrictions or landmarks in the details step. Rescue van must know exact approach.",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF1C1B1B)
@@ -513,7 +573,7 @@ private fun PrivacyGuarantee() {
 }
 
 @Composable
-private fun BottomNavigationBar(onBack: () -> Unit, onContinue: () -> Unit) {
+private fun BottomNavigationBar(isLoading: Boolean, onBack: () -> Unit, onContinue: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -543,17 +603,29 @@ private fun BottomNavigationBar(onBack: () -> Unit, onContinue: () -> Unit) {
             
             Button(
                 onClick = onContinue,
+                enabled = !isLoading,
                 modifier = Modifier
                     .weight(0.65f)
                     .height(56.dp)
                     .shadow(5.dp, androidx.compose.foundation.shape.RoundedCornerShape(0.dp))
                     .border(3.dp, Color.Black),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFE24E), contentColor = Color(0xFF211B00)),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFFE24E), 
+                    contentColor = Color(0xFF211B00),
+                    disabledContainerColor = Color.LightGray,
+                    disabledContentColor = Color.DarkGray
+                ),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(0.dp)
             ) {
-                Text("CONFIRM LOCATION", fontSize = 18.sp, fontWeight = FontWeight.Black)
-                Spacer(modifier = Modifier.width(8.dp))
-                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(20.dp))
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.Black, strokeWidth = 2.dp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("SUBMITTING...", fontSize = 16.sp, fontWeight = FontWeight.Black)
+                } else {
+                    Text("CONFIRM & DISPATCH", fontSize = 16.sp, fontWeight = FontWeight.Black)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(20.dp))
+                }
             }
         }
         

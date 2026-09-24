@@ -1,5 +1,7 @@
 package com.bezubaan.app.feature.auth.presentation
 
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.Image
@@ -23,8 +25,11 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(
-    onNavigateToNext: () -> Unit
+    onNavigateToNext: () -> Unit,
+    onNavigateToHome: () -> Unit,
+    viewModel: AuthViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var progress by remember { mutableFloatStateOf(0f) }
 
     LaunchedEffect(Unit) {
@@ -37,7 +42,17 @@ fun SplashScreen(
         }
         progress = 1f
         delay(300)
-        onNavigateToNext()
+        
+        // Wait until auth check is complete if it hasn't already
+        while(!uiState.isAuthCheckComplete) {
+            delay(50)
+        }
+        
+        if (uiState.isAuthenticated) {
+            onNavigateToHome()
+        } else {
+            onNavigateToNext()
+        }
     }
 
     val brutalYellow = Color(0xFFFFD54F)
@@ -156,7 +171,7 @@ fun SplashScreen(
             text = "For the voiceless, with courage, precision\n& urgent care.",
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.DarkGray
+            color = Color.Black
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -176,8 +191,8 @@ fun SplashScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("INITIALIZING TELEMETRY", fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.DarkGray)
-            Text(if(progress >= 1f) "READY" else "${(progress*100).toInt()}%", fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.DarkGray)
+            Text("INITIALIZING TELEMETRY", fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.Black)
+            Text(if(progress >= 1f) "READY" else "${(progress*100).toInt()}%", fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.Black)
         }
         Spacer(modifier = Modifier.height(4.dp))
         Box(
@@ -202,7 +217,7 @@ fun SplashScreen(
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
             Box(modifier = Modifier.size(6.dp).background(brutalYellow).border(1.dp, Color.Black))
             Spacer(modifier = Modifier.width(6.dp))
-            Text("BEZUBAAN FOUNDATION • BENGALURU", fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.DarkGray)
+            Text("BEZUBAAN FOUNDATION • BENGALURU", fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.Black)
             Spacer(modifier = Modifier.width(6.dp))
             Box(modifier = Modifier.size(6.dp).background(brutalRed).border(1.dp, Color.Black))
         }

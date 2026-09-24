@@ -8,7 +8,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 
 @Composable
 fun BezubaanTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = false, // Forced to false to maintain neo-brutalist aesthetics
     content: @Composable () -> Unit
 ) {
     val colors = if (darkTheme) darkBezubaanColors else lightBezubaanColors

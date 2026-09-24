@@ -13,6 +13,9 @@ interface AuthApi {
     @POST("auth/forgot-password")
     suspend fun forgotPassword(@Body request: ForgotPasswordRequest): retrofit2.Response<Unit>
 
+    @POST("auth/google/token")
+    suspend fun googleSignIn(@Body request: GoogleSignInRequest): retrofit2.Response<LoginResponse>
+
     @retrofit2.http.GET("users/me")
     suspend fun getProfile(): retrofit2.Response<UserDto>
 }

@@ -124,7 +124,7 @@ private fun TopBar() {
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
-                    Text("BEZUBAAN", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                    Text("BEZUBAAN", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                     Text("RESCUE", fontSize = 16.sp, fontWeight = FontWeight.Black)
                 }
             }
@@ -158,7 +158,7 @@ private fun UnitCallsignCard(isOffline: Boolean) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
-            Text("CALL-SIGN", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.DarkGray, fontFamily = FontFamily.Monospace)
+            Text("CALL-SIGN", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.Black, fontFamily = FontFamily.Monospace)
             Spacer(modifier = Modifier.height(2.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(modifier = Modifier.size(8.dp).background(if (isOffline) Color.Gray else darkGreen, CircleShape).border(1.dp, Color.Black, CircleShape))
@@ -169,7 +169,7 @@ private fun UnitCallsignCard(isOffline: Boolean) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (isOffline) {
                 Box(modifier = Modifier.border(2.dp, Color.Black).padding(horizontal = 8.dp, vertical = 4.dp)) {
-                    Text("VOLUNTEER", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
+                    Text("VOLUNTEER", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.Black)
                 }
             } else {
                 Row(
@@ -213,14 +213,14 @@ private fun OfflineStatusCard(onGoAvailable: () -> Unit) {
                 ) {
                     Box(modifier = Modifier.size(6.dp).background(Color.Gray, CircleShape))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("STATUS: OFFLINE // RESTING", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.DarkGray, letterSpacing = 1.sp)
+                    Text("STATUS: OFFLINE // RESTING", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.Black, letterSpacing = 1.sp)
                 }
                 Box(modifier = Modifier.size(40.dp).background(Color.LightGray, CircleShape), contentAlignment = Alignment.Center) {
-                    Text("GRID 4-8", fontSize = 8.sp, fontWeight = FontWeight.Black, color = Color.DarkGray, textAlign = TextAlign.Center)
+                    Text("GRID 4-8", fontSize = 8.sp, fontWeight = FontWeight.Black, color = Color.Black, textAlign = TextAlign.Center)
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
-            Text("DISPATCH CONSOLE", fontSize = 11.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
+            Text("DISPATCH CONSOLE", fontSize = 11.sp, fontWeight = FontWeight.Black, color = Color.Black)
             Text(
                 "VOLUNTEER",
                 fontSize = 28.sp,
@@ -238,7 +238,7 @@ private fun OfflineStatusCard(onGoAvailable: () -> Unit) {
             Text(
                 "You are currently off-duty. You will not receive emergency dispatch pings or nearby verified SOS triage requests.",
                 fontSize = 12.sp,
-                color = Color.DarkGray,
+                color = Color.Black,
                 lineHeight = 16.sp
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -310,7 +310,7 @@ private fun ProximityRadarCard() {
                 Text("PROXIMITY RADAR [STANDBY]", fontSize = 11.sp, fontWeight = FontWeight.Black)
             }
             Box(modifier = Modifier.border(1.dp, Color.Black).padding(horizontal = 6.dp, vertical = 2.dp)) {
-                Text("MUTED", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
+                Text("MUTED", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.Black)
             }
         }
         Spacer(modifier = Modifier.height(12.dp))
@@ -356,7 +356,7 @@ private fun OfflinePreFlightReadinessList() {
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("PRE-FLIGHT READINESS", fontSize = 12.sp, fontWeight = FontWeight.Black)
             }
-            Text("3 OF 3 READY", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
+            Text("3 OF 3 READY", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.Black)
         }
         
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -392,10 +392,10 @@ private fun OfflineChecklistItem(title: String, subtitle: String) {
             Column {
                 Text(title, fontSize = 11.sp, fontWeight = FontWeight.Black)
                 Spacer(modifier = Modifier.height(2.dp))
-                Text(subtitle, fontSize = 10.sp, color = Color.DarkGray)
+                Text(subtitle, fontSize = 10.sp, color = Color.Black)
             }
         }
-        Icon(Icons.Default.AddBox, contentDescription = null, tint = Color.DarkGray, modifier = Modifier.size(20.dp))
+        Icon(Icons.Default.AddBox, contentDescription = null, tint = Color.Black, modifier = Modifier.size(20.dp))
     }
 }
 
@@ -412,7 +412,7 @@ private fun ShiftLogCard() {
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("SHIFT LOG // RECENT ACTIVITY", fontSize = 11.sp, fontWeight = FontWeight.Black)
             }
-            Text("TODAY", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
+            Text("TODAY", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.Black)
         }
         
         Row(
@@ -442,11 +442,11 @@ private fun ShiftLogCard() {
                     }
                 }
                 Spacer(modifier = Modifier.height(4.dp))
-                Text("Fractured Paw Stabilized • Admitt...", fontSize = 10.sp, color = Color.DarkGray)
+                Text("Fractured Paw Stabilized • Admitt...", fontSize = 10.sp, color = Color.Black)
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text("3H AGO", fontSize = 9.sp, fontWeight = FontWeight.Black)
-                Text("14:12 IST", fontSize = 9.sp, color = Color.DarkGray)
+                Text("14:12 IST", fontSize = 9.sp, color = Color.Black)
             }
         }
     }
@@ -533,10 +533,10 @@ private fun RadarActiveStrip() {
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("RADAR ACTIVE // 3.5 KM", fontSize = 10.sp, fontWeight = FontWeight.Black)
-                Text("  •  AUTO-DISPATCH", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
+                Text("  •  AUTO-DISPATCH", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.Black)
             }
             Spacer(modifier = Modifier.height(4.dp))
-            Text("Scanning: Indiranagar 100ft, Halasuru Lake & Do...", fontSize = 11.sp, color = Color.DarkGray, maxLines = 1)
+            Text("Scanning: Indiranagar 100ft, Halasuru Lake & Do...", fontSize = 11.sp, color = Color.Black, maxLines = 1)
         }
     }
 }
@@ -594,7 +594,7 @@ private fun NewRescueDispatchCard(onAcceptPing: () -> Unit, onPass: () -> Unit) 
                 Text(
                     "Pelvic injury, conscious but unable to move. Safely cordoned off near roadside tea stall.",
                     fontSize = 12.sp,
-                    color = Color.DarkGray,
+                    color = Color.Black,
                     lineHeight = 16.sp
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -655,7 +655,7 @@ private fun NewRescueDispatchCard(onAcceptPing: () -> Unit, onPass: () -> Unit) 
                 Button(
                     onClick = onPass,
                     modifier = Modifier.fillMaxWidth().height(48.dp).border(thickBorder, Color.Black),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5E5E5), contentColor = Color.DarkGray),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5E5E5), contentColor = Color.Black),
                     shape = RoundedCornerShape(0.dp)
                 ) {
                     Text("✕ PASS TO NEXT VOLUNTEER", fontSize = 12.sp, fontWeight = FontWeight.Black)

@@ -74,7 +74,7 @@ private fun TopHeader() {
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
-                    Text("BEZUBAAN", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                    Text("BEZUBAAN", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                     Text("VETVISION AI TRIAGE", fontSize = 16.sp, fontWeight = FontWeight.Black)
                 }
             }
@@ -286,11 +286,11 @@ private fun ImagePreviewContainer() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Pets, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color.DarkGray)
+                Icon(Icons.Default.Pets, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color.Black)
                 Spacer(modifier = Modifier.width(4.dp))
                 Text("SPECIES: CANINE (CANIS FAMILIARIS)", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.Black)
             }
-            Text("BATCH #804-BZ", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
+            Text("BATCH #804-BZ", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.Black)
         }
     }
 }
@@ -406,7 +406,7 @@ private fun AiObservationWarning() {
                 "VetVision algorithms suggest potential conditions and urgency level. Not a certified veterinary diagnosis. If animal displays arterial hemorrhage or unresponsive vital signs, bypass triage and call paramedic dispatch instantly.",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.DarkGray,
+                color = Color.Black,
                 lineHeight = 16.sp
             )
         }

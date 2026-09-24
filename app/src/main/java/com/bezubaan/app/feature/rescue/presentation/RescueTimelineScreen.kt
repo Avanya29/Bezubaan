@@ -73,7 +73,7 @@ private fun TopHeader() {
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
-                    Text("BEZUBAAN", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                    Text("BEZUBAAN", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                     Text("VETVISION AI TRIAGE", fontSize = 14.sp, fontWeight = FontWeight.Black)
                 }
             }

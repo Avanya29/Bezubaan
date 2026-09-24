@@ -10,6 +10,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,23 +38,28 @@ fun ProfileScreen(
     onNavigateToEditProfile: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
     onNavigateToVolunteerActivation: () -> Unit = {},
-    onLogoutClick: () -> Unit = {}
+    onLogoutClick: () -> Unit = {},
+    viewModel: ProfileViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(bgGray)
     ) {
-        TopBar()
+        TopBar(uiState.user)
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item { IdentityCard() }
+            item { IdentityCard(uiState.user) }
             item { RoleDispatchCard(onNavigateToVolunteerActivation) }
-            item { ActiveIncidentReports() }
-            item { FosterHistoryCard() }
+            
+            // TODO: Hide mock data sections until backend supports them
+            // item { ActiveIncidentReports() }
+            // item { FosterHistoryCard() }
+            
             item { FirstAidFieldKit() }
             item { SettingsActionCard(onLogoutClick) }
             item { Spacer(modifier = Modifier.height(24.dp)) }
@@ -60,7 +68,7 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun TopBar() {
+private fun TopBar(user: com.bezubaan.app.feature.auth.domain.model.User?) {
     Column(modifier = Modifier.fillMaxWidth().background(Color.White)) {
         Row(
             modifier = Modifier
@@ -89,12 +97,14 @@ private fun TopBar() {
                     .size(36.dp)
                     .clip(CircleShape)
                     .border(2.dp, Color.Black, CircleShape)
+                    .background(Color.LightGray),
+                contentAlignment = Alignment.Center
             ) {
-                AsyncImage(
-                    model = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80",
+                Icon(
+                    Icons.Default.Person, 
                     contentDescription = "Profile",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                    modifier = Modifier.size(24.dp),
+                    tint = Color.DarkGray
                 )
             }
         }
@@ -103,7 +113,7 @@ private fun TopBar() {
 }
 
 @Composable
-private fun IdentityCard() {
+private fun IdentityCard(user: com.bezubaan.app.feature.auth.domain.model.User?) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -121,13 +131,13 @@ private fun IdentityCard() {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = yellow, modifier = Modifier.size(12.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("#BZ-VOL-048", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
+                    Text(user?.role ?: "CITIZEN", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.NearMe, contentDescription = null, tint = redAlert, modifier = Modifier.size(12.dp))
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("BANGALORE SEC 4", fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.DarkGray)
+                Text("BANGALORE", fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.Black)
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
@@ -136,34 +146,27 @@ private fun IdentityCard() {
                 modifier = Modifier
                     .size(64.dp)
                     .background(Color.LightGray, RoundedCornerShape(8.dp))
-                    .border(2.dp, Color.Black, RoundedCornerShape(8.dp))
+                    .border(2.dp, Color.Black, RoundedCornerShape(8.dp)),
+                contentAlignment = Alignment.Center
             ) {
-                AsyncImage(
-                    model = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop
-                )
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .offset(x = 6.dp, y = 6.dp)
-                        .background(yellow, CircleShape)
-                        .border(2.dp, Color.Black, CircleShape)
-                        .size(16.dp)
+                Icon(
+                    Icons.Default.Person, 
+                    contentDescription = "Profile",
+                    modifier = Modifier.size(40.dp),
+                    tint = Color.DarkGray
                 )
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Box(modifier = Modifier.background(yellow).border(1.dp, Color.Black).padding(horizontal = 4.dp, vertical = 2.dp)) {
-                    Text("FIELD VOLUNTEER", fontSize = 8.sp, fontWeight = FontWeight.Black)
+                    Text("BEZUBAAN USER", fontSize = 8.sp, fontWeight = FontWeight.Black)
                 }
                 Spacer(modifier = Modifier.height(4.dp))
-                Text("ADITI SHARMA", fontSize = 18.sp, fontWeight = FontWeight.Black)
+                Text(user?.name ?: "Loading...", fontSize = 18.sp, fontWeight = FontWeight.Black)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Pets, contentDescription = null, modifier = Modifier.size(10.dp), tint = darkGreen)
+                    Icon(Icons.Default.Email, contentDescription = null, modifier = Modifier.size(10.dp), tint = darkGreen)
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Verified Citizen & Animal Carer", fontSize = 10.sp, color = Color.DarkGray)
+                    Text(user?.email ?: "loading...", fontSize = 10.sp, color = Color.Black)
                 }
             }
         }
@@ -188,7 +191,7 @@ private fun StatBox(value: String, label: String, modifier: Modifier = Modifier)
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(value, fontSize = 16.sp, fontWeight = FontWeight.Black)
-        Text(label, fontSize = 8.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.DarkGray)
+        Text(label, fontSize = 8.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.Black)
     }
 }
 
@@ -242,7 +245,7 @@ private fun RoleDispatchCard(onSwitchToVolunteerClick: () -> Unit = {}) {
         Row {
             Icon(Icons.Default.Info, contentDescription = null, tint = yellow, modifier = Modifier.size(16.dp).padding(top = 2.dp))
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Switch to Volunteer Mode to receive live emergency dispatches, activate your 5km proximity radar, and take custody of street rescues in real time.", fontSize = 10.sp, lineHeight = 14.sp, color = Color.DarkGray)
+            Text("Switch to Volunteer Mode to receive live emergency dispatches, activate your 5km proximity radar, and take custody of street rescues in real time.", fontSize = 10.sp, lineHeight = 14.sp, color = Color.Black)
         }
         Spacer(modifier = Modifier.height(16.dp))
         Button(
@@ -272,7 +275,7 @@ private fun ActiveIncidentReports() {
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("ACTIVE INCIDENT REPORTS", fontSize = 12.sp, fontWeight = FontWeight.Black)
             }
-            Text("2 CASES LOGGED", fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.DarkGray)
+            Text("2 CASES LOGGED", fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.Black)
         }
         Spacer(modifier = Modifier.height(12.dp))
         // Case 1
@@ -308,13 +311,13 @@ private fun ActiveIncidentReports() {
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Event, contentDescription = null, modifier = Modifier.size(10.dp), tint = Color.DarkGray)
+                        Icon(Icons.Default.Event, contentDescription = null, modifier = Modifier.size(10.dp), tint = Color.Black)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("TODAY, 11:20 AM • INDIRANAGAR", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                        Text("TODAY, 11:20 AM • INDIRANAGAR", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text("INDIE PUP (FRACTURE)", fontSize = 14.sp, fontWeight = FontWeight.Black)
-                    Text("Assigned to Rescuer Rohit V. • ...", fontSize = 10.sp, color = Color.DarkGray)
+                    Text("Assigned to Rescuer Rohit V. • ...", fontSize = 10.sp, color = Color.Black)
                 }
             }
             HorizontalDivider(thickness = 2.dp, color = Color.Black)
@@ -366,7 +369,7 @@ private fun ActiveIncidentReports() {
                 Column {
                     Text("KORAMANGALA COMMUNITY DOG", fontSize = 12.sp, fontWeight = FontWeight.Black)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("Maggot wound fully sterilized. Returned to local feeder pack.", fontSize = 10.sp, color = Color.DarkGray, lineHeight = 14.sp)
+                    Text("Maggot wound fully sterilized. Returned to local feeder pack.", fontSize = 10.sp, color = Color.Black, lineHeight = 14.sp)
                 }
             }
         }
@@ -411,7 +414,7 @@ private fun FosterHistoryCard() {
         }
         Spacer(modifier = Modifier.height(16.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("PAST FOSTERS: BRUNO (ADOPTED), RANI\n(ADOPTED)", fontSize = 8.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.DarkGray, modifier = Modifier.weight(1f))
+            Text("PAST FOSTERS: BRUNO (ADOPTED), RANI\n(ADOPTED)", fontSize = 8.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.Black, modifier = Modifier.weight(1f))
             Text("VIEW LOG BOOK", fontSize = 9.sp, fontWeight = FontWeight.Black, textDecoration = TextDecoration.Underline, color = darkGreen)
         }
     }
@@ -494,7 +497,7 @@ private fun SettingsActionCard(onLogoutClick: () -> Unit) {
                 Icon(Icons.Default.VpnKey, contentDescription = null, modifier = Modifier.size(12.dp), tint = darkGreen)
                 Spacer(modifier = Modifier.width(8.dp))
                 Column {
-                    Text("RESCUER DISPATCH KEY", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                    Text("RESCUER DISPATCH KEY", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                     Text("#KEY-9942-SEC-BLR", fontSize = 10.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
                 }
             }
@@ -532,10 +535,10 @@ private fun SettingsItem(icon: androidx.compose.ui.graphics.vector.ImageVector, 
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, contentDescription = null, tint = Color.DarkGray, modifier = Modifier.size(20.dp))
+            Icon(icon, contentDescription = null, tint = Color.Black, modifier = Modifier.size(20.dp))
             Spacer(modifier = Modifier.width(16.dp))
             Text(title, fontSize = 10.sp, fontWeight = FontWeight.Black)
         }
-        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.DarkGray)
+        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.Black)
     }
 }

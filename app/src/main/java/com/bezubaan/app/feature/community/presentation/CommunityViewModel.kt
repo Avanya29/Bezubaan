@@ -2,19 +2,20 @@ package com.bezubaan.app.feature.community.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bezubaan.app.feature.community.domain.model.Post
+import com.bezubaan.app.core.common.Resource
+import com.bezubaan.app.feature.community.domain.usecase.CommunityUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
-class CommunityViewModel @Inject constructor() : ViewModel() {
+class CommunityViewModel @Inject constructor(
+    private val useCases: CommunityUseCases
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CommunityUiState())
     val uiState: StateFlow<CommunityUiState> = _uiState.asStateFlow()
@@ -23,62 +24,134 @@ class CommunityViewModel @Inject constructor() : ViewModel() {
         loadPosts()
     }
 
-    private fun loadPosts() {
+    fun loadPosts() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            delay(1000)
-
-            val mockPosts = listOf(
-                Post(
-                    id = UUID.randomUUID().toString(),
-                    authorName = "Priya Sharma",
-                    content = "Just rescued a puppy near MG Road! He's safe now at the shelter. 🐾",
-                    imageUrl = null,
-                    likes = 24,
-                    comments = 7
-                ),
-                Post(
-                    id = UUID.randomUUID().toString(),
-                    authorName = "Arjun Patel",
-                    content = "Found an injured cat near Koramangala. Called the vet — she's getting treatment now. Please share if you know anyone who can foster.",
-                    imageUrl = "placeholder_url",
-                    likes = 18,
-                    comments = 12
-                ),
-                Post(
-                    id = UUID.randomUUID().toString(),
-                    authorName = "Riya Mehta",
-                    content = "Our community drive fed 50 stray dogs today! Thank you to all the volunteers who showed up! 🙏",
-                    imageUrl = "placeholder_url",
-                    likes = 45,
-                    comments = 15
-                )
-            )
-
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    posts = mockPosts
-                )
+            useCases.getFeed().collect { resource ->
+                when (resource) {
+                    is Resource.Loading -> {
+                        _uiState.update { it.copy(isLoading = true, error = null) }
+                    }
+                    is Resource.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                posts = resource.data ?: emptyList()
+                            )
+                        }
+                    }
+                    is Resource.Error -> {
+                        _uiState.update {
+                            it.copy(isLoading = false, error = resource.message)
+                        }
+                    }
+                }
             }
         }
     }
 
     fun createPost(content: String, imageUrl: String? = null) {
+        if (content.isBlank()) return
         viewModelScope.launch {
-            val newPost = Post(
-                id = UUID.randomUUID().toString(),
-                authorName = "You",
-                content = content,
-                imageUrl = imageUrl,
-                likes = 0,
-                comments = 0
-            )
+            useCases.createPost(content, imageUrl).collect { resource ->
+                when (resource) {
+                    is Resource.Loading -> {
+                        _uiState.update { it.copy(isCreatingPost = true, createPostError = null) }
+                    }
+                    is Resource.Success -> {
+                        val newPost = resource.data
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                isCreatingPost = false,
+                                postCreatedSuccess = true,
+                                posts = if (newPost != null) listOf(newPost) + currentState.posts else currentState.posts
+                            )
+                        }
+                    }
+                    is Resource.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                isCreatingPost = false,
+                                createPostError = resource.message
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-            _uiState.update { currentState ->
-                currentState.copy(
-                    posts = listOf(newPost) + currentState.posts
-                )
+    fun clearPostCreatedFlag() {
+        _uiState.update { it.copy(postCreatedSuccess = false) }
+    }
+
+    fun toggleLike(postId: String) {
+        val currentPosts = _uiState.value.posts
+        val postIndex = currentPosts.indexOfFirst { it.id == postId }
+        if (postIndex == -1) return
+
+        val post = currentPosts[postIndex]
+        val isLiked = post.isLikedByMe
+        val newLikes = if (isLiked) post.likes - 1 else post.likes + 1
+
+        // Optimistic UI update
+        val updatedPost = post.copy(
+            isLikedByMe = !isLiked,
+            likes = newLikes
+        )
+        val newPosts = currentPosts.toMutableList().apply { set(postIndex, updatedPost) }
+        _uiState.update { it.copy(posts = newPosts) }
+
+        viewModelScope.launch {
+            if (isLiked) {
+                useCases.unlikePost(postId).collect { /* Handle error if needed and rollback */ }
+            } else {
+                useCases.likePost(postId).collect { /* Handle error if needed and rollback */ }
+            }
+        }
+    }
+
+    fun fetchComments(postId: String) {
+        viewModelScope.launch {
+            useCases.getComments(postId).collect { resource ->
+                when (resource) {
+                    is Resource.Loading -> _uiState.update { it.copy(isLoadingComments = true, commentsError = null) }
+                    is Resource.Success -> _uiState.update {
+                        it.copy(isLoadingComments = false, currentComments = resource.data ?: emptyList())
+                    }
+                    is Resource.Error -> _uiState.update {
+                        it.copy(isLoadingComments = false, commentsError = resource.message)
+                    }
+                }
+            }
+        }
+    }
+
+    fun createComment(postId: String, content: String) {
+        if (content.isBlank()) return
+        viewModelScope.launch {
+            useCases.createComment(postId, content).collect { resource ->
+                when (resource) {
+                    is Resource.Loading -> _uiState.update { it.copy(isCreatingComment = true) }
+                    is Resource.Success -> {
+                        val newComment = resource.data
+                        _uiState.update { state ->
+                            state.copy(
+                                isCreatingComment = false,
+                                currentComments = if (newComment != null) listOf(newComment) + state.currentComments else state.currentComments
+                            )
+                        }
+                        // Update comment count in feed
+                        val postIndex = _uiState.value.posts.indexOfFirst { it.id == postId }
+                        if (postIndex != -1) {
+                            val post = _uiState.value.posts[postIndex]
+                            val newPosts = _uiState.value.posts.toMutableList().apply {
+                                set(postIndex, post.copy(comments = post.comments + 1))
+                            }
+                            _uiState.update { it.copy(posts = newPosts) }
+                        }
+                    }
+                    is Resource.Error -> _uiState.update { it.copy(isCreatingComment = false, commentsError = resource.message) }
+                }
             }
         }
     }

@@ -63,6 +63,11 @@ fun BezubaanNavHost(
                         navController.navigate(WelcomeRoute) {
                             popUpTo<SplashRoute> { inclusive = true }
                         }
+                    },
+                    onNavigateToHome = {
+                        navController.navigate(HomeRoute) {
+                            popUpTo<AuthGraph> { inclusive = true }
+                        }
                     }
                 )
             }
@@ -122,13 +127,16 @@ fun BezubaanNavHost(
             composable<HomeRoute> { 
                 HomeScreen(
                     onNavigateToReport = { navController.navigate(RescueReportRoute) },
-                    onNavigateToDetails = { id -> navController.navigate(RescueDetailsRoute(rescueId = id)) }
+                    onNavigateToDetails = { id -> navController.navigate(RescueDetailsRoute(rescueId = id)) },
+                    onNavigateToProfile = { navController.navigate(ProfileRoute) },
+                    onNavigateToNotifications = { navController.navigate(NotificationsRoute) }
                 )
             }
 
             composable<RescueReportRoute> { 
                 RescueReportScreen(
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onStartRescue = { navController.navigate(RescueAnimalDetailsRoute) }
                 )
             }
             
@@ -153,42 +161,80 @@ fun BezubaanNavHost(
                 )
             }
 
-            composable<AiPhotoUploadRoute> {
-                com.bezubaan.app.feature.ai.presentation.AiPhotoUploadScreen(
-                    onBack = { navController.popBackStack() }
-                )
+            navigation<RescueFlowGraph>(startDestination = AiPhotoUploadRoute) {
+                composable<AiPhotoUploadRoute> { backStackEntry ->
+                    val parentEntry = androidx.compose.runtime.remember(backStackEntry) {
+                        navController.getBackStackEntry(RescueFlowGraph)
+                    }
+                    val sharedViewModel: com.bezubaan.app.feature.rescue.presentation.SharedRescueViewModel = androidx.hilt.navigation.compose.hiltViewModel(parentEntry)
+                    com.bezubaan.app.feature.ai.presentation.AiPhotoUploadScreen(
+                        sharedViewModel = sharedViewModel,
+                        onBack = { navController.popBackStack() },
+                        onContinue = { navController.navigate(RescueAnimalDetailsRoute) }
+                    )
+                }
+                
+                composable<AiPhotoReviewRoute> {
+                    com.bezubaan.app.feature.ai.presentation.AiPhotoReviewScreen(
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+                
+                composable<RescueActionSelectionRoute> {
+                    com.bezubaan.app.feature.ai.presentation.RescueActionSelectionScreen(
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+
+                composable<RescueAnimalDetailsRoute> { backStackEntry ->
+                    val parentEntry = androidx.compose.runtime.remember(backStackEntry) {
+                        navController.getBackStackEntry(RescueFlowGraph)
+                    }
+                    val sharedViewModel: com.bezubaan.app.feature.rescue.presentation.SharedRescueViewModel = androidx.hilt.navigation.compose.hiltViewModel(parentEntry)
+                    com.bezubaan.app.feature.rescue.presentation.RescueAnimalDetailsScreen(
+                        sharedViewModel = sharedViewModel,
+                        onBack = { navController.popBackStack() },
+                        onContinue = { navController.navigate(RescueAnimalLocationRoute) }
+                    )
+                }
+
+                composable<RescueAnimalLocationRoute> { backStackEntry ->
+                    val parentEntry = androidx.compose.runtime.remember(backStackEntry) {
+                        navController.getBackStackEntry(RescueFlowGraph)
+                    }
+                    val sharedViewModel: com.bezubaan.app.feature.rescue.presentation.SharedRescueViewModel = androidx.hilt.navigation.compose.hiltViewModel(parentEntry)
+                    com.bezubaan.app.feature.rescue.presentation.RescueAnimalLocationScreen(
+                        sharedViewModel = sharedViewModel,
+                        onBack = { navController.popBackStack() },
+                        onContinue = { navController.navigate(RescueReportSentRoute) }
+                    )
+                }
+
+                composable<RescueReportSentRoute> {
+                    com.bezubaan.app.feature.rescue.presentation.RescueReportSentScreen(
+                        onTrackRescue = { 
+                            navController.navigate(RescueTimelineRoute) {
+                                popUpTo(RescueFlowGraph) { inclusive = true }
+                            }
+                        },
+                        onBackToDashboard = { 
+                            navController.navigate(HomeRoute) {
+                                popUpTo(RescueFlowGraph) { inclusive = true }
+                            }
+                        }
+                    )
+                }
             }
-            
-            composable<AiPhotoReviewRoute> {
-                com.bezubaan.app.feature.ai.presentation.AiPhotoReviewScreen(
-                    onBack = { navController.popBackStack() }
-                )
-            }
-            
-            composable<RescueActionSelectionRoute> {
-                com.bezubaan.app.feature.ai.presentation.RescueActionSelectionScreen(
+
+            composable<RescueCaseDetailsRoute> {
+                com.bezubaan.app.feature.rescue.presentation.RescueCaseDetailsScreen(
                     onBack = { navController.popBackStack() }
                 )
             }
 
-            composable<RescueAnimalDetailsRoute> {
-                com.bezubaan.app.feature.rescue.presentation.RescueAnimalDetailsScreen(
-                    onBack = { navController.popBackStack() },
-                    onContinue = { /* TODO */ }
-                )
-            }
-
-            composable<RescueAnimalLocationRoute> {
-                com.bezubaan.app.feature.rescue.presentation.RescueAnimalLocationScreen(
-                    onBack = { navController.popBackStack() },
-                    onContinue = { navController.navigate(RescueReportSentRoute) }
-                )
-            }
-
-            composable<RescueReportSentRoute> {
-                com.bezubaan.app.feature.rescue.presentation.RescueReportSentScreen(
-                    onTrackRescue = { /* TODO */ },
-                    onBackToDashboard = { navController.popBackStack(HomeRoute, inclusive = false) }
+            composable<RescueTimelineRoute> {
+                com.bezubaan.app.feature.rescue.presentation.RescueTimelineScreen(
+                    onBackToDossier = { navController.navigate(RescueCaseDetailsRoute) }
                 )
             }
 
@@ -206,6 +252,14 @@ fun BezubaanNavHost(
                     onBack = { navController.popBackStack() },
                     onPostCreated = { navController.popBackStack() }
                 ) 
+            }
+            composable<DonateRoute> {
+                androidx.compose.foundation.layout.Box(
+                    modifier = androidx.compose.ui.Modifier.fillMaxSize(),
+                    contentAlignment = androidx.compose.ui.Alignment.Center
+                ) {
+                    androidx.compose.material3.Text("Donate Screen Coming Soon", fontWeight = androidx.compose.ui.text.font.FontWeight.Black)
+                }
             }
 
             composable<AdoptionRoute> { 
@@ -259,10 +313,17 @@ fun BezubaanNavHost(
             composable<NotificationsRoute> { NotificationCenterScreen(onBack = { navController.popBackStack() }) }
 
             composable<ProfileRoute> { 
+                val authViewModel: com.bezubaan.app.feature.auth.presentation.AuthViewModel = androidx.hilt.navigation.compose.hiltViewModel()
                 ProfileScreen(
                     onNavigateToEditProfile = { navController.navigate(EditProfileRoute) },
                     onNavigateToSettings = { navController.navigate(SettingsRoute) },
-                    onNavigateToVolunteerActivation = { navController.navigate(VolunteerActivationRoute) }
+                    onNavigateToVolunteerActivation = { navController.navigate(VolunteerActivationRoute) },
+                    onLogoutClick = {
+                        authViewModel.logout()
+                        navController.navigate(LoginRoute) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
                 ) 
             }
             composable<VolunteerActivationRoute> {

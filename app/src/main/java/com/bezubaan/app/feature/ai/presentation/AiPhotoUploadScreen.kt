@@ -26,8 +26,20 @@ import coil3.compose.AsyncImage
 
 @Composable
 fun AiPhotoUploadScreen(
-    onBack: () -> Unit
+    sharedViewModel: com.bezubaan.app.feature.rescue.presentation.SharedRescueViewModel,
+    onBack: () -> Unit,
+    onContinue: () -> Unit
 ) {
+    val state by sharedViewModel.state.collectAsState()
+    
+    val galleryLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        if (uri != null) {
+            sharedViewModel.updatePhoto(uri)
+            onContinue()
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -43,7 +55,10 @@ fun AiPhotoUploadScreen(
             item { TopContextBar(onBack) }
             item { TacticalHeadline() }
             item { CameraReticleDropzone() }
-            item { ActionButtons() }
+            item { ActionButtons(
+                onGalleryClick = { galleryLauncher.launch("image/*") },
+                onCameraClick = { /* TODO: Camera */ }
+            ) }
             item { TriageCaptureProtocol() }
             item { RecentRescuePreview() }
             item { EmergencyDispatchNotice() }
@@ -75,7 +90,7 @@ private fun TopHeader() {
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
-                    Text("BEZUBAAN", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                    Text("BEZUBAAN", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                     Text("VETVISION AI TRIAGE", fontSize = 16.sp, fontWeight = FontWeight.Black)
                 }
             }
@@ -240,7 +255,7 @@ private fun CameraReticleDropzone() {
             Spacer(modifier = Modifier.height(16.dp))
             Text("TAP TO OPEN CAMERA", fontSize = 18.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
             Spacer(modifier = Modifier.height(4.dp))
-            Text("OR DROP FIELD IMAGE HERE", fontSize = 12.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
+            Text("OR DROP FIELD IMAGE HERE", fontSize = 12.sp, fontWeight = FontWeight.Black, color = Color.Black)
         }
         
         // Bottom Telemetry
@@ -252,12 +267,12 @@ private fun CameraReticleDropzone() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.GpsFixed, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color.DarkGray)
+                    Icon(Icons.Default.GpsFixed, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color.Black)
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("28.6139° N, 77.2090° E", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
+                    Text("28.6139° N, 77.2090° E", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.Black)
                 }
                 Box(modifier = Modifier.background(Color(0xFFE0E0E0)).padding(horizontal = 8.dp, vertical = 2.dp)) {
-                    Text("WAITING ON CAPTURE", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
+                    Text("WAITING ON CAPTURE", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.Black)
                 }
             }
         }
@@ -303,15 +318,18 @@ private fun HUDLabel(text: String) {
             .border(1.dp, Color.LightGray)
             .padding(horizontal = 6.dp, vertical = 2.dp)
     ) {
-        Text(text, fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
+        Text(text, fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.Black)
     }
 }
 
 @Composable
-private fun ActionButtons() {
+private fun ActionButtons(
+    onGalleryClick: () -> Unit,
+    onCameraClick: () -> Unit
+) {
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Button(
-            onClick = { },
+            onClick = onCameraClick,
             modifier = Modifier.fillMaxWidth().height(56.dp).shadow(5.dp, androidx.compose.foundation.shape.RoundedCornerShape(0.dp)).border(3.dp, Color.Black),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE2F163), contentColor = Color.Black),
             shape = androidx.compose.foundation.shape.RoundedCornerShape(0.dp)
@@ -326,7 +344,7 @@ private fun ActionButtons() {
         }
         
         Button(
-            onClick = { },
+            onClick = onGalleryClick,
             modifier = Modifier.fillMaxWidth().height(52.dp).shadow(4.dp, androidx.compose.foundation.shape.RoundedCornerShape(0.dp)).border(3.dp, Color.Black),
             colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
             shape = androidx.compose.foundation.shape.RoundedCornerShape(0.dp)
@@ -345,7 +363,7 @@ private fun TriageCaptureProtocol() {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text("TRIAGE CAPTURE PROTOCOL", fontSize = 12.sp, fontWeight = FontWeight.Black)
-            Text("STANDARDS V2", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
+            Text("STANDARDS V2", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.Black)
         }
         Spacer(modifier = Modifier.height(8.dp))
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -374,7 +392,7 @@ private fun TriageCaptureProtocol() {
                 title = "3. FULL POSTURE",
                 badgeText = "CONTEXT",
                 badgeBg = Color(0xFFE0E0E0),
-                badgeTint = Color.DarkGray,
+                badgeTint = Color.Black,
                 desc = "Include full body stance or limb extension so the diagnostic engine can detect spinal deformities or fractures."
             )
         }
@@ -421,7 +439,7 @@ private fun ProtocolRule(
                 }
             }
             Spacer(modifier = Modifier.height(4.dp))
-            Text(desc, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color.DarkGray, lineHeight = 16.sp)
+            Text(desc, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color.Black, lineHeight = 16.sp)
         }
     }
 }
@@ -465,7 +483,7 @@ private fun RecentRescuePreview() {
                 Box(modifier = Modifier.size(8.dp).background(Color(0xFFC5AB00), CircleShape))
             }
             Spacer(modifier = Modifier.height(4.dp))
-            Text("Target stabilized post-triage at Shelter Station 4. Fracture immobilized with splint.", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color.DarkGray, lineHeight = 16.sp)
+            Text("Target stabilized post-triage at Shelter Station 4. Fracture immobilized with splint.", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color.Black, lineHeight = 16.sp)
         }
     }
 }

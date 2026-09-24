@@ -69,7 +69,7 @@ fun VolunteerSetupScreen(
             Text("WHERE CAN YOU HELP?", fontSize = 24.sp, fontWeight = FontWeight.Black, color = darkGrn)
             Text(
                 "Your location helps us dispatch verified rescue requests directly to your patrol perimeter.",
-                fontSize = 12.sp, color = Color.DarkGray, modifier = Modifier.padding(vertical = 8.dp)
+                fontSize = 12.sp, color = Color.Black, modifier = Modifier.padding(vertical = 8.dp)
             )
 
             // Map Placeholder
@@ -107,7 +107,7 @@ fun VolunteerSetupScreen(
                             Text("RECOMMENDED", fontSize = 8.sp, color = Color.White, fontWeight = FontWeight.Black)
                         }
                         Text("USE CURRENT LOCATION", fontSize = 16.sp, fontWeight = FontWeight.Black, color = darkGrn)
-                        Text("Instant auto-sync via satellite", fontSize = 10.sp, color = Color.DarkGray)
+                        Text("Instant auto-sync via satellite", fontSize = 10.sp, color = Color.Black)
                     }
                 }
                 Icon(Icons.Default.ArrowForward, contentDescription = null, tint = darkGrn)
@@ -127,10 +127,10 @@ fun VolunteerSetupScreen(
             ) {
                 Column {
                     Box(modifier = Modifier.background(Color.LightGray).padding(horizontal = 4.dp)) {
-                        Text("MANUAL STAGING", fontSize = 8.sp, color = Color.DarkGray, fontWeight = FontWeight.Black)
+                        Text("MANUAL STAGING", fontSize = 8.sp, color = Color.Black, fontWeight = FontWeight.Black)
                     }
                     Text("CHOOSE ON MAP", fontSize = 16.sp, fontWeight = FontWeight.Black, color = darkGrn)
-                    Text("Pin custom volunteer HQ or neighborhood base.", fontSize = 10.sp, color = Color.DarkGray)
+                    Text("Pin custom volunteer HQ or neighborhood base.", fontSize = 10.sp, color = Color.Black)
                 }
             }
 
@@ -147,7 +147,7 @@ fun VolunteerSetupScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     "ZERO CITIZEN TRACKING GUARANTEE. Your location is used solely for volunteer availability.",
-                    fontSize = 10.sp, color = Color.DarkGray
+                    fontSize = 10.sp, color = Color.Black
                 )
             }
 
@@ -163,7 +163,7 @@ fun VolunteerSetupScreen(
                 Text("[ KEEP VOLUNTEER MODE OFF ]", fontSize = 14.sp, fontWeight = FontWeight.Black)
             }
             
-            Text("AWAITING LOCATION AUTHORIZATION", fontSize = 8.sp, color = Color.DarkGray, modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 8.dp))
+            Text("AWAITING LOCATION AUTHORIZATION", fontSize = 8.sp, color = Color.Black, modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 8.dp))
         }
     }
 }

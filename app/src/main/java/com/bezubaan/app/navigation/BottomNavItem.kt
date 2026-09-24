@@ -7,6 +7,11 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material.icons.outlined.VolunteerActivism
 import androidx.compose.ui.graphics.vector.ImageVector
 
 data class BottomNavItem(
@@ -17,17 +22,12 @@ data class BottomNavItem(
 
 // Define different bottom navigation bars depending on the user role
 
-import androidx.compose.material.icons.outlined.Groups
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.Psychology
-import androidx.compose.material.icons.outlined.VolunteerActivism
 
 // Define universal bottom navigation bar matching the design
 val universalBottomNavItems = listOf(
     BottomNavItem("HOME", Icons.Outlined.Home, HomeRoute),
-    BottomNavItem("RESCUE", Icons.Outlined.LocationOn, RescueReportRoute),
-    BottomNavItem("AI VET", Icons.Outlined.Psychology, AiChatRoute),
+    BottomNavItem("RESCUE", Icons.Outlined.LocationOn, RescueFlowGraph),
+    BottomNavItem("AI VET", Icons.Outlined.Psychology, AiChatRoute()),
     BottomNavItem("SQUAD", Icons.Outlined.Groups, CommunityFeedRoute),
     BottomNavItem("DONATE", Icons.Outlined.VolunteerActivism, DonateRoute)
 )

@@ -11,7 +11,13 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import retrofit2.Retrofit
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import okhttp3.OkHttpClient
+import javax.inject.Named
 import javax.inject.Singleton
+import com.bezubaan.app.BuildConfig
 
 @Module
 @InstallIn(SingletonComponent::class)

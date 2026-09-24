@@ -75,7 +75,7 @@ private fun TopHeader() {
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
-                    Text("BEZUBAAN", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                    Text("BEZUBAAN", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                     Text("VETVISION AI TRIAGE", fontSize = 16.sp, fontWeight = FontWeight.Black)
                 }
             }
@@ -294,7 +294,7 @@ private fun AnimalSummaryCard() {
                     .padding(8.dp),
                 verticalAlignment = Alignment.Top
             ) {
-                Icon(Icons.Default.Info, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.DarkGray)
+                Icon(Icons.Default.Info, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.Black)
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     "Non-clinical triage report auto-forwards to authorized responders.",

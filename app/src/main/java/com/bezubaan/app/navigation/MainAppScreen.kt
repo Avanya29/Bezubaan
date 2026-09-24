@@ -19,14 +19,24 @@ import androidx.navigation.compose.rememberNavController
 import androidx.compose.runtime.collectAsState
 import com.bezubaan.app.MainViewModel
 
+import androidx.compose.runtime.LaunchedEffect
+
 @Composable
 fun MainAppScreen(mainViewModel: MainViewModel) {
-    val isVolunteerModeActive by mainViewModel.isVolunteerModeActive.collectAsState()
-
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val currentRoute = currentDestination?.route ?: ""
+    
+    LaunchedEffect(Unit) {
+        mainViewModel.sessionExpiredFlow.collect {
+            navController.navigate(LoginRoute) {
+                popUpTo(navController.graph.id) {
+                    inclusive = true
+                }
+            }
+        }
+    }
 
     // We don't want to show the bottom bar on Auth screens, Splash screen, or detailed nested screens if preferred.
     // For now, let's hide it if the route is part of AuthGraph (which includes Splash, Login, Register, etc.)
@@ -40,6 +50,10 @@ fun MainAppScreen(mainViewModel: MainViewModel) {
         ForgotPasswordRoute::class.qualifiedName,
         RescueDetailsRoute::class.qualifiedName,
         AnimalDetailsRoute::class.qualifiedName,
+        RescueAnimalLocationRoute::class.qualifiedName,
+        RescueReportSentRoute::class.qualifiedName,
+        RescueCaseDetailsRoute::class.qualifiedName,
+        RescueTimelineRoute::class.qualifiedName,
         CreatePostRoute::class.qualifiedName,
         AiChatRoute::class.qualifiedName
     )
@@ -70,6 +84,7 @@ fun MainAppScreen(mainViewModel: MainViewModel) {
                         Column(
                             horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
                             modifier = Modifier
+                                .weight(1f)
                                 .clickable {
                                     navController.navigate(item.route) {
                                         popUpTo(navController.graph.findStartDestination().id) {
@@ -79,10 +94,10 @@ fun MainAppScreen(mainViewModel: MainViewModel) {
                                         restoreState = true
                                     }
                                 }
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                                .padding(horizontal = 4.dp, vertical = 6.dp)
                         ) {
                             Icon(
-                                item.icon, 
+                                item.icon,
                                 contentDescription = item.title,
                                 tint = if (isSelected) Color.Black else Color.DarkGray,
                                 modifier = Modifier.size(28.dp)

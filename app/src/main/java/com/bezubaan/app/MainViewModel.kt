@@ -9,9 +9,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
+import com.bezubaan.app.core.network.TokenManager
+import kotlinx.coroutines.flow.SharedFlow
+
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    volunteerPreferences: VolunteerPreferences
+    volunteerPreferences: VolunteerPreferences,
+    tokenManager: TokenManager
 ) : ViewModel() {
 
     val isVolunteerModeActive: StateFlow<Boolean> = volunteerPreferences.isVolunteerModeActive
@@ -20,4 +24,6 @@ class MainViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = false
         )
+        
+    val sessionExpiredFlow: SharedFlow<Unit> = tokenManager.sessionExpiredFlow
 }

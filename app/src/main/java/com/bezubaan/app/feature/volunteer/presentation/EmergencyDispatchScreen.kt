@@ -95,7 +95,7 @@ fun EmergencyDispatchScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             "Dog is conscious, alert, and frightened. Lying on burlap sack near the metro stairs. Friendly temperament reported, but in visible distress.",
-                            fontSize = 12.sp, color = Color.DarkGray
+                            fontSize = 12.sp, color = Color.Black
                         )
                     }
                 }
@@ -116,7 +116,7 @@ fun EmergencyDispatchScreen(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("OUTER CIRCLE CP, GATE 3", fontSize = 16.sp, fontWeight = FontWeight.Black)
-                    Text("Near Rajiv Chowk Metro Pillar 42, New Delhi", fontSize = 12.sp, color = Color.DarkGray)
+                    Text("Near Rajiv Chowk Metro Pillar 42, New Delhi", fontSize = 12.sp, color = Color.Black)
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     Box(modifier = Modifier.fillMaxWidth().height(100.dp).background(darkGreen).border(2.dp, Color.Black)) {

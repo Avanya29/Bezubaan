@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.platform.LocalContext
 import com.bezubaan.app.ui.components.NeoButton
 import com.bezubaan.app.ui.components.NeoInput
 import com.bezubaan.app.ui.components.NeoOutlinedButton
@@ -34,6 +35,7 @@ fun LoginScreen(
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
     
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -267,7 +269,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Keep dispatch session active", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color.Black)
             }
-            Text("NODE: MH-02", fontSize = 10.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = Color.DarkGray)
+            Text("NODE: MH-02", fontSize = 10.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = Color.Black)
         }
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -312,7 +314,7 @@ fun LoginScreen(
 
         // Secondary Action (Google)
         Button(
-            onClick = { /* TODO */ },
+            onClick = { viewModel.googleSignIn(context) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)

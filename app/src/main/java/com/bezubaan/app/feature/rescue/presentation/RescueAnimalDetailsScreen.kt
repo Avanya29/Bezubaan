@@ -2,6 +2,7 @@ package com.bezubaan.app.feature.rescue.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -25,9 +26,12 @@ import coil3.compose.AsyncImage
 
 @Composable
 fun RescueAnimalDetailsScreen(
+    sharedViewModel: com.bezubaan.app.feature.rescue.presentation.SharedRescueViewModel,
     onBack: () -> Unit,
     onContinue: () -> Unit
 ) {
+    val state by sharedViewModel.state.collectAsState()
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -44,14 +48,14 @@ fun RescueAnimalDetailsScreen(
             item { ScreenHeadline() }
             item { AiVisionSyncBanner() }
             item { AnimalTagField() }
-            item { SpeciesClassification() }
+            item { SpeciesClassification(state.species, sharedViewModel::updateSpecies) }
             item { BreedOrType() }
-            item { SexSelector() }
-            item { LifeStageSelector() }
-            item { SizeWeightBracket() }
-            item { CoatColorPattern() }
-            item { DistinctMarksField() }
-            item { FieldNotesField() }
+            item { SexSelector(state.sex, sharedViewModel::updateSex) }
+            item { LifeStageSelector(state.lifeStage, sharedViewModel::updateLifeStage) }
+            item { SizeWeightBracket(state.size, sharedViewModel::updateSize) }
+            item { CoatColorPattern(state.coatColor, sharedViewModel::updateCoatColor) }
+            item { DistinctMarksField(state.marks, sharedViewModel::updateMarks) }
+            item { FieldNotesField(state.notes, sharedViewModel::updateNotes) }
             item { DispatchReadySpecs() }
             
             item { Spacer(modifier = Modifier.height(24.dp)) }
@@ -83,7 +87,7 @@ private fun TopHeader() {
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
-                    Text("BEZUBAAN", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                    Text("BEZUBAAN", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                     Text("VETVISION AI TRIAGE", fontSize = 16.sp, fontWeight = FontWeight.Black)
                 }
             }
@@ -240,26 +244,26 @@ private fun AnimalTagField() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text("Rusty (Street Tag)", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color(0xFF1C1B1B))
-            Icon(Icons.Default.Badge, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.DarkGray)
+            Icon(Icons.Default.Badge, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.Black)
         }
     }
 }
 
 @Composable
-private fun SpeciesClassification() {
+private fun SpeciesClassification(selectedSpecies: String, onSelect: (String) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         FormLabel("2", "SPECIES CLASSIFICATION *")
         
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            SelectionBox(modifier = Modifier.weight(1f), icon = "🐕", label = "DOG", isSelected = true)
-            SelectionBox(modifier = Modifier.weight(1f), icon = "🐈", label = "CAT", isSelected = false)
-            SelectionBox(modifier = Modifier.weight(1f), icon = "🐄", label = "CATTLE", isSelected = false)
+            SelectionBox(modifier = Modifier.weight(1f), icon = "🐕", label = "DOG", isSelected = selectedSpecies == "DOG", onClick = { onSelect("DOG") })
+            SelectionBox(modifier = Modifier.weight(1f), icon = "🐈", label = "CAT", isSelected = selectedSpecies == "CAT", onClick = { onSelect("CAT") })
+            SelectionBox(modifier = Modifier.weight(1f), icon = "🐄", label = "CATTLE", isSelected = selectedSpecies == "CATTLE", onClick = { onSelect("CATTLE") })
         }
         Spacer(modifier = Modifier.height(8.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            SelectionBox(modifier = Modifier.weight(1f), icon = "🐦", label = "BIRD", isSelected = false)
-            SelectionBox(modifier = Modifier.weight(1f), icon = "🐒", label = "MONKEY", isSelected = false)
-            SelectionBox(modifier = Modifier.weight(1f), icon = "⋯", label = "OTHER", isSelected = false)
+            SelectionBox(modifier = Modifier.weight(1f), icon = "🐦", label = "BIRD", isSelected = selectedSpecies == "BIRD", onClick = { onSelect("BIRD") })
+            SelectionBox(modifier = Modifier.weight(1f), icon = "🐒", label = "MONKEY", isSelected = selectedSpecies == "MONKEY", onClick = { onSelect("MONKEY") })
+            SelectionBox(modifier = Modifier.weight(1f), icon = "⋯", label = "OTHER", isSelected = selectedSpecies == "OTHER", onClick = { onSelect("OTHER") })
         }
     }
 }
@@ -305,99 +309,106 @@ private fun Chip(text: String) {
 }
 
 @Composable
-private fun SexSelector() {
+private fun SexSelector(selectedSex: String, onSelect: (String) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         FormLabel("4", "SEX *")
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            SelectionBox(modifier = Modifier.weight(1f), icon = "♂", label = "MALE", isSelected = false)
-            SelectionBox(modifier = Modifier.weight(1f), icon = "♀", label = "FEMALE", isSelected = true, selectedColor = Color(0xFFFFE24E), selectedTextColor = Color(0xFF211B00))
-            SelectionBox(modifier = Modifier.weight(1f), icon = "?", label = "UNKNOWN", isSelected = false)
+            SelectionBox(modifier = Modifier.weight(1f), icon = "♂", label = "MALE", isSelected = selectedSex == "MALE", onClick = { onSelect("MALE") })
+            SelectionBox(modifier = Modifier.weight(1f), icon = "♀", label = "FEMALE", isSelected = selectedSex == "FEMALE", selectedColor = Color(0xFFFFE24E), selectedTextColor = Color(0xFF211B00), onClick = { onSelect("FEMALE") })
+            SelectionBox(modifier = Modifier.weight(1f), icon = "?", label = "UNKNOWN", isSelected = selectedSex == "UNKNOWN", onClick = { onSelect("UNKNOWN") })
         }
     }
 }
 
 @Composable
-private fun LifeStageSelector() {
+private fun LifeStageSelector(selectedStage: String, onSelect: (String) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         FormLabel("5", "APPROXIMATE LIFE STAGE")
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            LifeStageBox(modifier = Modifier.weight(1f), title = "PUPPY / KITTEN", subtitle = "< 6 months", isSelected = false)
-            LifeStageBox(modifier = Modifier.weight(1f), title = "YOUNG ANIMAL", subtitle = "6m - 2 years", isSelected = false)
+            LifeStageBox(modifier = Modifier.weight(1f), title = "PUPPY / KITTEN", subtitle = "< 6 months", isSelected = selectedStage == "PUPPY", onClick = { onSelect("PUPPY") })
+            LifeStageBox(modifier = Modifier.weight(1f), title = "YOUNG ANIMAL", subtitle = "6m - 2 years", isSelected = selectedStage == "YOUNG", onClick = { onSelect("YOUNG") })
         }
         Spacer(modifier = Modifier.height(8.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            LifeStageBox(modifier = Modifier.weight(1f), title = "ADULT DOG", subtitle = "2 - 7 years", isSelected = true)
-            LifeStageBox(modifier = Modifier.weight(1f), title = "SENIOR STRAY", subtitle = "7+ years", isSelected = false)
+            LifeStageBox(modifier = Modifier.weight(1f), title = "ADULT DOG", subtitle = "2 - 7 years", isSelected = selectedStage == "ADULT", onClick = { onSelect("ADULT") })
+            LifeStageBox(modifier = Modifier.weight(1f), title = "SENIOR STRAY", subtitle = "7+ years", isSelected = selectedStage == "SENIOR", onClick = { onSelect("SENIOR") })
         }
     }
 }
 
 @Composable
-private fun SizeWeightBracket() {
+private fun SizeWeightBracket(selectedSize: String, onSelect: (String) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         FormLabel("6", "SIZE & WEIGHT BRACKET *", "NEEDED FOR CRATE", Color(0xFFC5AB00))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            SizeBox(modifier = Modifier.weight(1f), icon = Icons.Default.Pets, title = "SMALL", subtitle = "< 10 kg", isSelected = false)
-            SizeBox(modifier = Modifier.weight(1f), icon = Icons.Default.LocalShipping, title = "MEDIUM", subtitle = "10 - 25 kg", isSelected = true)
-            SizeBox(modifier = Modifier.weight(1f), icon = Icons.Default.Inventory, title = "LARGE", subtitle = "25+ kg", isSelected = false)
+            SizeBox(modifier = Modifier.weight(1f), icon = Icons.Default.Pets, title = "SMALL", subtitle = "< 10 kg", isSelected = selectedSize == "SMALL", onClick = { onSelect("SMALL") })
+            SizeBox(modifier = Modifier.weight(1f), icon = Icons.Default.LocalShipping, title = "MEDIUM", subtitle = "10 - 25 kg", isSelected = selectedSize == "MEDIUM", onClick = { onSelect("MEDIUM") })
+            SizeBox(modifier = Modifier.weight(1f), icon = Icons.Default.Inventory, title = "LARGE", subtitle = "25+ kg", isSelected = selectedSize == "LARGE", onClick = { onSelect("LARGE") })
         }
     }
 }
 
 @Composable
-private fun CoatColorPattern() {
+private fun CoatColorPattern(selectedColor: String, onSelect: (String) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         FormLabel("7", "COAT COLOR & PATTERN")
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ColorBox(modifier = Modifier.weight(1f), color = Color(0xFF8B4513), label = "BROWN / TAN", isSelected = true)
-            ColorBox(modifier = Modifier.weight(1f), color = Color.White, label = "PURE WHITE", isSelected = false)
-            ColorBox(modifier = Modifier.weight(1f), color = Color.Black, label = "BLACK", isSelected = false)
+            ColorBox(modifier = Modifier.weight(1f), color = Color(0xFF8B4513), label = "BROWN / TAN", isSelected = selectedColor == "BROWN", onClick = { onSelect("BROWN") })
+            ColorBox(modifier = Modifier.weight(1f), color = Color.White, label = "PURE WHITE", isSelected = selectedColor == "WHITE", onClick = { onSelect("WHITE") })
+            ColorBox(modifier = Modifier.weight(1f), color = Color.Black, label = "BLACK", isSelected = selectedColor == "BLACK", onClick = { onSelect("BLACK") })
         }
         Spacer(modifier = Modifier.height(8.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ColorBox(modifier = Modifier.weight(1f), color = Color(0xFFD2B48C), label = "FAWN / GOLD", isSelected = false)
-            ColorBox(modifier = Modifier.weight(1.5f), color = Color.DarkGray, label = "BRINDLE / MULTI-PATCH", isSelected = false, showPattern = true)
+            ColorBox(modifier = Modifier.weight(1f), color = Color(0xFFD2B48C), label = "FAWN / GOLD", isSelected = selectedColor == "FAWN", onClick = { onSelect("FAWN") })
+            ColorBox(modifier = Modifier.weight(1.5f), color = Color.Black, label = "BRINDLE / MULTI", isSelected = selectedColor == "MULTI", showPattern = true, onClick = { onSelect("MULTI") })
         }
     }
 }
 
 @Composable
-private fun DistinctMarksField() {
+private fun DistinctMarksField(marks: String, onMarksChange: (String) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         FormLabel("8", "DISTINCT MARKS / NOTCHES", "CRITICAL", Color(0xFFB01212))
-        Box(
+        OutlinedTextField(
+            value = marks,
+            onValueChange = onMarksChange,
+            placeholder = { Text("e.g. Right ear V-notch (sterilized), white patch on chest", color = Color.Gray, fontSize = 14.sp) },
             modifier = Modifier
                 .fillMaxWidth()
                 .shadow(2.dp, androidx.compose.foundation.shape.RoundedCornerShape(0.dp))
-                .background(Color.White)
-                .border(2.dp, Color.Black)
-                .padding(horizontal = 14.dp, vertical = 12.dp)
-        ) {
-            Text("Right ear V-notch (sterilized), white patch ac", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color(0xFF1C1B1B))
-        }
+                .background(Color.White),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.Black,
+                unfocusedBorderColor = Color.Black,
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+            ),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(0.dp)
+        )
     }
 }
 
 @Composable
-private fun FieldNotesField() {
+private fun FieldNotesField(notes: String, onNotesChange: (String) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         FormLabel("9", "FIELD NOTES & DEMEANOR")
-        Box(
+        OutlinedTextField(
+            value = notes,
+            onValueChange = onNotesChange,
+            placeholder = { Text("e.g. Frightened and shivering... Not aggressive.", color = Color.Gray, fontSize = 14.sp) },
             modifier = Modifier
                 .fillMaxWidth()
                 .shadow(2.dp, androidx.compose.foundation.shape.RoundedCornerShape(0.dp))
-                .background(Color.White)
-                .border(2.dp, Color.Black)
-                .padding(horizontal = 14.dp, vertical = 12.dp)
-        ) {
-            Text(
-                "Frightened and shivering, huddled behind the Sharma Tea Stall. Not aggressive, accepts biscuit crumbs cautiously.", 
-                fontSize = 16.sp, 
-                fontWeight = FontWeight.Medium, 
-                color = Color(0xFF1C1B1B),
-                lineHeight = 22.sp
-            )
-        }
+                .background(Color.White),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.Black,
+                unfocusedBorderColor = Color.Black,
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+            ),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(0.dp),
+            minLines = 3
+        )
     }
 }
 
@@ -484,12 +495,13 @@ private fun BottomNavigationBar(onBack: () -> Unit, onContinue: () -> Unit) {
 
 
 @Composable
-private fun SelectionBox(modifier: Modifier = Modifier, icon: String, label: String, isSelected: Boolean, selectedColor: Color = Color(0xFF002210), selectedTextColor: Color = Color.White) {
+private fun SelectionBox(modifier: Modifier = Modifier, icon: String, label: String, isSelected: Boolean, onClick: () -> Unit, selectedColor: Color = Color(0xFF002210), selectedTextColor: Color = Color.White) {
     Column(
         modifier = modifier
             .shadow(if (isSelected) 3.dp else 2.dp, androidx.compose.foundation.shape.RoundedCornerShape(0.dp))
             .background(if (isSelected) selectedColor else Color.White)
             .border(2.dp, Color.Black)
+            .clickable(onClick = onClick)
             .height(48.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -503,12 +515,13 @@ private fun SelectionBox(modifier: Modifier = Modifier, icon: String, label: Str
 }
 
 @Composable
-private fun LifeStageBox(modifier: Modifier = Modifier, title: String, subtitle: String, isSelected: Boolean) {
+private fun LifeStageBox(modifier: Modifier = Modifier, title: String, subtitle: String, isSelected: Boolean, onClick: () -> Unit) {
     Column(
         modifier = modifier
             .shadow(if (isSelected) 3.dp else 2.dp, androidx.compose.foundation.shape.RoundedCornerShape(0.dp))
             .background(if (isSelected) Color(0xFF002210) else Color.White)
             .border(2.dp, Color.Black)
+            .clickable(onClick = onClick)
             .height(48.dp)
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -520,12 +533,13 @@ private fun LifeStageBox(modifier: Modifier = Modifier, title: String, subtitle:
 }
 
 @Composable
-private fun SizeBox(modifier: Modifier = Modifier, icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, isSelected: Boolean) {
+private fun SizeBox(modifier: Modifier = Modifier, icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, isSelected: Boolean, onClick: () -> Unit) {
     Column(
         modifier = modifier
             .shadow(if (isSelected) 3.dp else 2.dp, androidx.compose.foundation.shape.RoundedCornerShape(0.dp))
             .background(if (isSelected) Color(0xFFFFE24E) else Color.White)
             .border(2.dp, Color.Black)
+            .clickable(onClick = onClick)
             .height(64.dp)
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -534,17 +548,18 @@ private fun SizeBox(modifier: Modifier = Modifier, icon: androidx.compose.ui.gra
         Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.Black)
         Spacer(modifier = Modifier.height(2.dp))
         Text(title, fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.Black, letterSpacing = 0.8.sp)
-        Text(subtitle, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+        Text(subtitle, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
     }
 }
 
 @Composable
-private fun ColorBox(modifier: Modifier = Modifier, color: Color, label: String, isSelected: Boolean, showPattern: Boolean = false) {
+private fun ColorBox(modifier: Modifier = Modifier, color: Color, label: String, isSelected: Boolean, showPattern: Boolean = false, onClick: () -> Unit) {
     Row(
         modifier = modifier
             .shadow(if (isSelected) 3.dp else 2.dp, androidx.compose.foundation.shape.RoundedCornerShape(0.dp))
             .background(if (isSelected) Color(0xFF002210) else Color.White)
             .border(2.dp, Color.Black)
+            .clickable(onClick = onClick)
             .height(40.dp)
             .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,

@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.bezubaan.app.core.common.Constants
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.asSharedFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -32,5 +33,12 @@ class TokenManager @Inject constructor(
         dataStore.edit { preferences ->
             preferences.remove(tokenKey)
         }
+    }
+
+    private val _sessionExpiredFlow = kotlinx.coroutines.flow.MutableSharedFlow<Unit>()
+    val sessionExpiredFlow = _sessionExpiredFlow.asSharedFlow()
+
+    suspend fun triggerSessionExpired() {
+        _sessionExpiredFlow.emit(Unit)
     }
 }

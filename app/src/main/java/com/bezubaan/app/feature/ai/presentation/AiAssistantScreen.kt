@@ -75,7 +75,7 @@ private fun TopHeader() {
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
-                    Text("BEZUBAAN", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                    Text("BEZUBAAN", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                     Text("VETVISION AI", fontSize = 16.sp, fontWeight = FontWeight.Black)
                 }
             }
@@ -117,7 +117,7 @@ private fun TopHeader() {
                 modifier = Modifier.border(1.dp, Color.Black).background(Color(0xFFE0E0E0)).padding(horizontal = 6.dp, vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("⚡ V2.4 MULTIMODAL", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
+                Text("⚡ V2.4 MULTIMODAL", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.Black)
             }
         }
         HorizontalDivider(thickness = thickBorder, color = Color.Black)
@@ -138,7 +138,7 @@ private fun HeroSection() {
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column {
-                Text("BEZUBAAN FIELD AI", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.DarkGray)
+                Text("BEZUBAAN FIELD AI", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.Black)
                 Text("CLINICAL TRIAGE", fontSize = 16.sp, fontWeight = FontWeight.Black, color = darkGreen)
             }
         }
@@ -165,7 +165,7 @@ private fun HeroSection() {
         Text(
             "Upload an animal photo or describe clinical signs in the field. Powered by VetVision AI trained on 40,000+ street rescue cases across urban zones.",
             fontSize = 12.sp,
-            color = Color.DarkGray,
+            color = Color.Black,
             lineHeight = 16.sp
         )
     }
@@ -201,7 +201,7 @@ private fun FeatureHighlightCards() {
                     }
                 }
                 Spacer(modifier = Modifier.height(4.dp))
-                Text("Real-time trauma inspection, limb alignment, open wound classification & skin disease detection.", fontSize = 10.sp, color = Color.DarkGray, lineHeight = 14.sp)
+                Text("Real-time trauma inspection, limb alignment, open wound classification & skin disease detection.", fontSize = 10.sp, color = Color.Black, lineHeight = 14.sp)
             }
         }
         
@@ -231,7 +231,7 @@ private fun FeatureHighlightCards() {
                     }
                 }
                 Spacer(modifier = Modifier.height(4.dp))
-                Text("Rapid voice/text triage: respiratory rate, alertness levels, pupil response & mobility status.", fontSize = 10.sp, color = Color.DarkGray, lineHeight = 14.sp)
+                Text("Rapid voice/text triage: respiratory rate, alertness levels, pupil response & mobility status.", fontSize = 10.sp, color = Color.Black, lineHeight = 14.sp)
             }
         }
 
@@ -305,7 +305,7 @@ private fun OutputRow(
     title: String,
     desc: String,
     iconBg: Color = Color(0xFFE0E0E0),
-    iconTint: Color = Color.DarkGray
+    iconTint: Color = Color.Black
 ) {
     Row(
         modifier = Modifier
@@ -327,7 +327,7 @@ private fun OutputRow(
         Column {
             Text(title, fontSize = 11.sp, fontWeight = FontWeight.Black)
             Spacer(modifier = Modifier.height(2.dp))
-            Text(desc, fontSize = 10.sp, color = Color.DarkGray, lineHeight = 12.sp)
+            Text(desc, fontSize = 10.sp, color = Color.Black, lineHeight = 12.sp)
         }
     }
 }

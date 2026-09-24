@@ -45,6 +45,7 @@ export class CommunityService {
       take,
       include: {
         author: { select: { id: true, profile: true } },
+        likes: { where: { userId }, take: 1 },
         _count: { select: { likes: true, comments: true } },
       },
     });
@@ -57,6 +58,7 @@ export class CommunityService {
         author: { select: { id: true, profile: true } },
         likes: { where: { userId }, take: 1 },
         saves: { where: { userId }, take: 1 },
+        comments: { include: { author: { select: { id: true, profile: true } } }, orderBy: { createdAt: 'desc' } },
         _count: { select: { likes: true, comments: true, saves: true } },
       },
     });

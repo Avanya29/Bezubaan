@@ -85,7 +85,7 @@ fun ActiveRescueScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Column {
-                        Text("INCIDENT PROTOCOL", fontSize = 10.sp, color = Color.DarkGray, fontWeight = FontWeight.Bold)
+                        Text("INCIDENT PROTOCOL", fontSize = 10.sp, color = Color.Black, fontWeight = FontWeight.Bold)
                         Text("RESCUE IN PROGRESS", fontSize = 20.sp, fontWeight = FontWeight.Black, color = darkGreen)
                     }
                     Box(modifier = Modifier.background(darkGreen).padding(horizontal = 8.dp, vertical = 4.dp)) {
@@ -118,14 +118,14 @@ fun ActiveRescueScreen(
                         
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Column {
-                                Text("VOLUNTEER", fontSize = 10.sp, color = Color.DarkGray, fontWeight = FontWeight.Bold)
+                                Text("VOLUNTEER", fontSize = 10.sp, color = Color.Black, fontWeight = FontWeight.Bold)
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(16.dp))
                                     Text("Aakash V.", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                             Column {
-                                Text("REPORTER", fontSize = 10.sp, color = Color.DarkGray, fontWeight = FontWeight.Bold)
+                                Text("REPORTER", fontSize = 10.sp, color = Color.Black, fontWeight = FontWeight.Bold)
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(16.dp))
                                     Text("Priya S. (On Site)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
@@ -146,7 +146,7 @@ fun ActiveRescueScreen(
                 ) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("TACTICAL FIELD PROTOCOL", fontSize = 12.sp, fontWeight = FontWeight.Black)
-                        Text("STEP 2 OF 4 COMPLETE", fontSize = 10.sp, color = Color.DarkGray, fontWeight = FontWeight.Bold)
+                        Text("STEP 2 OF 4 COMPLETE", fontSize = 10.sp, color = Color.Black, fontWeight = FontWeight.Bold)
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     

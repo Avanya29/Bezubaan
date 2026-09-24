@@ -37,7 +37,23 @@ class AuthRepositoryImpl @Inject constructor(
                     Resource.Error(profileResponse.message() ?: "Failed to fetch user profile")
                 }
             } else {
-                Resource.Error(response.message() ?: "Login failed")
+                val errorBody = response.errorBody()?.string()
+                val errorMessage = if (!errorBody.isNullOrBlank()) {
+                    try {
+                        val json = org.json.JSONObject(errorBody)
+                        if (json.has("message")) {
+                            val msg = json.get("message")
+                            if (msg is org.json.JSONArray) msg.getString(0) else msg.toString()
+                        } else {
+                            json.toString()
+                        }
+                    } catch (e: Exception) {
+                        errorBody
+                    }
+                } else {
+                    response.message().takeIf { it.isNotBlank() } ?: "Login failed"
+                }
+                Resource.Error(errorMessage)
             }
         } catch (e: Exception) {
             Resource.Error(e.localizedMessage ?: "An unexpected error occurred")
@@ -57,7 +73,88 @@ class AuthRepositoryImpl @Inject constructor(
                     )
                 )
             } else {
-                Resource.Error(response.message() ?: "Registration failed")
+                val errorBody = response.errorBody()?.string()
+                val errorMessage = if (!errorBody.isNullOrBlank()) {
+                    try {
+                        val json = org.json.JSONObject(errorBody)
+                        if (json.has("message")) {
+                            val msg = json.get("message")
+                            if (msg is org.json.JSONArray) msg.getString(0) else msg.toString()
+                        } else {
+                            json.toString()
+                        }
+                    } catch (e: Exception) {
+                        errorBody
+                    }
+                } else {
+                    response.message().takeIf { it.isNotBlank() } ?: "Registration failed"
+                }
+                Resource.Error(errorMessage)
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.localizedMessage ?: "An unexpected error occurred")
+        }
+    }
+
+    override suspend fun googleSignIn(idToken: String): Resource<User> {
+        return try {
+            val response = api.googleSignIn(com.bezubaan.app.feature.auth.data.remote.GoogleSignInRequest(idToken))
+            if (response.isSuccessful && response.body() != null) {
+                val token = response.body()!!.access_token
+                tokenManager.saveToken(token)
+                
+                // Now fetch user profile
+                val profileResponse = api.getProfile()
+                if (profileResponse.isSuccessful && profileResponse.body() != null) {
+                    val userDto = profileResponse.body()!!
+                    Resource.Success(
+                        User(
+                            id = userDto.id,
+                            name = userDto.name,
+                            email = userDto.email
+                        )
+                    )
+                } else {
+                    Resource.Error(profileResponse.message() ?: "Failed to fetch user profile")
+                }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                val errorMessage = if (!errorBody.isNullOrBlank()) {
+                    try {
+                        val json = org.json.JSONObject(errorBody)
+                        if (json.has("message")) {
+                            val msg = json.get("message")
+                            if (msg is org.json.JSONArray) msg.getString(0) else msg.toString()
+                        } else {
+                            json.toString()
+                        }
+                    } catch (e: Exception) {
+                        errorBody
+                    }
+                } else {
+                    response.message().takeIf { it.isNotBlank() } ?: "Google sign-in failed"
+                }
+                Resource.Error(errorMessage)
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.localizedMessage ?: "An unexpected error occurred")
+        }
+    }
+
+    override suspend fun getProfile(): Resource<User> {
+        return try {
+            val response = api.getProfile()
+            if (response.isSuccessful && response.body() != null) {
+                val userDto = response.body()!!
+                Resource.Success(
+                    User(
+                        id = userDto.id,
+                        name = userDto.name,
+                        email = userDto.email
+                    )
+                )
+            } else {
+                Resource.Error(response.message() ?: "Failed to fetch user profile")
             }
         } catch (e: Exception) {
             Resource.Error(e.localizedMessage ?: "An unexpected error occurred")

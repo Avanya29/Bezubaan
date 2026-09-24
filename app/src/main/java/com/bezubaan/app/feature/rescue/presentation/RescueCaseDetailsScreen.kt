@@ -77,7 +77,7 @@ private fun TopHeader() {
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
-                    Text("BEZUBAAN HELPING HANDS", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                    Text("BEZUBAAN HELPING HANDS", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                     Text("RESCUE", fontSize = 16.sp, fontWeight = FontWeight.Black)
                 }
             }

@@ -172,7 +172,7 @@ private fun HeroSection() {
         Text(
             "You are activating frontline responder mode. Your live geolocation will stream to the emergency radar to route nearby animal rescue alerts.",
             fontSize = 12.sp,
-            color = Color.DarkGray,
+            color = Color.Black,
             textAlign = TextAlign.Center,
             lineHeight = 18.sp
         )
@@ -211,7 +211,7 @@ private fun RadarZoneCard() {
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text("Indiranagar Sector", fontSize = 16.sp, fontWeight = FontWeight.Black, color = Color.Black)
-            Text("Bangalore Central East • ±4m High-Precision", fontSize = 10.sp, color = Color.DarkGray)
+            Text("Bangalore Central East • ±4m High-Precision", fontSize = 10.sp, color = Color.Black)
         }
     }
 }
@@ -284,7 +284,7 @@ private fun ChecklistItem(title: String, subtitle: String, badge: String? = null
                     }
                 }
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(subtitle, fontSize = 10.sp, color = Color.DarkGray, lineHeight = 14.sp)
+                Text(subtitle, fontSize = 10.sp, color = Color.Black, lineHeight = 14.sp)
             }
         }
         if (!isLast) {
@@ -344,7 +344,7 @@ private fun ActionButtons(onActivate: () -> Unit, onCancel: () -> Unit) {
         Button(
             onClick = onCancel,
             modifier = Modifier.fillMaxWidth().height(48.dp).border(2.dp, Color.Black, RoundedCornerShape(8.dp)),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5E5E5), contentColor = Color.DarkGray),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5E5E5), contentColor = Color.Black),
             shape = RoundedCornerShape(8.dp)
         ) {
             Text("CANCEL // REMAIN IN CITIZEN MODE", fontSize = 10.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
