@@ -26,6 +26,7 @@ import coil3.compose.AsyncImage
 
 @Composable
 fun RescueReportSentScreen(
+    rescueId: String,
     onTrackRescue: () -> Unit,
     onBackToDashboard: () -> Unit
 ) {

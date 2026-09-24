@@ -142,8 +142,7 @@ fun BezubaanNavHost(
             
             composable<RescueDetailsRoute> { backStackEntry ->
                 val route = backStackEntry.toRoute<RescueDetailsRoute>()
-                RescueDetailsScreen(
-                    rescueId = route.rescueId,
+                com.bezubaan.app.feature.rescue.presentation.RescueCaseDetailsScreen(
                     onBack = { navController.popBackStack() }
                 )
             }
@@ -206,14 +205,21 @@ fun BezubaanNavHost(
                     com.bezubaan.app.feature.rescue.presentation.RescueAnimalLocationScreen(
                         sharedViewModel = sharedViewModel,
                         onBack = { navController.popBackStack() },
-                        onContinue = { navController.navigate(RescueReportSentRoute) }
+                        onContinue = { 
+                            val caseId = sharedViewModel.state.value.successCase?.id
+                            if (caseId != null) {
+                                navController.navigate(RescueReportSentRoute(rescueId = caseId))
+                            }
+                        }
                     )
                 }
 
-                composable<RescueReportSentRoute> {
+                composable<RescueReportSentRoute> { backStackEntry ->
+                    val route = backStackEntry.toRoute<RescueReportSentRoute>()
                     com.bezubaan.app.feature.rescue.presentation.RescueReportSentScreen(
+                        rescueId = route.rescueId,
                         onTrackRescue = { 
-                            navController.navigate(RescueTimelineRoute) {
+                            navController.navigate(RescueTimelineRoute(rescueId = route.rescueId)) {
                                 popUpTo(RescueFlowGraph) { inclusive = true }
                             }
                         },
@@ -226,15 +232,13 @@ fun BezubaanNavHost(
                 }
             }
 
-            composable<RescueCaseDetailsRoute> {
-                com.bezubaan.app.feature.rescue.presentation.RescueCaseDetailsScreen(
-                    onBack = { navController.popBackStack() }
-                )
-            }
 
-            composable<RescueTimelineRoute> {
+
+            composable<RescueTimelineRoute> { backStackEntry ->
+                val route = backStackEntry.toRoute<RescueTimelineRoute>()
                 com.bezubaan.app.feature.rescue.presentation.RescueTimelineScreen(
-                    onBackToDossier = { navController.navigate(RescueCaseDetailsRoute) }
+                    rescueId = route.rescueId,
+                    onBackToDossier = { navController.navigate(RescueDetailsRoute(rescueId = route.rescueId)) }
                 )
             }
 
@@ -260,6 +264,12 @@ fun BezubaanNavHost(
                 ) {
                     androidx.compose.material3.Text("Donate Screen Coming Soon", fontWeight = androidx.compose.ui.text.font.FontWeight.Black)
                 }
+            }
+
+            composable<NotificationsRoute> {
+                com.bezubaan.app.feature.notifications.presentation.NotificationCenterScreen(
+                    onBack = { navController.popBackStack() }
+                )
             }
 
             composable<AdoptionRoute> { 
@@ -338,7 +348,11 @@ fun BezubaanNavHost(
                     }
                 )
             }
-            composable<EditProfileRoute> { EditProfileScreen() }
+            composable<EditProfileRoute> { 
+                EditProfileScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                ) 
+            }
             composable<SettingsRoute> { SettingsScreen() }
         }
     }

@@ -2,6 +2,7 @@ package com.bezubaan.app.feature.profile.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -25,12 +26,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 
-val yellow = Color(0xFFE2F163)
-val mintGreen = Color(0xFFC4F7D4)
-val redAlert = Color(0xFFFF4D4D)
-val lightPink = Color(0xFFFFD1D1)
-val darkGreen = Color(0xFF0D3311)
-val bgGray = Color(0xFFF4F4F0)
+val yellow: Color @Composable get() = com.bezubaan.app.ui.theme.BezubaanTheme.colors.accent
+val mintGreen: Color @Composable get() = com.bezubaan.app.ui.theme.BezubaanTheme.colors.secondary
+val redAlert: Color @Composable get() = com.bezubaan.app.ui.theme.BezubaanTheme.colors.error
+val lightPink: Color @Composable get() = com.bezubaan.app.ui.theme.BezubaanTheme.colors.surfaceVariant
+val darkGreen: Color @Composable get() = com.bezubaan.app.ui.theme.BezubaanTheme.colors.primary
+val bgGray: Color @Composable get() = com.bezubaan.app.ui.theme.BezubaanTheme.colors.background
 val thickBorder = 3.dp
 
 @Composable
@@ -48,21 +49,27 @@ fun ProfileScreen(
             .background(bgGray)
     ) {
         TopBar(uiState.user)
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item { IdentityCard(uiState.user) }
-            item { RoleDispatchCard(onNavigateToVolunteerActivation) }
-            
-            // TODO: Hide mock data sections until backend supports them
-            // item { ActiveIncidentReports() }
-            // item { FosterHistoryCard() }
-            
-            item { FirstAidFieldKit() }
-            item { SettingsActionCard(onLogoutClick) }
-            item { Spacer(modifier = Modifier.height(24.dp)) }
+        if (uiState.isLoading && uiState.user == null) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = darkGreen)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item { IdentityCard(uiState.user, uiState.stats, onNavigateToEditProfile) }
+                item { RoleDispatchCard(onNavigateToVolunteerActivation) }
+                
+                // TODO: Hide mock data sections until backend supports them
+                // item { ActiveIncidentReports() }
+                // item { FosterHistoryCard() }
+                
+                item { FirstAidFieldKit() }
+                item { SettingsActionCard(onNavigateToSettings, onLogoutClick) }
+                item { Spacer(modifier = Modifier.height(24.dp)) }
+            }
         }
     }
 }
@@ -113,7 +120,7 @@ private fun TopBar(user: com.bezubaan.app.feature.auth.domain.model.User?) {
 }
 
 @Composable
-private fun IdentityCard(user: com.bezubaan.app.feature.auth.domain.model.User?) {
+private fun IdentityCard(user: com.bezubaan.app.feature.auth.domain.model.User?, stats: com.bezubaan.app.feature.auth.domain.model.UserStats?, onEditClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -162,11 +169,27 @@ private fun IdentityCard(user: com.bezubaan.app.feature.auth.domain.model.User?)
                     Text("BEZUBAAN USER", fontSize = 8.sp, fontWeight = FontWeight.Black)
                 }
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(user?.name ?: "Loading...", fontSize = 18.sp, fontWeight = FontWeight.Black)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(user?.name ?: "Loading...", fontSize = 18.sp, fontWeight = FontWeight.Black)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(onClick = onEditClick, modifier = Modifier.size(20.dp)) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit Profile", tint = Color.Black)
+                    }
+                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Email, contentDescription = null, modifier = Modifier.size(10.dp), tint = darkGreen)
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(user?.email ?: "loading...", fontSize = 10.sp, color = Color.Black)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(10.dp), tint = darkGreen)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(user?.phone ?: "No Phone Number", fontSize = 10.sp, color = Color.Black)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(10.dp), tint = darkGreen)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(user?.address ?: "No Address", fontSize = 10.sp, color = Color.Black)
                 }
             }
         }
@@ -174,9 +197,9 @@ private fun IdentityCard(user: com.bezubaan.app.feature.auth.domain.model.User?)
         HorizontalDivider(thickness = 2.dp, color = Color.Black)
         Spacer(modifier = Modifier.height(12.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            StatBox("14", "RESCUES", modifier = Modifier.weight(1f))
-            StatBox("03", "FOSTERED", modifier = Modifier.weight(1f))
-            StatBox("₹24.5k", "FUNDED", modifier = Modifier.weight(1.2f))
+            StatBox("${stats?.rescues ?: 0}", "RESCUES", modifier = Modifier.weight(1f))
+            StatBox("${stats?.fostered ?: 0}", "FOSTERED", modifier = Modifier.weight(1f))
+            StatBox("₹${stats?.funded ?: 0.0}", "FUNDED", modifier = Modifier.weight(1.2f))
         }
     }
 }
@@ -480,7 +503,7 @@ private fun KitItem(name: String, isReady: Boolean, modifier: Modifier = Modifie
 }
 
 @Composable
-private fun SettingsActionCard(onLogoutClick: () -> Unit) {
+private fun SettingsActionCard(onNavigateToSettings: () -> Unit, onLogoutClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -501,16 +524,24 @@ private fun SettingsActionCard(onLogoutClick: () -> Unit) {
                     Text("#KEY-9942-SEC-BLR", fontSize = 10.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
                 }
             }
-            Box(modifier = Modifier.background(Color.White).border(1.dp, Color.Black).padding(horizontal = 8.dp, vertical = 4.dp)) {
+            Box(
+                modifier = Modifier
+                    .clickable { 
+                        // TODO: Implement copy to clipboard
+                    }
+                    .background(Color.White)
+                    .border(1.dp, Color.Black)
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
                 Text("COPY", fontSize = 8.sp, fontWeight = FontWeight.Black)
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        SettingsItem(Icons.Default.NotificationsActive, "EMERGENCY ALERT GEOFENCE\n(5KM)")
+        SettingsItem(Icons.Default.NotificationsActive, "EMERGENCY ALERT GEOFENCE\n(5KM)", onClick = onNavigateToSettings)
         HorizontalDivider(thickness = 1.dp, color = Color.LightGray)
-        SettingsItem(Icons.Default.Badge, "OFFICIAL VOLUNTEER ID &\nPERMIT")
+        SettingsItem(Icons.Default.Badge, "OFFICIAL VOLUNTEER ID &\nPERMIT", onClick = onNavigateToSettings)
         HorizontalDivider(thickness = 1.dp, color = Color.LightGray)
-        SettingsItem(Icons.Default.Tune, "PREFERENCES & LANGUAGE")
+        SettingsItem(Icons.Default.Tune, "PREFERENCES & LANGUAGE", onClick = onNavigateToSettings)
         Spacer(modifier = Modifier.height(24.dp))
         Button(
             onClick = onLogoutClick,
@@ -528,9 +559,9 @@ private fun SettingsActionCard(onLogoutClick: () -> Unit) {
 }
 
 @Composable
-private fun SettingsItem(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String) {
+private fun SettingsItem(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, onClick: () -> Unit = {}) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() }.padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {

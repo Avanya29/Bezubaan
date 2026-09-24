@@ -21,6 +21,27 @@ export class UsersService {
     });
   }
 
+  async getStats(userId: string) {
+    const rescues = await this.prisma.rescueCase.count({
+      where: { reporterId: userId },
+    });
+
+    const fosters = await this.prisma.fosterApplication.count({
+      where: { applicantId: userId, status: 'APPROVED' },
+    });
+
+    const donations = await this.prisma.donation.aggregate({
+      where: { donorId: userId, status: 'SUCCESS' },
+      _sum: { amount: true },
+    });
+
+    return {
+      rescues,
+      fostered: fosters,
+      funded: (donations._sum.amount || 0) / 100, // Assuming amount is in cents/paise
+    };
+  }
+
   async createLocalUser(data: {
     email: string;
     passwordHash: string;

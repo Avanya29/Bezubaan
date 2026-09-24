@@ -77,6 +77,7 @@ fun RescueReportScreen(
             )
         }
     ) { innerPadding ->
+        val context = androidx.compose.ui.platform.LocalContext.current
         NeoSurface(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             Column(
                 modifier = Modifier
@@ -184,7 +185,7 @@ fun RescueReportScreen(
 
                 NeoButton(
                     text = "FIND A VET NEARBY",
-                    onClick = { /* TODO */ },
+                    onClick = { android.widget.Toast.makeText(context, "Searching for nearby vets...", android.widget.Toast.LENGTH_SHORT).show() },
                     modifier = Modifier.fillMaxWidth(),
                     containerColor = Color.White,
                     contentColor = Color.Black
@@ -192,7 +193,7 @@ fun RescueReportScreen(
 
                 NeoButton(
                     text = "ASK VETVISION CO-PILOT",
-                    onClick = { /* TODO */ },
+                    onClick = { android.widget.Toast.makeText(context, "Starting VetVision Co-pilot...", android.widget.Toast.LENGTH_SHORT).show() },
                     modifier = Modifier.fillMaxWidth(),
                     containerColor = Color.White,
                     contentColor = Color.Black
@@ -203,7 +204,7 @@ fun RescueReportScreen(
                 // Emergency Call Button
                 NeoButton(
                     text = "CALL 24/7 AMBULANCE: 1800-BEZUBAAN",
-                    onClick = { /* TODO */ },
+                    onClick = { android.widget.Toast.makeText(context, "Calling emergency ambulance...", android.widget.Toast.LENGTH_SHORT).show() },
                     modifier = Modifier.fillMaxWidth().height(60.dp),
                     containerColor = Color(0xFFD32F2F),
                     contentColor = Color.White

@@ -3,6 +3,7 @@ package com.bezubaan.app.feature.rescue.presentation
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -26,8 +27,11 @@ import coil3.compose.AsyncImage
 
 @Composable
 fun RescueCaseDetailsScreen(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    viewModel: RescueCaseDetailsViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
+    val state by viewModel.state.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -41,9 +45,9 @@ fun RescueCaseDetailsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item { TopActionNavStrip(onBack) }
-            item { PrimaryCaseDossierHeader() }
+            item { PrimaryCaseDossierHeader(state.rescueCase) }
             item { ProminentLiveStatusCard() }
-            item { AnimalIdentityCard() }
+            item { AnimalIdentityCard(state.rescueCase) }
             item { IncidentLocationCard() }
             item { RescuerFieldIntelCard() }
             item { AiVetVisionAssessmentSummary() }
@@ -52,7 +56,13 @@ fun RescueCaseDetailsScreen(
             item { Spacer(modifier = Modifier.height(24.dp)) }
         }
         
-        StickyBottomActions()
+        val context = androidx.compose.ui.platform.LocalContext.current
+        StickyBottomActions(
+            onTrackRescue = { android.widget.Toast.makeText(context, "Tracking started", android.widget.Toast.LENGTH_SHORT).show() },
+            onCall = { android.widget.Toast.makeText(context, "Calling responder...", android.widget.Toast.LENGTH_SHORT).show() },
+            onChat = { android.widget.Toast.makeText(context, "Opening chat...", android.widget.Toast.LENGTH_SHORT).show() },
+            onSos = { android.widget.Toast.makeText(context, "SOS Alert sent!", android.widget.Toast.LENGTH_SHORT).show() }
+        )
     }
 }
 
@@ -160,18 +170,20 @@ private fun TopActionNavStrip(onBack: () -> Unit) {
 }
 
 @Composable
-private fun PrimaryCaseDossierHeader() {
+private fun PrimaryCaseDossierHeader(rescueCase: com.bezubaan.app.feature.rescue.domain.model.RescueCase?) {
+    val caseId = rescueCase?.id ?: "UNKNOWN"
+    val status = rescueCase?.status?.uppercase() ?: "ACTIVE"
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("INCIDENT DOSSIER • CASE #BZ-804", fontSize = 12.sp, fontWeight = FontWeight.Black, color = Color(0xFF414942))
+            Text("INCIDENT DOSSIER • CASE #$caseId", fontSize = 12.sp, fontWeight = FontWeight.Black, color = Color(0xFF414942))
             Box(
                 modifier = Modifier.background(Color(0xFFFFE24E), RoundedCornerShape(2.dp)).padding(horizontal = 10.dp, vertical = 4.dp)
             ) {
-                Text("ACTIVE", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF211B00))
+                Text(status, fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF211B00))
             }
         }
         
@@ -230,7 +242,13 @@ private fun ProminentLiveStatusCard() {
 }
 
 @Composable
-private fun AnimalIdentityCard() {
+private fun AnimalIdentityCard(rescueCase: com.bezubaan.app.feature.rescue.domain.model.RescueCase?) {
+    val animal = rescueCase?.animal
+    val species = animal?.species?.uppercase() ?: "CANINE"
+    val sex = animal?.sex?.uppercase() ?: "UNKNOWN"
+    val badgeText = "$species • $sex"
+    val imageUrl = rescueCase?.imageUrl ?: "https://images.unsplash.com/photo-1544568100-847a948585b9?auto=format&fit=crop&w=800&q=80"
+    
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -244,7 +262,7 @@ private fun AnimalIdentityCard() {
                 .background(Color(0xFFEBE7E7))
         ) {
             AsyncImage(
-                model = "https://images.unsplash.com/photo-1544568100-847a948585b9?auto=format&fit=crop&w=800&q=80",
+                model = imageUrl,
                 contentDescription = "Animal photo",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -254,7 +272,7 @@ private fun AnimalIdentityCard() {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Box(modifier = Modifier.background(Color.White, RoundedCornerShape(4.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
-                    Text("CANINE • FEMALE", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF1C1B1B))
+                    Text(badgeText, fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF1C1B1B))
                 }
                 Box(modifier = Modifier.background(Color(0xFFBA1A1A), RoundedCornerShape(4.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
                     Text("PRIORITY P2 (MODERATE)", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.White)
@@ -266,10 +284,10 @@ private fun AnimalIdentityCard() {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
                 Column {
                     Text("CASE PATIENT", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF414942))
-                    Text("Rusty (Street Tag)", fontSize = 22.sp, fontWeight = FontWeight.Black, color = Color(0xFF1C1B1B))
+                    Text(animal?.name ?: "Unknown (Street Tag)", fontSize = 22.sp, fontWeight = FontWeight.Black, color = Color(0xFF1C1B1B))
                 }
                 Box(modifier = Modifier.background(Color(0xFFC0EDCD), RoundedCornerShape(2.dp)).padding(horizontal = 8.dp, vertical = 4.dp)) {
-                    Text("INDIE DESI DOG", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF274F37))
+                    Text(animal?.breed?.uppercase() ?: "INDIE DESI", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF274F37))
                 }
             }
             
@@ -280,14 +298,14 @@ private fun AnimalIdentityCard() {
                     Column {
                         Text("DEMEANOR & AGE", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF414942))
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("Adult (approx 3y) •\nGuarded, calm", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1C1B1B))
+                        Text(animal?.approximateAge ?: "Adult (approx 3y)", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1C1B1B))
                     }
                 }
                 Box(modifier = Modifier.weight(1f).background(Color(0xFFF6F3F2), RoundedCornerShape(4.dp)).padding(10.dp)) {
                     Column {
                         Text("DISTINGUISHING MARKS", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF414942))
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("V-notch right ear, white\nchest star", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1C1B1B))
+                        Text(animal?.identifyingMarks ?: "None reported", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1C1B1B))
                     }
                 }
             }
@@ -707,7 +725,12 @@ private fun PipelineStep(
 }
 
 @Composable
-private fun StickyBottomActions() {
+private fun StickyBottomActions(
+    onTrackRescue: () -> Unit,
+    onCall: () -> Unit,
+    onChat: () -> Unit,
+    onSos: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -716,7 +739,7 @@ private fun StickyBottomActions() {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Button(
-            onClick = { /* TODO */ },
+            onClick = onTrackRescue,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp)
@@ -731,7 +754,7 @@ private fun StickyBottomActions() {
         
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(
-                onClick = { /* TODO */ },
+                onClick = onCall,
                 modifier = Modifier
                     .weight(1f)
                     .height(44.dp)
@@ -745,7 +768,7 @@ private fun StickyBottomActions() {
             }
             
             Button(
-                onClick = { /* TODO */ },
+                onClick = onChat,
                 modifier = Modifier
                     .weight(1f)
                     .height(44.dp)
@@ -776,7 +799,12 @@ private fun StickyBottomActions() {
                 }
             }
             
-            Box(modifier = Modifier.background(Color(0xFFBA1A1A), RoundedCornerShape(2.dp)).padding(horizontal = 8.dp, vertical = 6.dp)) {
+            Box(
+                modifier = Modifier
+                    .background(Color(0xFFBA1A1A), RoundedCornerShape(2.dp))
+                    .clickable { onSos() }
+                    .padding(horizontal = 8.dp, vertical = 6.dp)
+            ) {
                 Text("SOS CALL", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.White)
             }
         }

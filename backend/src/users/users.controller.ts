@@ -23,6 +23,11 @@ export class UsersController {
     };
   }
 
+  @Get('me/stats')
+  async getStats(@CurrentUser() user: any) {
+    return this.usersService.getStats(user.id);
+  }
+
   @Patch('me/profile')
   async updateProfile(
     @CurrentUser() user: any,

@@ -83,7 +83,14 @@ fun HomeScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            item { NamasteCard(userName = uiState.userName) }
+            item { 
+                NamasteCard(
+                    userName = uiState.userName, 
+                    locationName = uiState.locationName,
+                    isOnDuty = uiState.isOnDuty,
+                    onToggleDuty = viewModel::toggleDutyStatus
+                ) 
+            }
             item { PrimaryCalloutCard(onNavigateToReport) }
             item { QuickActionGrid() }
             item { ActiveRescueSection() }
@@ -195,8 +202,10 @@ fun LiveTicker() {
 }
 
 @Composable
-fun NamasteCard(userName: String) {
+fun NamasteCard(userName: String, locationName: String, isOnDuty: Boolean, onToggleDuty: () -> Unit) {
     val displayName = if (userName.isNotBlank()) userName.uppercase() else "CITIZEN"
+    val dutyColor = if (isOnDuty) mintGreen else Color.LightGray
+    val dutyText = if (isOnDuty) "● ON DUTY // CITIZEN DISPATCH" else "○ OFF DUTY // CITIZEN DISPATCH"
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -208,11 +217,12 @@ fun NamasteCard(userName: String) {
             Text("NAMASTE, $displayName \uD83D\uDC4B", fontSize = 16.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
             Box(
                 modifier = Modifier
-                    .background(mintGreen, RoundedCornerShape(4.dp))
+                    .clickable { onToggleDuty() }
+                    .background(dutyColor, RoundedCornerShape(4.dp))
                     .border(1.dp, Color.Black, RoundedCornerShape(4.dp))
                     .padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
-                Text("● ON DUTY // CITIZEN DISPATCH", color = darkGreen, fontSize = 9.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
+                Text(dutyText, color = darkGreen, fontSize = 9.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
@@ -221,7 +231,8 @@ fun NamasteCard(userName: String) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Column {
                 Text("COVERAGE AREA", fontSize = 9.sp, color = Color.Black, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                Text("Indiranagar, Bengaluru (1.2 km radius)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                val displayLocation = if (locationName.isNotBlank()) locationName else "Locating..."
+                Text("$displayLocation (1.2 km radius)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text("SECTOR", fontSize = 9.sp, color = Color.Black, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)

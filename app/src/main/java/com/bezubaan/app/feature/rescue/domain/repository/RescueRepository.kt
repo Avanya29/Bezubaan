@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface RescueRepository {
     fun getNearbyRescues(lat: Double, lng: Double): Flow<Resource<List<RescueCase>>>
+    fun getRescueCaseById(id: String): Flow<Resource<RescueCase>>
     fun reportRescue(
         description: String,
         lat: Double,

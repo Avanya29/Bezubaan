@@ -20,10 +20,13 @@ import kotlinx.coroutines.withContext
 import java.util.Locale
 import javax.inject.Inject
 
+
+
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val locationTracker: LocationTracker,
+    private val rescueRepository: com.bezubaan.app.feature.rescue.domain.repository.RescueRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -31,8 +34,10 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
-        loadNearbyCases()
         fetchUserProfile()
+        // Wait for fetchLocation to populate location before loading cases
+        // but we'll fetch location immediately on init.
+        fetchLocation()
     }
 
     private fun fetchUserProfile() {
@@ -51,10 +56,15 @@ class HomeViewModel @Inject constructor(
             if (location != null) {
                 val addressName = reverseGeocode(location.latitude, location.longitude)
                 _uiState.update { it.copy(locationName = addressName) }
+                loadNearbyCases(location.latitude, location.longitude)
             } else {
                 _uiState.update { it.copy(locationName = "LOCATION UNAVAILABLE") }
             }
         }
+    }
+
+    fun toggleDutyStatus() {
+        _uiState.update { it.copy(isOnDuty = !it.isOnDuty) }
     }
 
     private suspend fun reverseGeocode(lat: Double, lng: Double): String {
@@ -82,33 +92,21 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun loadNearbyCases() {
+    private fun loadNearbyCases(lat: Double, lng: Double) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            delay(1000)
-            val cases = listOf(
-                RescueCase(
-                    id = "1",
-                    description = "Dog found injured near road, needs medical attention.",
-                    address = "MG Road, Bangalore",
-                    latitude = 12.9716,
-                    longitude = 77.5946,
-                    status = "Reported",
-                    imageUrl = "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=600&q=80",
-                    animal = com.bezubaan.app.feature.rescue.domain.model.AnimalDetails(species = "Dog")
-                ),
-                RescueCase(
-                    id = "2",
-                    description = "Cat has been stuck in a tree for hours, unable to come down.",
-                    address = "Indiranagar, Bangalore",
-                    latitude = 12.9784,
-                    longitude = 77.6408,
-                    status = "Rescued",
-                    imageUrl = "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=600&q=80",
-                    animal = com.bezubaan.app.feature.rescue.domain.model.AnimalDetails(species = "Cat")
-                )
-            )
-            _uiState.update { it.copy(isLoading = false, nearbyCases = cases) }
+            rescueRepository.getNearbyRescues(lat, lng).collect { result ->
+                when (result) {
+                    is com.bezubaan.app.core.common.Resource.Success -> {
+                        _uiState.update { it.copy(isLoading = false, nearbyCases = result.data ?: emptyList()) }
+                    }
+                    is com.bezubaan.app.core.common.Resource.Loading -> {
+                        _uiState.update { it.copy(isLoading = true) }
+                    }
+                    is com.bezubaan.app.core.common.Resource.Error -> {
+                        _uiState.update { it.copy(isLoading = false) }
+                    }
+                }
+            }
         }
     }
 }

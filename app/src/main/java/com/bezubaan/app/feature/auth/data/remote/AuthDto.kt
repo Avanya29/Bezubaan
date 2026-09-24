@@ -31,9 +31,30 @@ data class LoginResponse(
 )
 
 @Serializable
+data class UserProfileDto(
+    val id: String,
+    val phoneNumber: String?,
+    val address: String?
+)
+
+@Serializable
 data class UserDto(
     val id: String,
     val name: String,
     val email: String,
-    val role: String? = null
+    val role: String? = null,
+    val profile: UserProfileDto? = null
+)
+
+@Serializable
+data class UserStatsDto(
+    val rescues: Int = 0,
+    val fostered: Int = 0,
+    val funded: Double = 0.0
+)
+
+@Serializable
+data class UpdateProfileRequest(
+    val phoneNumber: String? = null,
+    val address: String? = null
 )

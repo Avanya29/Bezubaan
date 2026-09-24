@@ -32,6 +32,20 @@ class RescueRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getRescueCaseById(id: String): Flow<Resource<RescueCase>> = flow {
+        emit(Resource.Loading)
+        try {
+            val response = api.getRescueById(id)
+            if (response.isSuccessful && response.body() != null) {
+                emit(Resource.Success(response.body()!!.toDomain()))
+            } else {
+                emit(Resource.Error(response.message() ?: "Failed to fetch rescue case"))
+            }
+        } catch (e: Exception) {
+            emit(Resource.Error(e.localizedMessage ?: "Unexpected error occurred"))
+        }
+    }
+
     override fun reportRescue(
         description: String,
         lat: Double,

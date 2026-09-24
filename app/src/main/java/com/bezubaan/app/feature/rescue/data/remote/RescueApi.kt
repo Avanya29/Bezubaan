@@ -12,6 +12,11 @@ interface RescueApi {
         @Query("lng") lng: Double
     ): retrofit2.Response<List<RescueDto>>
 
+    @GET("api/rescues/{id}")
+    suspend fun getRescueById(
+        @retrofit2.http.Path("id") id: String
+    ): retrofit2.Response<RescueDto>
+
     @POST("api/rescues")
     suspend fun reportRescue(
         @Body request: CreateRescueRequest

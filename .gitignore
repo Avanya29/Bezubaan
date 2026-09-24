@@ -114,3 +114,6 @@ local.properties
 *.keystore
 *.p12
 *.pfx
+
+.google-services.json
+google-services.json

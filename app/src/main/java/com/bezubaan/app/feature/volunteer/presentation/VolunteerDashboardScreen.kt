@@ -43,6 +43,7 @@ fun VolunteerDashboardScreen(
 ) {
     val isOffline by viewModel.isOffline.collectAsStateWithLifecycle()
     val emergencyRescue by viewModel.emergencyRescue.collectAsStateWithLifecycle()
+    val user by viewModel.user.collectAsStateWithLifecycle()
 
     // Show Dialog when an emergency comes in
     if (emergencyRescue != null) {
@@ -81,7 +82,7 @@ fun VolunteerDashboardScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item { UnitCallsignCard(isOffline) }
+            item { UnitCallsignCard(isOffline, user) }
             
             if (isOffline) {
                 item { OfflineStatusCard(onGoAvailable = { viewModel.setOffline(false) }) }
@@ -147,7 +148,7 @@ private fun TopBar() {
 }
 
 @Composable
-private fun UnitCallsignCard(isOffline: Boolean) {
+private fun UnitCallsignCard(isOffline: Boolean, user: com.bezubaan.app.feature.auth.domain.model.User?) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -163,7 +164,8 @@ private fun UnitCallsignCard(isOffline: Boolean) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(modifier = Modifier.size(8.dp).background(if (isOffline) Color.Gray else darkGreen, CircleShape).border(1.dp, Color.Black, CircleShape))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("ADITI-VOL-048", fontSize = 16.sp, fontWeight = FontWeight.Black)
+                val callsign = user?.name?.uppercase()?.replace(" ", "-")?.let { "$it-VOL" } ?: "ADITI-VOL-048"
+                Text(callsign, fontSize = 16.sp, fontWeight = FontWeight.Black)
             }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {

@@ -10,5 +10,7 @@ interface AuthRepository {
     suspend fun register(request: RegisterRequest): Resource<User>
     suspend fun googleSignIn(idToken: String): Resource<User>
     suspend fun getProfile(): Resource<User>
+    suspend fun getStats(): Resource<com.bezubaan.app.feature.auth.domain.model.UserStats>
+    suspend fun updateProfile(request: com.bezubaan.app.feature.auth.data.remote.UpdateProfileRequest): Resource<User>
     suspend fun logout()
 }

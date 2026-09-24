@@ -3,10 +3,14 @@ package com.bezubaan.app.feature.volunteer.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bezubaan.app.core.network.SocketManager
+import com.bezubaan.app.feature.auth.domain.model.User
+import com.bezubaan.app.feature.auth.domain.repository.AuthRepository
+import com.bezubaan.app.core.network.TokenManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import javax.inject.Inject
@@ -15,8 +19,13 @@ import android.util.Log
 
 @HiltViewModel
 class VolunteerDashboardViewModel @Inject constructor(
-    private val socketManager: SocketManager
+    private val socketManager: SocketManager,
+    private val authRepository: AuthRepository,
+    private val tokenManager: TokenManager
 ) : ViewModel() {
+
+    private val _user = MutableStateFlow<User?>(null)
+    val user: StateFlow<User?> = _user.asStateFlow()
 
     private val _isOffline = MutableStateFlow(true)
     val isOffline: StateFlow<Boolean> = _isOffline.asStateFlow()
@@ -32,14 +41,22 @@ class VolunteerDashboardViewModel @Inject constructor(
                 _emergencyRescue.value = rescueData
             }
         }
+        
+        viewModelScope.launch {
+            val result = authRepository.getProfile()
+            if (result is com.bezubaan.app.core.common.Resource.Success) {
+                _user.value = result.data
+            }
+        }
     }
 
-    // In a real app, JWT token is fetched from AuthManager/DataStore.
-    // For demo, we can pass a dummy token or a real one if available.
-    fun setOffline(offline: Boolean, jwtToken: String = "dummy-token-for-now") {
+    fun setOffline(offline: Boolean) {
         _isOffline.value = offline
         if (!offline) {
-            socketManager.connect(jwtToken)
+            viewModelScope.launch {
+                val token = tokenManager.getToken() ?: ""
+                socketManager.connect(token)
+            }
             
             // Also fetch FCM token to register with backend so we get background pushes
             FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->

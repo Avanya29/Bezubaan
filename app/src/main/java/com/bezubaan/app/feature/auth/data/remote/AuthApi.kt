@@ -18,4 +18,10 @@ interface AuthApi {
 
     @retrofit2.http.GET("users/me")
     suspend fun getProfile(): retrofit2.Response<UserDto>
+
+    @retrofit2.http.GET("users/me/stats")
+    suspend fun getStats(): retrofit2.Response<UserStatsDto>
+
+    @retrofit2.http.PATCH("users/me/profile")
+    suspend fun updateProfile(@Body request: UpdateProfileRequest): retrofit2.Response<UserDto>
 }

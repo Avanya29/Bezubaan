@@ -1,6 +1,7 @@
 package com.bezubaan.app.feature.notifications.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -30,6 +31,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.bezubaan.app.feature.notifications.domain.model.Notification
+import com.bezubaan.app.feature.notifications.domain.model.NotificationType
 
 // ─── Color Palette ─────────────────────────────────────────────────
 private val BgCream        = Color(0xFFFCF9F8)
@@ -54,8 +58,11 @@ private val DonateYellow   = Color(0xFFFFE24E)
 
 @Composable
 fun NotificationCenterScreen(
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    viewModel: NotificationsViewModel = hiltViewModel()
 ) {
+    val state by viewModel.state.collectAsState()
+
     Box(modifier = Modifier.fillMaxSize().background(BgCream)) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -66,42 +73,64 @@ fun NotificationCenterScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     PushDispatchBar()
                     Spacer(modifier = Modifier.height(20.dp))
-                    OperationalControlBar()
+                    OperationalControlBar(
+                        unreadCount = state.notifications.count { !it.isRead },
+                        onMarkAllRead = { viewModel.markAllAsRead() }
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
-            item { FilterPillsRow() }
-            item {
-                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-                    Spacer(modifier = Modifier.height(20.dp))
-                    CriticalAlertsSection()
-                    Spacer(modifier = Modifier.height(20.dp))
-                    TodaySection()
-                    Spacer(modifier = Modifier.height(20.dp))
-                    YesterdaySection()
-                    Spacer(modifier = Modifier.height(20.dp))
-                    SosFooterBanner()
-                    Spacer(modifier = Modifier.height(20.dp))
-                    // Android gesture pill
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Box(
-                            modifier = Modifier
-                                .width(128.dp).height(6.dp)
-                                .background(Ink.copy(alpha = 0.8f), RoundedCornerShape(12.dp))
-                        )
+            item { FilterPillsRow(state.filter) { viewModel.setFilter(it) } }
+            
+            if (state.isLoading) {
+                item {
+                    Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = Ink)
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
+                }
+            } else {
+                val filtered = if (state.filter == "ALL") state.notifications 
+                               else state.notifications.filter { it.type.name == state.filter || state.filter.contains(it.type.name) }
+                
+                item {
+                    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        if (filtered.isEmpty()) {
+                            Text("No notifications", color = MutedText, modifier = Modifier.align(Alignment.CenterHorizontally))
+                        } else {
+                            filtered.forEach { notification ->
+                                RealNotificationCard(
+                                    notification = notification,
+                                    onMarkRead = { viewModel.markAsRead(notification.id) }
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(20.dp))
+                        SosFooterBanner()
+                        Spacer(modifier = Modifier.height(20.dp))
+                        // Android gesture pill
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            Box(
+                                modifier = Modifier
+                                    .width(128.dp).height(6.dp)
+                                    .background(Ink.copy(alpha = 0.8f), RoundedCornerShape(12.dp))
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
                 }
             }
         }
         // Floating header
-        NotificationTopBar(onBack)
+        NotificationTopBar(onBack, onMarkAllRead = { viewModel.markAllAsRead() })
     }
 }
 
 // ─── Top Bar ───────────────────────────────────────────────────────
 @Composable
-private fun NotificationTopBar(onBack: () -> Unit) {
+private fun NotificationTopBar(onBack: () -> Unit, onMarkAllRead: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -128,22 +157,10 @@ private fun NotificationTopBar(onBack: () -> Unit) {
             }
             Spacer(modifier = Modifier.width(4.dp))
             Text("NOTIFICATIONS", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Ink, letterSpacing = (-0.45).sp)
-            // Badge "4 NEW"
-            Box(
-                modifier = Modifier
-                    .background(DarkGreen)
-                    .neoBrutalistShadow(1.dp)
-                    .padding(horizontal = 8.dp, vertical = 2.dp)
-            ) {
-                Row {
-                    Text("4 ", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Yellow)
-                    Text("NEW", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Yellow)
-                }
-            }
         }
         // Right: mark all read + settings + avatar
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = {}, modifier = Modifier.size(44.dp)) {
+            IconButton(onClick = onMarkAllRead, modifier = Modifier.size(44.dp)) {
                 Icon(Icons.Default.DoneAll, contentDescription = "Mark all read", tint = Ink, modifier = Modifier.size(18.dp))
             }
             IconButton(onClick = {}, modifier = Modifier.size(44.dp)) {
@@ -196,7 +213,7 @@ private fun PushDispatchBar() {
 
 // ─── Operational Control Bar ───────────────────────────────────────
 @Composable
-private fun OperationalControlBar() {
+private fun OperationalControlBar(unreadCount: Int, onMarkAllRead: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -209,7 +226,7 @@ private fun OperationalControlBar() {
                 .neoBrutalistShadow(3.dp)
                 .padding(horizontal = 15.dp, vertical = 7.dp)
         ) {
-            Text("UNREAD (4)", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Yellow, letterSpacing = (-0.18).sp)
+            Text("UNREAD ($unreadCount)", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Yellow, letterSpacing = (-0.18).sp)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             // MARK READ
@@ -219,6 +236,7 @@ private fun OperationalControlBar() {
                     .background(Color.White)
                     .border(3.dp, Ink)
                     .neoBrutalistShadow(3.dp)
+                    .clickable { onMarkAllRead() }
                     .padding(horizontal = 15.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -243,18 +261,16 @@ private fun OperationalControlBar() {
 
 // ─── Filter Pills (Horizontal Scroll) ─────────────────────────────
 @Composable
-private fun FilterPillsRow() {
-    var selected by remember { mutableIntStateOf(0) }
-
-    data class FilterChip(val label: String, val icon: ImageVector?, val activeBg: Color, val activeText: Color)
+private fun FilterPillsRow(currentFilter: String, onFilterSelect: (String) -> Unit) {
+    data class FilterChip(val filterCode: String, val label: String, val icon: ImageVector?, val activeBg: Color, val activeText: Color)
 
     val chips = listOf(
-        FilterChip("ALL", null, Yellow, YellowDark),
-        FilterChip("RESCUE (2)", Icons.Default.Pets, Crimson, Color.White),
-        FilterChip("MEDICAL", Icons.Default.MedicalServices, Color.White, Ink),
-        FilterChip("ADOPTION", Icons.Default.Favorite, Color.White, Ink),
-        FilterChip("FOSTER", Icons.Default.Home, Color.White, Ink),
-        FilterChip("COMMUNITY", Icons.Default.Groups, Color.White, Ink),
+        FilterChip("ALL", "ALL", null, Yellow, YellowDark),
+        FilterChip("RESCUE_ALERT", "RESCUE", Icons.Default.Pets, Crimson, Color.White),
+        FilterChip("MEDICAL_UPDATE", "MEDICAL", Icons.Default.MedicalServices, Color.White, Ink),
+        FilterChip("ADOPTION_MATCH", "ADOPTION", Icons.Default.Favorite, Color.White, Ink),
+        FilterChip("FOSTER_CARE", "FOSTER", Icons.Default.Home, Color.White, Ink),
+        FilterChip("COMMUNITY", "COMMUNITY", Icons.Default.Groups, Color.White, Ink),
     )
 
     Box(
@@ -271,8 +287,8 @@ private fun FilterPillsRow() {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            chips.forEachIndexed { index, chip ->
-                val isSelected = selected == index
+            chips.forEach { chip ->
+                val isSelected = currentFilter == chip.filterCode
                 val bg = if (isSelected) chip.activeBg else Color.White
                 val textColor = if (isSelected) chip.activeText else Ink
                 Row(
@@ -281,6 +297,7 @@ private fun FilterPillsRow() {
                         .background(bg)
                         .border(3.dp, Ink)
                         .neoBrutalistShadow(3.dp)
+                        .clickable { onFilterSelect(chip.filterCode) }
                         .padding(horizontal = 17.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -289,7 +306,7 @@ private fun FilterPillsRow() {
                         Icon(it, contentDescription = null, tint = textColor, modifier = Modifier.size(12.dp))
                     }
                     Text(chip.label, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = textColor, letterSpacing = 0.72.sp)
-                    if (index == 0 && isSelected) {
+                    if (chip.filterCode == "ALL" && isSelected) {
                         Box(modifier = Modifier.background(YellowDark).padding(horizontal = 6.dp)) {
                             Text("14", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Yellow, letterSpacing = 0.8.sp)
                         }
@@ -873,3 +890,70 @@ private fun Modifier.neoBrutalistShadow(offset: Dp): Modifier = this.drawBehind 
     val px = offset.toPx()
     drawRect(color = Ink, topLeft = Offset(px, px), size = size)
 }
+
+@Composable
+fun RealNotificationCard(notification: Notification, onMarkRead: () -> Unit) {
+    val (icon, bg, badgeBg) = when (notification.type) {
+        NotificationType.RESCUE_ALERT -> Triple(Icons.Default.Pets, Color.White, Crimson)
+        NotificationType.MEDICAL_UPDATE -> Triple(Icons.Default.LocalHospital, Color.White, MintGreen)
+        NotificationType.ADOPTION_MATCH -> Triple(Icons.Default.Favorite, FadedCard, MintAdoption)
+        NotificationType.FOSTER_CARE -> Triple(Icons.Default.Home, FadedCard, Color(0xFFE5E2E1))
+        NotificationType.COMMUNITY_DISCUSSION -> Triple(Icons.Default.Groups, FadedCard, Color(0xFFE5E2E1))
+        NotificationType.DONATION -> Triple(Icons.Default.AttachMoney, FadedCard, DonateYellow)
+        else -> Triple(Icons.Default.Notifications, Color.White, Yellow)
+    }
+    
+    val badgeText = notification.type.name.replace("_", " ")
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(bg)
+            .border(3.dp, Ink)
+            .neoBrutalistShadow(4.dp)
+            .padding(17.dp)
+            .clickable { onMarkRead() },
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(modifier = Modifier.background(badgeBg).border(2.dp, Ink).padding(horizontal = 10.dp, vertical = 4.dp)) {
+                    Text(badgeText, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Ink, letterSpacing = 0.8.sp)
+                }
+            }
+            if (!notification.isRead) {
+                Box(modifier = Modifier.background(Yellow).border(1.dp, Ink).padding(horizontal = 7.dp, vertical = 3.dp)) {
+                    Text("UNREAD", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = YellowDark, letterSpacing = 0.8.sp)
+                }
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(Color(0xFFE5E2DB))
+                    .border(2.dp, Ink)
+                    .neoBrutalistShadow(2.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, contentDescription = null, tint = Ink, modifier = Modifier.size(18.dp))
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(notification.title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Ink, letterSpacing = (-0.18).sp, lineHeight = 22.5.sp)
+                Text(
+                    notification.message,
+                    fontSize = 14.sp, color = MutedText, lineHeight = 20.sp
+                )
+                Text(
+                    notification.createdAt,
+                    fontSize = 10.sp, color = MutedText
+                )
+            }
+        }
+    }
+}
+

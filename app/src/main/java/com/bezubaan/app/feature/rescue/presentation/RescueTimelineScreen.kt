@@ -29,8 +29,12 @@ import coil3.compose.AsyncImage
 
 @Composable
 fun RescueTimelineScreen(
-    onBackToDossier: () -> Unit
+    rescueId: String,
+    onBackToDossier: () -> Unit,
+    viewModel: RescueCaseDetailsViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
+    val state by viewModel.state.collectAsState()
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -43,7 +47,7 @@ fun RescueTimelineScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item { TopContextNavigationBar(onBackToDossier) }
+            item { TopContextNavigationBar(state.rescueCase, onBackToDossier) }
             item { ScreenHeaderBanner() }
             item { PatientResponderMiniHud() }
             item { TimelineStream() }
@@ -105,7 +109,8 @@ private fun TopHeader() {
 }
 
 @Composable
-private fun TopContextNavigationBar(onBackToDossier: () -> Unit) {
+private fun TopContextNavigationBar(rescueCase: com.bezubaan.app.feature.rescue.domain.model.RescueCase?, onBackToDossier: () -> Unit) {
+    val caseId = rescueCase?.id ?: "UNKNOWN"
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -158,7 +163,7 @@ private fun TopContextNavigationBar(onBackToDossier: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.FolderOpen, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("CASE #BZ-804", fontSize = 18.sp, fontWeight = FontWeight.Black, color = Color.White)
+                Text("CASE #$caseId", fontSize = 18.sp, fontWeight = FontWeight.Black, color = Color.White)
             }
             Box(modifier = Modifier.background(Color(0xFFFFE24E), RoundedCornerShape(2.dp)).padding(horizontal = 8.dp, vertical = 2.dp)) {
                 Text("ETA 7 MINS", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF211B00))

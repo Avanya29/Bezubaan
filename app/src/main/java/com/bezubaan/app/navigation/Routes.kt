@@ -28,9 +28,8 @@ import kotlinx.serialization.Serializable
 @Serializable data object RescueActionSelectionRoute
 @Serializable data object RescueAnimalDetailsRoute
 @Serializable data object RescueAnimalLocationRoute
-@Serializable data object RescueReportSentRoute
-@Serializable data object RescueCaseDetailsRoute
-@Serializable data object RescueTimelineRoute
+@Serializable data class RescueReportSentRoute(val rescueId: String)
+@Serializable data class RescueTimelineRoute(val rescueId: String)
 
 @Serializable data object CommunityFeedRoute
 @Serializable data object CommunityFollowingRoute

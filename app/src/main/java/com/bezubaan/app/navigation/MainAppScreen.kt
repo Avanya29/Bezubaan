@@ -52,7 +52,6 @@ fun MainAppScreen(mainViewModel: MainViewModel) {
         AnimalDetailsRoute::class.qualifiedName,
         RescueAnimalLocationRoute::class.qualifiedName,
         RescueReportSentRoute::class.qualifiedName,
-        RescueCaseDetailsRoute::class.qualifiedName,
         RescueTimelineRoute::class.qualifiedName,
         CreatePostRoute::class.qualifiedName,
         AiChatRoute::class.qualifiedName

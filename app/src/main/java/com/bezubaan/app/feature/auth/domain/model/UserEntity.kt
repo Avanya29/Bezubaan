@@ -12,13 +12,31 @@ data class User(
     val email: String,
     val role: String = "CITIZEN",
     val phone: String? = null,
-    val avatarUrl: String? = null
+    val avatarUrl: String? = null,
+    val address: String? = null
 )
 
 fun com.bezubaan.app.feature.auth.data.remote.UserDto.toUser(): User {
     return User(
         id = id,
         name = name,
-        email = email
+        email = email,
+        role = role ?: "CITIZEN",
+        phone = profile?.phoneNumber,
+        address = profile?.address
+    )
+}
+
+data class UserStats(
+    val rescues: Int,
+    val fostered: Int,
+    val funded: Double
+)
+
+fun com.bezubaan.app.feature.auth.data.remote.UserStatsDto.toUserStats(): UserStats {
+    return UserStats(
+        rescues = rescues,
+        fostered = fostered,
+        funded = funded
     )
 }

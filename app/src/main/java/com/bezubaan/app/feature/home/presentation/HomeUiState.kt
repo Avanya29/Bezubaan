@@ -6,5 +6,6 @@ data class HomeUiState(
     val isLoading: Boolean = false,
     val nearbyCases: List<RescueCase> = emptyList(),
     val userName: String = "",
-    val locationName: String = "LOCATING..."
+    val locationName: String = "LOCATING...",
+    val isOnDuty: Boolean = false
 )
