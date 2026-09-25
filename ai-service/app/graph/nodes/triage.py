@@ -2,8 +2,10 @@ import logging
 from typing import Dict, Any, List
 from pydantic import BaseModel, Field
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage
 from app.graph.state import TriageGraphState
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -31,10 +33,8 @@ async def triage_node(state: TriageGraphState) -> Dict[str, Any]:
             "safety_warnings": []
         }
         
+    try:
         # We use ChatGroq as the primary, falling back to Gemini
-        from langchain_groq import ChatGroq
-        from app.config import settings
-
         # Primary LLM: Groq
         primary_llm = ChatGroq(
             model="llama-3.3-70b-versatile", # or whichever model you prefer
