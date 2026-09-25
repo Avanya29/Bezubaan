@@ -72,6 +72,12 @@ export class AiService {
       if (data.observations?.length) lines.push('\n🔍 Observations:\n• ' + data.observations.join('\n• '));
       if (data.recommended_actions?.length) lines.push('\n✅ Recommended Actions:\n• ' + data.recommended_actions.join('\n• '));
       if (data.safety_warnings?.length) lines.push('\n⚠️ Safety Warnings:\n• ' + data.safety_warnings.join('\n• '));
+      if (data.nearby_veterinary_help?.providers?.length) {
+        lines.push('\n🏥 Nearby Vets:');
+        data.nearby_veterinary_help.providers.forEach((vet: any) => {
+          lines.push(`• ${vet.name} (${Math.round(vet.distance_meters)}m away)\n  ${vet.address}${vet.phone ? '\n  📞 ' + vet.phone : ''}`);
+        });
+      }
       if (data.confidence_note) lines.push('\n📋 ' + data.confidence_note);
       return {
         id: Date.now().toString(),
@@ -112,6 +118,12 @@ export class AiService {
       if (data.observations?.length) lines.push('\n🔍 Observations:\n• ' + data.observations.join('\n• '));
       if (data.recommended_actions?.length) lines.push('\n✅ Recommended Actions:\n• ' + data.recommended_actions.join('\n• '));
       if (data.safety_warnings?.length) lines.push('\n⚠️ Safety Warnings:\n• ' + data.safety_warnings.join('\n• '));
+      if (data.nearby_veterinary_help?.providers?.length) {
+        lines.push('\n🏥 Nearby Vets:');
+        data.nearby_veterinary_help.providers.forEach((vet: any) => {
+          lines.push(`• ${vet.name} (${Math.round(vet.distance_meters)}m away)\n  ${vet.address}${vet.phone ? '\n  📞 ' + vet.phone : ''}`);
+        });
+      }
       if (data.confidence_note) lines.push('\n📋 ' + data.confidence_note);
       return {
         id: Date.now().toString(),
