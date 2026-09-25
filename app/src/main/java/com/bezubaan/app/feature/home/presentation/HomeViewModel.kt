@@ -27,6 +27,7 @@ class HomeViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val locationTracker: LocationTracker,
     private val rescueRepository: com.bezubaan.app.feature.rescue.domain.repository.RescueRepository,
+    private val volunteerRepository: com.bezubaan.app.feature.volunteer.domain.repository.VolunteerRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -64,7 +65,11 @@ class HomeViewModel @Inject constructor(
     }
 
     fun toggleDutyStatus() {
-        _uiState.update { it.copy(isOnDuty = !it.isOnDuty) }
+        val newStatus = !_uiState.value.isOnDuty
+        _uiState.update { it.copy(isOnDuty = newStatus) }
+        viewModelScope.launch {
+            volunteerRepository.updateAvailability(newStatus)
+        }
     }
 
     private suspend fun reverseGeocode(lat: Double, lng: Double): String {

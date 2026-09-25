@@ -58,13 +58,26 @@ fun VolunteerDashboardScreen(
                     .padding(24.dp),
                 contentAlignment = Alignment.Center
             ) {
+                val assignmentId = try { emergencyRescue?.getString("assignmentId") ?: "" } catch (e: Exception) { "" }
                 NewRescueDispatchCard(
                     // Pass actual data if needed: emergencyRescue
                     onAcceptPing = {
-                        viewModel.dismissEmergency()
-                        onNavigateToEmergencyDispatch()
+                        if (assignmentId.isNotEmpty()) {
+                            viewModel.acceptEmergency(assignmentId) {
+                                onNavigateToEmergencyDispatch()
+                            }
+                        } else {
+                            viewModel.dismissEmergency()
+                            onNavigateToEmergencyDispatch()
+                        }
                     },
-                    onPass = { viewModel.dismissEmergency() }
+                    onPass = { 
+                        if (assignmentId.isNotEmpty()) {
+                            viewModel.declineEmergency(assignmentId)
+                        } else {
+                            viewModel.dismissEmergency() 
+                        }
+                    }
                 )
             }
         }

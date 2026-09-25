@@ -21,7 +21,8 @@ import android.util.Log
 class VolunteerDashboardViewModel @Inject constructor(
     private val socketManager: SocketManager,
     private val authRepository: AuthRepository,
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenManager,
+    private val volunteerRepository: com.bezubaan.app.feature.volunteer.domain.repository.VolunteerRepository
 ) : ViewModel() {
 
     private val _user = MutableStateFlow<User?>(null)
@@ -52,6 +53,9 @@ class VolunteerDashboardViewModel @Inject constructor(
 
     fun setOffline(offline: Boolean) {
         _isOffline.value = offline
+        viewModelScope.launch {
+            volunteerRepository.updateAvailability(!offline)
+        }
         if (!offline) {
             viewModelScope.launch {
                 val token = tokenManager.getToken() ?: ""
@@ -76,6 +80,23 @@ class VolunteerDashboardViewModel @Inject constructor(
 
     fun dismissEmergency() {
         _emergencyRescue.value = null
+    }
+
+    fun acceptEmergency(assignmentId: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            val result = volunteerRepository.acceptAssignment(assignmentId)
+            if (result is com.bezubaan.app.core.common.Resource.Success) {
+                dismissEmergency()
+                onSuccess()
+            }
+        }
+    }
+
+    fun declineEmergency(assignmentId: String) {
+        viewModelScope.launch {
+            volunteerRepository.rejectAssignment(assignmentId, "declined")
+            dismissEmergency()
+        }
     }
 
     override fun onCleared() {
