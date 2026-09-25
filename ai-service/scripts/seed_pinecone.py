@@ -62,8 +62,8 @@ def main():
             
     print(f"Prepared {len(docs)} documents.")
     
-    print("Initializing embeddings (gemini-embedding-2)...")
-    embeddings = GoogleGenerativeAIEmbeddings(model="gemini-embedding-2", google_api_key=google_api_key)
+    print("Initializing embeddings (gemini-embedding-001)...")
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001", google_api_key=google_api_key)
     
     print(f"Uploading vectors to Pinecone index '{index_name}'...")
     print("This will take several minutes and make thousands of API calls to Google. Please wait.")

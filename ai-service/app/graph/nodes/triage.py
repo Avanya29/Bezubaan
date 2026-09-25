@@ -31,9 +31,26 @@ async def triage_node(state: TriageGraphState) -> Dict[str, Any]:
             "safety_warnings": []
         }
         
-    try:
-        llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
-        structured_llm = llm.with_structured_output(TriageOutput)
+        # We use ChatGroq as the primary, falling back to Gemini
+        from langchain_groq import ChatGroq
+        from app.config import settings
+
+        # Primary LLM: Groq
+        primary_llm = ChatGroq(
+            model="llama-3.3-70b-versatile", # or whichever model you prefer
+            temperature=0,
+            api_key=settings.groq_api_key
+        ).with_structured_output(TriageOutput)
+
+        # Fallback LLM: Gemini
+        fallback_llm = ChatGoogleGenerativeAI(
+            model="gemini-2.5-flash", 
+            temperature=0,
+            google_api_key=settings.llm_api_key
+        ).with_structured_output(TriageOutput)
+
+        # Chain them using LangChain's native fallback feature
+        llm_with_fallback = primary_llm.with_fallbacks([fallback_llm])
         
         vision_context = "\n".join(vision_findings) if vision_findings else "None provided."
         
@@ -54,7 +71,7 @@ async def triage_node(state: TriageGraphState) -> Dict[str, Any]:
         )
         
         message = HumanMessage(content=prompt)
-        result = await structured_llm.ainvoke([message])
+        result = await llm_with_fallback.ainvoke([message])
         
         return {
             "preliminary_assessment": result.preliminary_assessment,
@@ -63,35 +80,10 @@ async def triage_node(state: TriageGraphState) -> Dict[str, Any]:
             "safety_warnings": result.safety_warnings
         }
     except Exception as e:
-        logger.warning(f"Triage model (Gemini) failed: {e}. Attempting Groq fallback...")
-        try:
-            from groq import AsyncGroq
-            from app.config import settings
-            import json
-            
-            client = AsyncGroq(api_key=settings.groq_api_key)
-            groq_prompt = prompt + "\nOutput MUST be a valid JSON object matching the requested schema with keys: preliminary_assessment, severity_estimate, recommended_actions, safety_warnings."
-            
-            response = await client.chat.completions.create(
-                messages=[{"role": "user", "content": groq_prompt}],
-                model="openai/gpt-oss-120b",
-                response_format={"type": "json_object"},
-                temperature=0,
-            )
-            content = response.choices[0].message.content
-            result_dict = json.loads(content)
-            
-            return {
-                "preliminary_assessment": result_dict.get("preliminary_assessment", "Fallback processing used."),
-                "severity_estimate": result_dict.get("severity_estimate", "UNKNOWN"),
-                "recommended_actions": result_dict.get("recommended_actions", []),
-                "safety_warnings": result_dict.get("safety_warnings", [])
-            }
-        except Exception as fallback_error:
-            logger.error(f"Groq fallback also failed: {fallback_error}")
-            return {
-                "preliminary_assessment": "AI triage processing failed on all models. Manual review required.",
-                "severity_estimate": "UNKNOWN",
-                "recommended_actions": ["Manual review required due to AI service error."],
-                "safety_warnings": ["Always prioritize human safety when approaching unknown animals."]
-            }
+        logger.error(f"Both primary (Groq) and fallback (Gemini) models failed: {e}")
+        return {
+            "preliminary_assessment": "AI triage processing failed on all models. Manual review required.",
+            "severity_estimate": "UNKNOWN",
+            "recommended_actions": ["Manual review required due to AI service error."],
+            "safety_warnings": ["Always prioritize human safety when approaching unknown animals."]
+        }

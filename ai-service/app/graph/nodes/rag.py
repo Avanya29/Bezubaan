@@ -17,7 +17,7 @@ def get_vector_store():
     global _vector_store
     if _vector_store is None:
         try:
-            embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-2")
+            embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
             
             if settings.pinecone_api_key:
                 _vector_store = PineconeVectorStore(
