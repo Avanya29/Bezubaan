@@ -9,6 +9,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,11 +24,20 @@ import coil3.compose.AsyncImage
 
 @Composable
 fun ActiveRescueScreen(
+    assignmentId: String,
+    rescueId: String,
+    viewModel: ActiveRescueViewModel = hiltViewModel(),
     onMarkRescued: () -> Unit,
     onCallVet: () -> Unit,
     onChat: () -> Unit,
     onIssue: () -> Unit
 ) {
+    DisposableEffect(assignmentId, rescueId) {
+        viewModel.startLiveTracking(assignmentId, rescueId)
+        onDispose {
+            viewModel.stopLiveTracking()
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()

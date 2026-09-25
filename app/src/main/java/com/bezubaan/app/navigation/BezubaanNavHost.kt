@@ -308,6 +308,8 @@ fun BezubaanNavHost(
             composable<ActiveRescueRoute> { backStackEntry ->
                 val route = backStackEntry.toRoute<ActiveRescueRoute>()
                 ActiveRescueScreen(
+                    assignmentId = route.assignmentId,
+                    rescueId = route.rescueId,
                     onMarkRescued = { navController.popBackStack() },
                     onCallVet = { },
                     onChat = { },
