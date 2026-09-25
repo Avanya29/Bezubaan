@@ -16,7 +16,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Role } from '@prisma/client';
 
-@Controller('api/fosters')
+@Controller('fosters')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class FostersController {
   constructor(private readonly fostersService: FostersService) {}

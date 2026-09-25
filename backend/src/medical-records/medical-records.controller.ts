@@ -9,7 +9,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Role } from '@prisma/client';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('api/medical-records')
+@Controller('medical-records')
 export class MedicalRecordsController {
   constructor(private readonly medicalRecordsService: MedicalRecordsService) {}
 

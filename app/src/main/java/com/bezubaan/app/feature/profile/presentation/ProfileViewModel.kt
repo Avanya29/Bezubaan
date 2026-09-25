@@ -37,11 +37,8 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             
-            val profileDeferred = async { authRepository.getProfile() }
-            val statsDeferred = async { authRepository.getStats() }
-            
-            val profileResult = profileDeferred.await()
-            val statsResult = statsDeferred.await()
+            val profileResult = authRepository.getProfile()
+            val statsResult = authRepository.getStats()
             
             if (profileResult is Resource.Success && statsResult is Resource.Success) {
                 _uiState.update { 

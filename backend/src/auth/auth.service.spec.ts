@@ -3,6 +3,7 @@ jest.setTimeout(15000);
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 
 describe('AuthService', () => {
@@ -21,11 +22,16 @@ describe('AuthService', () => {
       sign: jest.fn(),
     };
 
+    const mockConfigService = {
+      get: jest.fn().mockReturnValue('mock-client-id'),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         { provide: UsersService, useValue: mockUsersService },
         { provide: JwtService, useValue: mockJwtService },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 

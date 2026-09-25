@@ -92,7 +92,14 @@ fun HomeScreen(
                 ) 
             }
             item { PrimaryCalloutCard(onNavigateToReport) }
-            item { QuickActionGrid() }
+            item { 
+                QuickActionGrid(
+                    onAiTriageClick = onNavigateToReport,
+                    onAdoptClick = {},
+                    onFosterClick = {},
+                    onDonateClick = {}
+                ) 
+            }
             item { ActiveRescueSection() }
             item { NearbyRescuesSection(uiState.nearbyCases, onNavigateToDetails) }
             item { RescueStoriesSection() }
@@ -292,19 +299,26 @@ fun PrimaryCalloutCard(onNavigateToReport: () -> Unit) {
 }
 
 @Composable
-fun QuickActionGrid() {
+fun QuickActionGrid(
+    onAiTriageClick: () -> Unit,
+    onAdoptClick: () -> Unit,
+    onFosterClick: () -> Unit,
+    onDonateClick: () -> Unit
+) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             QuickActionCard(
                 title = "AI TRIAGE CAM", 
                 subtitle = "Instant VetVision Scan", 
                 icon = Icons.Default.CameraAlt,
+                onClick = onAiTriageClick,
                 modifier = Modifier.weight(1f)
             )
             QuickActionCard(
                 title = "ADOPT INDIES", 
                 subtitle = "28 Pups Waiting", 
                 icon = Icons.Default.Pets,
+                onClick = onAdoptClick,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -313,12 +327,14 @@ fun QuickActionGrid() {
                 title = "URGENT FOSTER", 
                 subtitle = "Post-Op Recovery", 
                 icon = Icons.Default.Home,
+                onClick = onFosterClick,
                 modifier = Modifier.weight(1f)
             )
             QuickActionCard(
                 title = "BANDAGE FUND", 
                 subtitle = "Direct Med Grants", 
                 icon = Icons.Default.Favorite,
+                onClick = onDonateClick,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -326,12 +342,12 @@ fun QuickActionGrid() {
 }
 
 @Composable
-fun QuickActionCard(title: String, subtitle: String, icon: ImageVector, modifier: Modifier = Modifier) {
+fun QuickActionCard(title: String, subtitle: String, icon: ImageVector, onClick: () -> Unit = {}, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .background(Color.White, RoundedCornerShape(12.dp))
             .border(2.dp, Color.Black, RoundedCornerShape(12.dp))
-            .clickable { }
+            .clickable { onClick() }
             .padding(16.dp)
     ) {
         Column {

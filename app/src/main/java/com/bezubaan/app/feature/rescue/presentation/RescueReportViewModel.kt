@@ -9,13 +9,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.bezubaan.app.core.location.LocationTracker
 import com.bezubaan.app.feature.rescue.domain.repository.RescueRepository
 import com.bezubaan.app.core.common.Resource
 import javax.inject.Inject
 
 @HiltViewModel
 class RescueReportViewModel @Inject constructor(
-    private val repository: RescueRepository
+    private val repository: RescueRepository,
+    private val locationTracker: LocationTracker
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RescueReportUiState())
@@ -40,15 +42,14 @@ class RescueReportViewModel @Inject constructor(
             _uiState.update { it.copy(isSubmitting = true) }
             val currentState = _uiState.value
             
-            // Dummy coordinates for now if location is a string address, 
-            // but we can parse it or rely on device GPS later.
-            val mockLat = 19.0760
-            val mockLng = 72.8777
+            val deviceLocation = locationTracker.getCurrentLocation()
+            val finalLat = deviceLocation?.latitude ?: 0.0
+            val finalLng = deviceLocation?.longitude ?: 0.0
             
             repository.reportRescue(
                 description = currentState.description,
-                lat = mockLat,
-                lng = mockLng,
+                lat = finalLat,
+                lng = finalLng,
                 address = currentState.location,
                 animalSpecies = currentState.animalType
             ).collect { result ->

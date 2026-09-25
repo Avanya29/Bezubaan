@@ -1,4 +1,10 @@
-import { Injectable, Inject, Optional, NotFoundException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  Optional,
+  NotFoundException,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { UpdatePreferenceDto } from './dto/update-preference.dto';
 import { ClientProxy } from '@nestjs/microservices';

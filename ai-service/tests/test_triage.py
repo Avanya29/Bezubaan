@@ -11,6 +11,9 @@ Tests cover:
   - Malformed response handling
   - Anonymous correlation ID generation
 """
+import os
+os.environ["AI_PROVIDER"] = "mock"
+
 import pytest
 from unittest.mock import AsyncMock, patch
 

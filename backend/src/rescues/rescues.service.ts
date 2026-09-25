@@ -47,14 +47,14 @@ export class RescuesService {
           role: 'VOLUNTEER',
           fcmToken: { not: null },
           volunteerProfile: {
-            availabilityStatus: 'AVAILABLE'
-          }
+            availabilityStatus: 'AVAILABLE',
+          },
         },
-        select: { fcmToken: true }
+        select: { fcmToken: true },
       });
 
       const tokens = availableVolunteers
-        .map(v => v.fcmToken)
+        .map((v) => v.fcmToken)
         .filter((t): t is string => t !== null);
 
       if (tokens.length > 0) {
@@ -155,13 +155,13 @@ export class RescuesService {
       include: { user: true },
     });
 
-    const mappedVolunteers = availableVolunteers.map(v => ({
+    const mappedVolunteers = availableVolunteers.map((v) => ({
       id: v.id,
       name: v.user.email, // using email as a fallback, should use user profile name if available
       experience_level: v.experience || 'Unknown',
       capabilities: v.capabilities,
       // We could calculate distance using Haversine formula here if needed
-      // distance_meters: 1000 
+      // distance_meters: 1000
     }));
 
     // Trigger the AI service

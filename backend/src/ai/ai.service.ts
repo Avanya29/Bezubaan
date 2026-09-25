@@ -33,12 +33,12 @@ export class AiService {
   async analyzeImage(imageUrl: string) {
     try {
       const rescueId = `img-${Date.now()}`;
-      
+
       let finalImageUrl = imageUrl;
       if (imageUrl.startsWith('data:image')) {
         const fs = require('fs');
         const path = require('path');
-        const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, "");
+        const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, '');
         const buffer = Buffer.from(base64Data, 'base64');
         const filename = `${rescueId}.jpg`;
         const publicDir = path.join(__dirname, '..', '..', 'public');
@@ -46,10 +46,12 @@ export class AiService {
           fs.mkdirSync(publicDir, { recursive: true });
         }
         fs.writeFileSync(path.join(publicDir, filename), buffer);
-        
+
         // Since we are running on Render, the host is usually available via env or we can construct it
         // As a fallback for Render, the host is usually the app name
-        const host = process.env.RENDER_EXTERNAL_HOSTNAME ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}` : 'https://bezubaan-api.onrender.com';
+        const host = process.env.RENDER_EXTERNAL_HOSTNAME
+          ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}`
+          : 'https://bezubaan-api.onrender.com';
         finalImageUrl = `${host}/uploads/${filename}`;
       }
 
@@ -64,14 +66,23 @@ export class AiService {
         }),
         signal: AbortSignal.timeout(this.timeoutMs),
       });
-      if (!response.ok) throw new Error(`AI Service returned ${response.status}`);
+      if (!response.ok)
+        throw new Error(`AI Service returned ${response.status}`);
       const data = await response.json();
       // Map triage response to a format the Android AI chat can display
       const lines: string[] = [];
       if (data.preliminary_assessment) lines.push(data.preliminary_assessment);
-      if (data.observations?.length) lines.push('\n🔍 Observations:\n• ' + data.observations.join('\n• '));
-      if (data.recommended_actions?.length) lines.push('\n✅ Recommended Actions:\n• ' + data.recommended_actions.join('\n• '));
-      if (data.safety_warnings?.length) lines.push('\n⚠️ Safety Warnings:\n• ' + data.safety_warnings.join('\n• '));
+      if (data.observations?.length)
+        lines.push('\n🔍 Observations:\n• ' + data.observations.join('\n• '));
+      if (data.recommended_actions?.length)
+        lines.push(
+          '\n✅ Recommended Actions:\n• ' +
+            data.recommended_actions.join('\n• '),
+        );
+      if (data.safety_warnings?.length)
+        lines.push(
+          '\n⚠️ Safety Warnings:\n• ' + data.safety_warnings.join('\n• '),
+        );
       if (data.confidence_note) lines.push('\n📋 ' + data.confidence_note);
       return {
         id: Date.now().toString(),
@@ -84,7 +95,7 @@ export class AiService {
       this.logger.error('Analyze failed', error);
       return {
         id: Date.now().toString(),
-        text: 'I was unable to analyze the image right now. Please describe the animal\'s condition and I will help you.',
+        text: "I was unable to analyze the image right now. Please describe the animal's condition and I will help you.",
         isUser: false,
         timestamp: Date.now(),
       };
@@ -104,18 +115,29 @@ export class AiService {
         }),
         signal: AbortSignal.timeout(this.timeoutMs),
       });
-      if (!response.ok) throw new Error(`AI Service returned ${response.status}`);
+      if (!response.ok)
+        throw new Error(`AI Service returned ${response.status}`);
       const data = await response.json();
       // Build a readable reply from the triage response
       const lines: string[] = [];
       if (data.preliminary_assessment) lines.push(data.preliminary_assessment);
-      if (data.observations?.length) lines.push('\n🔍 Observations:\n• ' + data.observations.join('\n• '));
-      if (data.recommended_actions?.length) lines.push('\n✅ Recommended Actions:\n• ' + data.recommended_actions.join('\n• '));
-      if (data.safety_warnings?.length) lines.push('\n⚠️ Safety Warnings:\n• ' + data.safety_warnings.join('\n• '));
+      if (data.observations?.length)
+        lines.push('\n🔍 Observations:\n• ' + data.observations.join('\n• '));
+      if (data.recommended_actions?.length)
+        lines.push(
+          '\n✅ Recommended Actions:\n• ' +
+            data.recommended_actions.join('\n• '),
+        );
+      if (data.safety_warnings?.length)
+        lines.push(
+          '\n⚠️ Safety Warnings:\n• ' + data.safety_warnings.join('\n• '),
+        );
       if (data.confidence_note) lines.push('\n📋 ' + data.confidence_note);
       return {
         id: Date.now().toString(),
-        text: lines.join('\n') || "I've reviewed the situation. Please consult a vet for professional advice.",
+        text:
+          lines.join('\n') ||
+          "I've reviewed the situation. Please consult a vet for professional advice.",
         isUser: false,
         timestamp: Date.now(),
       };

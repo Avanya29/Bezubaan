@@ -35,10 +35,13 @@ export class EventsGateway
     try {
       // In Socket.IO v4, auth tokens are usually passed in handshake.auth
       let token = client.handshake.auth?.token;
-      
+
       // Fallback for custom headers
       if (!token && client.handshake.headers['authorization']) {
-        token = client.handshake.headers['authorization'].replace('Bearer ', '');
+        token = client.handshake.headers['authorization'].replace(
+          'Bearer ',
+          '',
+        );
       }
 
       if (!token) {
@@ -46,15 +49,21 @@ export class EventsGateway
         return;
       }
 
-      const secret = this.configService.get<string>('JWT_SECRET') || 'defaultSecretForDevOnly';
+      const secret =
+        this.configService.get<string>('JWT_SECRET') ||
+        'defaultSecretForDevOnly';
       const decoded = jwt.verify(token, secret) as any;
 
       // Only track active volunteers for emergency dispatch
       if (decoded.role === 'VOLUNTEER') {
         this.connectedVolunteers.set(decoded.sub, client);
-        this.logger.log(`Volunteer Connected: ${decoded.sub} (Socket: ${client.id})`);
+        this.logger.log(
+          `Volunteer Connected: ${decoded.sub} (Socket: ${client.id})`,
+        );
       } else {
-        this.logger.log(`Citizen Connected: ${decoded.sub} (Socket: ${client.id})`);
+        this.logger.log(
+          `Citizen Connected: ${decoded.sub} (Socket: ${client.id})`,
+        );
       }
     } catch (err) {
       this.logger.error(`Connection error: ${err.message}`);
@@ -78,7 +87,9 @@ export class EventsGateway
    * Broadcast an emergency rescue to all connected active volunteers
    */
   broadcastEmergency(rescue: any) {
-    this.logger.log(`Broadcasting EMERGENCY RESCUE [${rescue.id}] to ${this.connectedVolunteers.size} active volunteers.`);
+    this.logger.log(
+      `Broadcasting EMERGENCY RESCUE [${rescue.id}] to ${this.connectedVolunteers.size} active volunteers.`,
+    );
     // In a real production app, we would filter by geolocation (e.g. within 5km radius).
     // For now, we broadcast to all active volunteers.
     this.connectedVolunteers.forEach((socket, userId) => {

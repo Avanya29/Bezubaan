@@ -24,11 +24,14 @@ async function bootstrap() {
   app.use(helmet());
   const express = require('express');
   const path = require('path');
-  
+
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-  app.use('/uploads', express.static(path.join(__dirname, '..', '..', 'public')));
-  
+  app.use(
+    '/uploads',
+    express.static(path.join(__dirname, '..', '..', 'public')),
+  );
+
   app.enableCors({
     origin: corsOrigin,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
