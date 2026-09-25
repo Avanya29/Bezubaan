@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,6 +23,8 @@ import coil3.compose.AsyncImage
 
 @Composable
 fun EmergencyDispatchScreen(
+    assignmentId: String,
+    viewModel: EmergencyDispatchViewModel = hiltViewModel(),
     onAccept: () -> Unit,
     onDecline: () -> Unit,
     onBack: () -> Unit
@@ -128,7 +131,7 @@ fun EmergencyDispatchScreen(
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxWidth()) {
                     Button(
-                        onClick = onDecline,
+                        onClick = { viewModel.declineEmergency(assignmentId, onDecline) },
                         modifier = Modifier.weight(1f).height(56.dp).border(3.dp, Color.Black),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
                         shape = RoundedCornerShape(0.dp)
@@ -136,9 +139,9 @@ fun EmergencyDispatchScreen(
                         Text("DECLINE", fontSize = 14.sp, fontWeight = FontWeight.Black)
                     }
                     Button(
-                        onClick = onAccept,
+                        onClick = { viewModel.acceptEmergency(assignmentId, onAccept) },
                         modifier = Modifier.weight(2f).height(56.dp).border(3.dp, Color.Black),
-                        colors = ButtonDefaults.buttonColors(containerColor = yellowBtn, contentColor = Color.Black),
+                        colors = ButtonDefaults.buttonColors(containerColor = yellow, contentColor = Color.Black),
                         shape = RoundedCornerShape(0.dp)
                     ) {
                         Text("⚡ ACCEPT RESCUE", fontSize = 14.sp, fontWeight = FontWeight.Black)

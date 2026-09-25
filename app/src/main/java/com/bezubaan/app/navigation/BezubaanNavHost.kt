@@ -288,20 +288,25 @@ fun BezubaanNavHost(
 
             composable<VolunteerDashboardRoute> { 
                 VolunteerDashboardScreen(
-                    onNavigateToEmergencyDispatch = { navController.navigate(EmergencyDispatchRoute) }
+                    onNavigateToEmergencyDispatch = { assignmentId, rescueId -> 
+                        navController.navigate(EmergencyDispatchRoute(assignmentId, rescueId)) 
+                    }
                 ) 
             }
-            composable<EmergencyDispatchRoute> { 
+            composable<EmergencyDispatchRoute> { backStackEntry ->
+                val route = backStackEntry.toRoute<EmergencyDispatchRoute>()
                 EmergencyDispatchScreen(
+                    assignmentId = route.assignmentId,
                     onAccept = { 
                         navController.popBackStack()
-                        navController.navigate(ActiveRescueRoute)
+                        navController.navigate(ActiveRescueRoute(route.assignmentId, route.rescueId))
                     },
                     onDecline = { navController.popBackStack() },
                     onBack = { navController.popBackStack() }
                 ) 
             }
-            composable<ActiveRescueRoute> {
+            composable<ActiveRescueRoute> { backStackEntry ->
+                val route = backStackEntry.toRoute<ActiveRescueRoute>()
                 ActiveRescueScreen(
                     onMarkRescued = { navController.popBackStack() },
                     onCallVet = { },

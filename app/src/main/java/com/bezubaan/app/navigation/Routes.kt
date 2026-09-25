@@ -46,8 +46,8 @@ import kotlinx.serialization.Serializable
 @Serializable data object VolunteerDashboardRoute
 @Serializable data object NgoDashboardRoute
 
-@Serializable data object EmergencyDispatchRoute
-@Serializable data object ActiveRescueRoute
+@Serializable data class EmergencyDispatchRoute(val assignmentId: String, val rescueId: String)
+@Serializable data class ActiveRescueRoute(val assignmentId: String, val rescueId: String)
 @Serializable data object RescueTrackingRoute
 
 @Serializable data object MapRoute

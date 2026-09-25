@@ -39,7 +39,7 @@ val thickBorder = 3.dp
 @Composable
 fun VolunteerDashboardScreen(
     viewModel: VolunteerDashboardViewModel = hiltViewModel(),
-    onNavigateToEmergencyDispatch: () -> Unit = {}
+    onNavigateToEmergencyDispatch: (String, String) -> Unit = { _, _ -> }
 ) {
     val isOffline by viewModel.isOffline.collectAsStateWithLifecycle()
     val emergencyRescue by viewModel.emergencyRescue.collectAsStateWithLifecycle()
@@ -59,16 +59,15 @@ fun VolunteerDashboardScreen(
                 contentAlignment = Alignment.Center
             ) {
                 val assignmentId = try { emergencyRescue?.getString("assignmentId") ?: "" } catch (e: Exception) { "" }
+                val rescueId = try { emergencyRescue?.getJSONObject("rescue")?.getString("id") ?: "" } catch (e: Exception) { "" }
                 NewRescueDispatchCard(
                     // Pass actual data if needed: emergencyRescue
                     onAcceptPing = {
                         if (assignmentId.isNotEmpty()) {
-                            viewModel.acceptEmergency(assignmentId) {
-                                onNavigateToEmergencyDispatch()
-                            }
+                            viewModel.dismissEmergency()
+                            onNavigateToEmergencyDispatch(assignmentId, rescueId)
                         } else {
                             viewModel.dismissEmergency()
-                            onNavigateToEmergencyDispatch()
                         }
                     },
                     onPass = { 
@@ -664,7 +663,7 @@ private fun NewRescueDispatchCard(onAcceptPing: () -> Unit, onPass: () -> Unit) 
                     colors = ButtonDefaults.buttonColors(containerColor = yellow, contentColor = Color.Black),
                     shape = RoundedCornerShape(0.dp)
                 ) {
-                    Text("ACCEPT DISPATCH ➔", fontSize = 16.sp, fontWeight = FontWeight.Black)
+                    Text("VIEW DISPATCH ➔", fontSize = 16.sp, fontWeight = FontWeight.Black)
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
