@@ -32,7 +32,7 @@ async def triage_node(state: TriageGraphState) -> Dict[str, Any]:
         }
         
     try:
-        llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0)
+        llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
         structured_llm = llm.with_structured_output(TriageOutput)
         
         vision_context = "\n".join(vision_findings) if vision_findings else "None provided."

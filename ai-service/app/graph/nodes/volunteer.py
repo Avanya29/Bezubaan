@@ -28,7 +28,7 @@ async def volunteer_node(state: TriageGraphState) -> Dict[str, Any]:
         return {"recommended_volunteers": []}
         
     try:
-        llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0)
+        llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
         structured_llm = llm.with_structured_output(VolunteerResponseSchema)
         
         severity = state.get("severity_estimate", "UNKNOWN")

@@ -39,7 +39,7 @@ async def vision_node(state: TriageGraphState) -> Dict[str, Any]:
     
     try:
         # Initialize the Gemini Vision model (requires GOOGLE_API_KEY env var)
-        llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0)
+        llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
         structured_llm = llm.with_structured_output(VisionExtraction)
         
         prompt = (

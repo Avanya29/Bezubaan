@@ -14,7 +14,7 @@ def get_vector_store():
     global _vector_store
     if _vector_store is None:
         try:
-            embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+            embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
             
             # Dummy SOP documents for RAG
             docs = [
