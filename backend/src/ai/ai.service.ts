@@ -26,7 +26,7 @@ export class AiService {
       this.configService.get<string>('AI_SERVICE_URL') ||
       'http://localhost:18000';
     this.timeoutMs =
-      (this.configService.get<number>('AI_PROVIDER_TIMEOUT_SECONDS') || 30) *
+      (this.configService.get<number>('AI_PROVIDER_TIMEOUT_SECONDS') || 60) *
       1000;
   }
 
@@ -41,7 +41,7 @@ export class AiService {
         const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, "");
         const buffer = Buffer.from(base64Data, 'base64');
         const filename = `${rescueId}.jpg`;
-        const publicDir = path.join(__dirname, '..', '..', 'public');
+        const publicDir = path.join(__dirname, '..', '..', '..', 'public');
         if (!fs.existsSync(publicDir)) {
           fs.mkdirSync(publicDir, { recursive: true });
         }
