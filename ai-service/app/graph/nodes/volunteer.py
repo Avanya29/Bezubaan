@@ -55,5 +55,26 @@ async def volunteer_node(state: TriageGraphState) -> Dict[str, Any]:
         return {"recommended_volunteers": recs}
         
     except Exception as e:
-        logger.error(f"Volunteer model failed: {e}")
-        return {"recommended_volunteers": []}
+        logger.warning(f"Volunteer model (Gemini) failed: {e}. Attempting Groq fallback...")
+        try:
+            from groq import AsyncGroq
+            from app.config import settings
+            import json
+            
+            client = AsyncGroq(api_key=settings.groq_api_key)
+            groq_prompt = prompt + "\nOutput MUST be a valid JSON object matching the requested schema with a key 'recommended_volunteers' containing an array of objects."
+            
+            response = await client.chat.completions.create(
+                messages=[{"role": "user", "content": groq_prompt}],
+                model="llama3-8b-8192",
+                response_format={"type": "json_object"},
+                temperature=0,
+            )
+            content = response.choices[0].message.content
+            result_dict = json.loads(content)
+            
+            recs = result_dict.get("recommended_volunteers", [])
+            return {"recommended_volunteers": recs}
+        except Exception as fallback_error:
+            logger.error(f"Groq fallback for volunteer model also failed: {fallback_error}")
+            return {"recommended_volunteers": []}

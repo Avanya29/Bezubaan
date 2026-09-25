@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     llm_api_key: str = ""
     groq_api_key: str = ""
     google_maps_api_key: str = ""
+    pinecone_api_key: str = ""
+    pinecone_index_name: str = "bezubaan-rag"
     ai_provider_timeout_seconds: int = 30
     log_level: str = "INFO"
 
