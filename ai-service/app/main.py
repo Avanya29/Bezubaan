@@ -35,8 +35,7 @@ def _create_provider() -> AIProvider:
     """
     Instantiate the configured AI provider.
 
-    Currently only 'mock' is supported.
-    When Q14/Q15 are resolved, additional providers will be added here.
+    Currently supports 'mock', 'gemini', 'groq', and 'fallback'.
     """
     provider_name = settings.ai_provider.lower()
     if provider_name == "mock":
@@ -45,10 +44,19 @@ def _create_provider() -> AIProvider:
     elif provider_name == "gemini":
         logger.info("Using GeminiProvider (gemini-2.5-flash) for AI triage")
         return GeminiProvider()
+    elif provider_name == "groq":
+        logger.info("Using GroqProvider (llama3-8b) for AI triage")
+        from app.providers.groq_provider import GroqProvider
+        return GroqProvider()
+    elif provider_name == "fallback":
+        logger.info("Using FallbackProvider (Gemini -> Groq) for AI triage")
+        from app.providers.groq_provider import GroqProvider
+        from app.providers.fallback_provider import FallbackProvider
+        return FallbackProvider(GeminiProvider(), GroqProvider())
     else:
         raise ValueError(
             f"Unknown AI_PROVIDER: '{settings.ai_provider}'. "
-            f"Currently 'mock' and 'gemini' are supported."
+            f"Currently 'mock', 'gemini', 'groq', and 'fallback' are supported."
         )
 
 
