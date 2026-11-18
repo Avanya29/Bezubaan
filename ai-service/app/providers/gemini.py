@@ -100,7 +100,10 @@ Animal Info:
 - Description: {info.description or 'None'}
 """
         
-        location_ctx = f"Location: {request.location.latitude}, {request.location.longitude} ({request.location.address or 'No address'})"
+        if request.location.latitude == 0.0 and request.location.longitude == 0.0:
+            location_ctx = "Location: Not specified by user"
+        else:
+            location_ctx = f"Location: Coordinates {request.location.latitude}, {request.location.longitude} ({request.location.address or 'Address pending'})"
 
         return f"""
 You are Jeev, an expert animal rescue triage assistant for the Bezubaan platform.
@@ -109,6 +112,7 @@ Your task is to analyze the following incident report and provide a structured p
 IMPORTANT SAFETY RULES:
 1. You are providing a PRELIMINARY assessment, NOT a verified veterinary diagnosis.
 2. If symptoms suggest rabies, severe trauma, or aggressive behavior, emphasize human safety in warnings.
+3. NEVER assume the user is in Karnataka, Bangalore, or any specific state unless explicitly stated in the address or description. Recommend seeking assistance from registered local veterinary clinics in their immediate vicinity.
 
 Incident Description:
 "{request.description}"
