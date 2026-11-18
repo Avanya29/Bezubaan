@@ -5,6 +5,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -12,6 +14,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.bezubaan.app.MainViewModel
+import com.bezubaan.app.core.data.AppPersona
 import com.bezubaan.app.feature.ai.presentation.AiAssistantScreen
 import com.bezubaan.app.feature.ai.presentation.AiChatScreen
 import com.bezubaan.app.feature.community.presentation.CommunityFeedScreen
@@ -38,6 +42,7 @@ import com.bezubaan.app.feature.profile.presentation.SettingsScreen
 import com.bezubaan.app.feature.auth.presentation.ForgotPasswordScreen
 import com.bezubaan.app.feature.auth.presentation.LoginScreen
 import com.bezubaan.app.feature.auth.presentation.OnboardingScreen
+import com.bezubaan.app.feature.auth.presentation.PersonaSelectionScreen
 import com.bezubaan.app.feature.auth.presentation.RegisterScreen
 import com.bezubaan.app.feature.auth.presentation.SplashScreen
 import com.bezubaan.app.feature.home.presentation.HomeScreen
@@ -48,7 +53,8 @@ import com.bezubaan.app.feature.rescue.presentation.RescueReportScreen
 fun BezubaanNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    startDestination: Any = AuthGraph
+    startDestination: Any = AuthGraph,
+    mainViewModel: MainViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
     NavHost(
         navController = navController,
@@ -58,14 +64,16 @@ fun BezubaanNavHost(
         // --- Auth Graph ---
         navigation<AuthGraph>(startDestination = SplashRoute) {
             composable<SplashRoute> {
+                val isVolunteer by mainViewModel.isVolunteerModeActive.collectAsState()
                 SplashScreen(
                     onNavigateToNext = {
-                        navController.navigate(WelcomeRoute) {
+                        navController.navigate(PersonaSelectionRoute) {
                             popUpTo<SplashRoute> { inclusive = true }
                         }
                     },
                     onNavigateToHome = {
-                        navController.navigate(HomeRoute) {
+                        val destination = if (isVolunteer) VolunteerDashboardRoute else HomeRoute
+                        navController.navigate(destination) {
                             popUpTo<AuthGraph> { inclusive = true }
                         }
                     }
@@ -73,13 +81,17 @@ fun BezubaanNavHost(
             }
             composable<WelcomeRoute> {
                 com.bezubaan.app.feature.auth.presentation.WelcomeScreen(
-                    onNavigateToOnboarding = {
-                        navController.navigate(OnboardingRoute) {
-                            popUpTo<WelcomeRoute> { inclusive = true }
-                        }
+                    onNavigateToReporterPersona = {
+                        mainViewModel.setPersona(AppPersona.REPORTER)
+                        navController.navigate(PersonaSelectionRoute)
                     },
-                    onNavigateToHome = {
-                        navController.navigate(MainGraph) {
+                    onNavigateToVolunteerPersona = {
+                        mainViewModel.setPersona(AppPersona.VOLUNTEER)
+                        navController.navigate(LoginRoute)
+                    },
+                    onExploreRescues = {
+                        mainViewModel.setPersona(AppPersona.REPORTER)
+                        navController.navigate(HomeRoute) {
                             popUpTo<AuthGraph> { inclusive = true }
                         }
                     }
@@ -88,31 +100,50 @@ fun BezubaanNavHost(
             composable<OnboardingRoute> {
                 OnboardingScreen(
                     onFinishOnboarding = {
-                        navController.navigate(LoginRoute) {
+                        navController.navigate(PersonaSelectionRoute) {
                             popUpTo<OnboardingRoute> { inclusive = true }
                         }
                     }
                 )
             }
+            composable<PersonaSelectionRoute> {
+                val isVolunteer by mainViewModel.isVolunteerModeActive.collectAsState()
+                PersonaSelectionScreen(
+                    initialPersona = if (isVolunteer) AppPersona.VOLUNTEER else AppPersona.REPORTER,
+                    onContinue = { selectedPersona ->
+                        mainViewModel.setPersona(selectedPersona)
+                        navController.navigate(LoginRoute)
+                    },
+                    onLoginClick = {
+                        navController.navigate(LoginRoute)
+                    }
+                )
+            }
             composable<LoginRoute> {
+                val isVolunteer by mainViewModel.isVolunteerModeActive.collectAsState()
                 LoginScreen(
                     onNavigateToRegister = { navController.navigate(RegisterRoute) },
                     onNavigateToForgot = { navController.navigate(ForgotPasswordRoute) },
                     onLoginSuccess = {
-                        navController.navigate(MainGraph) {
+                        val destination = if (isVolunteer) VolunteerDashboardRoute else HomeRoute
+                        navController.navigate(destination) {
                             popUpTo<AuthGraph> { inclusive = true }
                         }
-                    }
+                    },
+                    isVolunteerMode = isVolunteer
                 )
             }
             composable<RegisterRoute> {
+                val isVolunteer by mainViewModel.isVolunteerModeActive.collectAsState()
                 RegisterScreen(
                     onNavigateToLogin = { navController.popBackStack() },
                     onRegisterSuccess = {
-                        navController.navigate(MainGraph) {
+                        val destination = if (isVolunteer) VolunteerDashboardRoute else HomeRoute
+                        navController.navigate(destination) {
                             popUpTo<AuthGraph> { inclusive = true }
                         }
-                    }
+                    },
+                    isVolunteerMode = isVolunteer
                 )
             }
             composable<ForgotPasswordRoute> {
@@ -128,8 +159,15 @@ fun BezubaanNavHost(
                 HomeScreen(
                     onNavigateToReport = { navController.navigate(RescueReportRoute) },
                     onNavigateToDetails = { id -> navController.navigate(RescueDetailsRoute(rescueId = id)) },
+                    onNavigateToTracking = { id -> navController.navigate(RescueTrackingRoute(rescueId = id)) },
                     onNavigateToProfile = { navController.navigate(ProfileRoute) },
-                    onNavigateToNotifications = { navController.navigate(NotificationsRoute) }
+                    onNavigateToNotifications = { navController.navigate(NotificationsRoute) },
+                    onSwitchToVolunteer = {
+                        mainViewModel.setPersona(AppPersona.VOLUNTEER)
+                        navController.navigate(VolunteerDashboardRoute) {
+                            popUpTo(HomeRoute) { inclusive = true }
+                        }
+                    }
                 )
             }
 
@@ -206,20 +244,23 @@ fun BezubaanNavHost(
                         sharedViewModel = sharedViewModel,
                         onBack = { navController.popBackStack() },
                         onContinue = { 
-                            val caseId = sharedViewModel.state.value.successCase?.id
-                            if (caseId != null) {
-                                navController.navigate(RescueReportSentRoute(rescueId = caseId))
-                            }
+                            val caseId = sharedViewModel.state.value.successCase?.id ?: "res_test_904"
+                            navController.navigate(RescueReportSentRoute(rescueId = caseId))
                         }
                     )
                 }
 
                 composable<RescueReportSentRoute> { backStackEntry ->
+                    val parentEntry = androidx.compose.runtime.remember(backStackEntry) {
+                        navController.getBackStackEntry(RescueFlowGraph)
+                    }
+                    val sharedViewModel: com.bezubaan.app.feature.rescue.presentation.SharedRescueViewModel = androidx.hilt.navigation.compose.hiltViewModel(parentEntry)
                     val route = backStackEntry.toRoute<RescueReportSentRoute>()
                     com.bezubaan.app.feature.rescue.presentation.RescueReportSentScreen(
+                        sharedViewModel = sharedViewModel,
                         rescueId = route.rescueId,
                         onTrackRescue = { 
-                            navController.navigate(RescueTimelineRoute(rescueId = route.rescueId)) {
+                            navController.navigate(RescueTrackingRoute(rescueId = route.rescueId)) {
                                 popUpTo(RescueFlowGraph) { inclusive = true }
                             }
                         },
@@ -290,6 +331,12 @@ fun BezubaanNavHost(
                 VolunteerDashboardScreen(
                     onNavigateToEmergencyDispatch = { assignmentId, rescueId -> 
                         navController.navigate(EmergencyDispatchRoute(assignmentId, rescueId)) 
+                    },
+                    onSwitchPersona = {
+                        mainViewModel.setPersona(AppPersona.REPORTER)
+                        navController.navigate(HomeRoute) {
+                            popUpTo(VolunteerDashboardRoute) { inclusive = true }
+                        }
                     }
                 ) 
             }
@@ -316,8 +363,10 @@ fun BezubaanNavHost(
                     onIssue = { }
                 )
             }
-            composable<RescueTrackingRoute> {
+            composable<RescueTrackingRoute> { backStackEntry ->
+                val args = backStackEntry.toRoute<RescueTrackingRoute>()
                 RescueTrackingScreen(
+                    rescueId = args.rescueId,
                     onCallVolunteer = { },
                     onChat = { },
                     onBack = { navController.popBackStack() }
@@ -331,10 +380,24 @@ fun BezubaanNavHost(
 
             composable<ProfileRoute> { 
                 val authViewModel: com.bezubaan.app.feature.auth.presentation.AuthViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+                val isVolunteer by mainViewModel.isVolunteerModeActive.collectAsState()
                 ProfileScreen(
                     onNavigateToEditProfile = { navController.navigate(EditProfileRoute) },
                     onNavigateToSettings = { navController.navigate(SettingsRoute) },
-                    onNavigateToVolunteerActivation = { navController.navigate(VolunteerActivationRoute) },
+                    onNavigateToVolunteerActivation = {
+                        if (isVolunteer) {
+                            mainViewModel.setPersona(AppPersona.REPORTER)
+                            navController.navigate(HomeRoute) {
+                                popUpTo(ProfileRoute) { inclusive = true }
+                            }
+                        } else {
+                            mainViewModel.setPersona(AppPersona.VOLUNTEER)
+                            navController.navigate(VolunteerDashboardRoute) {
+                                popUpTo(ProfileRoute) { inclusive = true }
+                            }
+                        }
+                    },
+                    isVolunteerMode = isVolunteer,
                     onLogoutClick = {
                         authViewModel.logout()
                         navController.navigate(LoginRoute) {

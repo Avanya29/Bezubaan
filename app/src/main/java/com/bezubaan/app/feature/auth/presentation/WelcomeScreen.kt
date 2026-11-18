@@ -21,8 +21,9 @@ import coil3.compose.AsyncImage
 
 @Composable
 fun WelcomeScreen(
-    onNavigateToOnboarding: () -> Unit,
-    onNavigateToHome: () -> Unit
+    onNavigateToReporterPersona: () -> Unit,
+    onNavigateToVolunteerPersona: () -> Unit,
+    onExploreRescues: () -> Unit
 ) {
     val brutalYellow = Color(0xFFFFD54F)
     val brutalRed = Color(0xFFFF5252)
@@ -181,7 +182,7 @@ fun WelcomeScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onNavigateToOnboarding() }
+                .clickable { onNavigateToReporterPersona() }
         ) {
             Box(modifier = Modifier.offset(x = 4.dp, y = 4.dp).fillMaxWidth().height(56.dp).background(Color.Black))
             Box(
@@ -196,7 +197,7 @@ fun WelcomeScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("⟐", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("REPORT AN ANIMAL", fontSize = 16.sp, fontWeight = FontWeight.Black)
+                        Text("REPORT AN ANIMAL (CITIZEN)", fontSize = 16.sp, fontWeight = FontWeight.Black)
                     }
                     Text("→", fontSize = 20.sp, fontWeight = FontWeight.Black)
                 }
@@ -208,7 +209,7 @@ fun WelcomeScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onNavigateToHome() } // Or Onboarding, depending on logic
+                .clickable { onExploreRescues() }
         ) {
             Box(modifier = Modifier.offset(x = 4.dp, y = 4.dp).fillMaxWidth().height(48.dp).background(Color.Black))
             Box(
@@ -234,25 +235,41 @@ fun WelcomeScreen(
         Divider(color = Color.LightGray, thickness = 1.dp)
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Footer Section
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        // Volunteer Section
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onNavigateToVolunteerPersona() }
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("🩺", fontSize = 16.sp)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Volunteer or Medic?", fontSize = 14.sp, color = Color.Black)
-            }
+            Box(modifier = Modifier.offset(x = 4.dp, y = 4.dp).fillMaxWidth().height(48.dp).background(Color.Black))
             Box(
                 modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
                     .background(brutalDarkGreen)
-                    .border(2.dp, Color.Black)
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
-                    .clickable { /* Login Route */ }
+                    .border(3.dp, Color.Black),
+                contentAlignment = Alignment.Center
             ) {
-                Text("VOLUNTEER LOGIN", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("🩺", fontSize = 16.sp)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "FIELD VOLUNTEER LOGIN",
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Black,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                    Text("➔", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Black)
+                }
             }
         }
 

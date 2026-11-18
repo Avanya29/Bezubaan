@@ -25,11 +25,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bezubaan.app.ui.components.NeoInput
+import com.bezubaan.app.ui.components.NeoPasswordInput
 
 @Composable
 fun RegisterScreen(
     onNavigateToLogin: () -> Unit,
     onRegisterSuccess: () -> Unit,
+    isVolunteerMode: Boolean = false,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -38,7 +40,7 @@ fun RegisterScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var role by remember { mutableStateOf("CITIZEN") }
+    var role by remember { mutableStateOf(if (isVolunteerMode) "VOLUNTEER" else "CITIZEN") }
     var ethicsAccepted by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.isRegistered) {
@@ -232,7 +234,7 @@ fun RegisterScreen(
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
-        NeoInput(
+        NeoPasswordInput(
             value = password, 
             onValueChange = { password = it }, 
             label = "••••••••••••",
@@ -263,7 +265,12 @@ fun RegisterScreen(
             Text("■ CONFIRM SECURITY CODE", fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = Color.Black)
         }
         Spacer(modifier = Modifier.height(8.dp))
-        NeoInput(value = confirmPassword, onValueChange = { confirmPassword = it }, label = "••••••••••••")
+        NeoPasswordInput(
+            value = confirmPassword, 
+            onValueChange = { confirmPassword = it }, 
+            label = "••••••••••••",
+            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = Color.Black) }
+        )
 
         // Validation Badges
         Spacer(modifier = Modifier.height(16.dp))
@@ -303,13 +310,15 @@ fun RegisterScreen(
             isSelected = role == "CITIZEN",
             onClick = { role = "CITIZEN" }
         )
-        Spacer(modifier = Modifier.height(8.dp))
-        RoleCard(
-            title = "FIELD RESCUER / VOLUNTEER",
-            desc = "Join emergency extraction units & physical rescue",
-            isSelected = role == "VOLUNTEER",
-            onClick = { role = "VOLUNTEER" }
-        )
+        if (isVolunteerMode) {
+            Spacer(modifier = Modifier.height(8.dp))
+            RoleCard(
+                title = "FIELD RESCUER / VOLUNTEER",
+                desc = "Join emergency extraction units & physical rescue",
+                isSelected = role == "VOLUNTEER",
+                onClick = { role = "VOLUNTEER" }
+            )
+        }
         Spacer(modifier = Modifier.height(8.dp))
         RoleCard(
             title = "MEDICAL / FOSTER CARE",

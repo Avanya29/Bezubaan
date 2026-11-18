@@ -54,17 +54,11 @@ export class EventsGateway
         'defaultSecretForDevOnly';
       const decoded = jwt.verify(token, secret) as any;
 
-      // Only track active volunteers for emergency dispatch
-      if (decoded.role === 'VOLUNTEER') {
-        this.connectedVolunteers.set(decoded.sub, client);
-        this.logger.log(
-          `Volunteer Connected: ${decoded.sub} (Socket: ${client.id})`,
-        );
-      } else {
-        this.logger.log(
-          `Citizen Connected: ${decoded.sub} (Socket: ${client.id})`,
-        );
-      }
+      // Track all connected responder sockets for emergency dispatch
+      this.connectedVolunteers.set(decoded.sub, client);
+      this.logger.log(
+        `Responder Connected to Live Radar: ${decoded.sub} (role: ${decoded.role}, Socket: ${client.id})`,
+      );
     } catch (err) {
       this.logger.error(`Connection error: ${err.message}`);
       client.disconnect();
@@ -73,11 +67,11 @@ export class EventsGateway
 
   handleDisconnect(client: Socket) {
     this.logger.log(`Client Disconnected: ${client.id}`);
-    // Remove from active volunteers if present
+    // Remove from active responders if present
     for (const [userId, socket] of this.connectedVolunteers.entries()) {
       if (socket.id === client.id) {
         this.connectedVolunteers.delete(userId);
-        this.logger.log(`Volunteer Disconnected: ${userId}`);
+        this.logger.log(`Responder Disconnected: ${userId}`);
         break;
       }
     }
@@ -88,12 +82,9 @@ export class EventsGateway
    */
   broadcastEmergency(rescue: any) {
     this.logger.log(
-      `Broadcasting EMERGENCY RESCUE [${rescue.id}] to ${this.connectedVolunteers.size} active volunteers.`,
+      `Broadcasting EMERGENCY RESCUE [${rescue.id}] to all connected responders (Tracked: ${this.connectedVolunteers.size}).`,
     );
-    // In a real production app, we would filter by geolocation (e.g. within 5km radius).
-    // For now, we broadcast to all active volunteers.
-    this.connectedVolunteers.forEach((socket, userId) => {
-      socket.emit('new_emergency_rescue', rescue);
-    });
+    // Broadcast to all connected sockets on the gateway
+    this.server.emit('new_emergency_rescue', rescue);
   }
 }

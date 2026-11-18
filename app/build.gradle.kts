@@ -116,9 +116,12 @@ dependencies {
 
     implementation("io.socket:socket.io-client:2.1.0")
 
+    // Google Sign-In (Official Play Services Auth - Rock-Solid Intent Chooser)
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+    
     // Google Sign-In (Credential Manager)
-    implementation("androidx.credentials:credentials:1.5.0-rc01")
-    implementation("androidx.credentials:credentials-play-services-auth:1.5.0-rc01")
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
     testImplementation(libs.junit)

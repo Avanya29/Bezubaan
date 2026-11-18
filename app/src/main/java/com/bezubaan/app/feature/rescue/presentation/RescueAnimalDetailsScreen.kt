@@ -47,9 +47,9 @@ fun RescueAnimalDetailsScreen(
             item { StepTelemetry() }
             item { ScreenHeadline() }
             item { AiVisionSyncBanner() }
-            item { AnimalTagField() }
+            item { AnimalTagField(state.animalTag, sharedViewModel::updateAnimalTag) }
             item { SpeciesClassification(state.species, sharedViewModel::updateSpecies) }
-            item { BreedOrType() }
+            item { BreedOrType(state.breedType, sharedViewModel::updateBreedType) }
             item { SexSelector(state.sex, sharedViewModel::updateSex) }
             item { LifeStageSelector(state.lifeStage, sharedViewModel::updateLifeStage) }
             item { SizeWeightBracket(state.size, sharedViewModel::updateSize) }
@@ -230,22 +230,26 @@ private fun FormLabel(number: String, title: String, trailingText: String? = nul
 }
 
 @Composable
-private fun AnimalTagField() {
+private fun AnimalTagField(tag: String, onTagChange: (String) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         FormLabel("1", "ANIMAL TAG / NAME", "OPTIONAL")
-        Row(
+        OutlinedTextField(
+            value = tag,
+            onValueChange = onTagChange,
+            placeholder = { Text("e.g. Rusty (Street Tag)", color = Color.Gray, fontSize = 14.sp) },
+            trailingIcon = { Icon(Icons.Default.Badge, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.Black) },
             modifier = Modifier
                 .fillMaxWidth()
-                .shadow(3.dp, androidx.compose.foundation.shape.RoundedCornerShape(0.dp))
-                .background(Color.White)
-                .border(2.dp, Color.Black)
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("Rusty (Street Tag)", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color(0xFF1C1B1B))
-            Icon(Icons.Default.Badge, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.Black)
-        }
+                .shadow(2.dp, androidx.compose.foundation.shape.RoundedCornerShape(0.dp))
+                .background(Color.White),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.Black,
+                unfocusedBorderColor = Color.Black,
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+            ),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(0.dp)
+        )
     }
 }
 
@@ -269,39 +273,46 @@ private fun SpeciesClassification(selectedSpecies: String, onSelect: (String) ->
 }
 
 @Composable
-private fun BreedOrType() {
+private fun BreedOrType(breed: String, onBreedChange: (String) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         FormLabel("3", "BREED OR TYPE")
-        Box(
+        OutlinedTextField(
+            value = breed,
+            onValueChange = onBreedChange,
+            placeholder = { Text("e.g. Desi / Indian Pariah Dog", color = Color.Gray, fontSize = 14.sp) },
             modifier = Modifier
                 .fillMaxWidth()
-                .shadow(3.dp, androidx.compose.foundation.shape.RoundedCornerShape(0.dp))
-                .background(Color.White)
-                .border(2.dp, Color.Black)
-                .padding(horizontal = 14.dp, vertical = 12.dp)
-        ) {
-            Text("Desi / Indian Pariah Dog (Indie)", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color(0xFF1C1B1B))
-        }
+                .shadow(2.dp, androidx.compose.foundation.shape.RoundedCornerShape(0.dp))
+                .background(Color.White),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.Black,
+                unfocusedBorderColor = Color.Black,
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+            ),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(0.dp)
+        )
         
         Spacer(modifier = Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Chip("⚡ INDIE / PARIAH")
-            Chip("⚡ LABRADOR MIX")
+            Chip("⚡ INDIE / PARIAH", onClick = { onBreedChange("Indie / Pariah") })
+            Chip("⚡ LABRADOR MIX", onClick = { onBreedChange("Labrador Mix") })
         }
         Spacer(modifier = Modifier.height(8.dp))
         Row {
-            Chip("⚡ GERMAN SHEP CROSS")
+            Chip("⚡ GERMAN SHEP CROSS", onClick = { onBreedChange("German Shep Cross") })
         }
     }
 }
 
 @Composable
-private fun Chip(text: String) {
+private fun Chip(text: String, onClick: () -> Unit = {}) {
     Box(
         modifier = Modifier
             .shadow(1.dp, androidx.compose.foundation.shape.RoundedCornerShape(0.dp))
             .background(Color(0xFFEBE7E7))
             .border(1.dp, Color.Black)
+            .clickable(onClick = onClick)
             .padding(horizontal = 8.dp, vertical = 6.dp)
     ) {
         Text(text, fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF1C1B1B), letterSpacing = 0.8.sp)

@@ -9,16 +9,26 @@ import javax.inject.Inject
 class AnalyzeImageUseCase @Inject constructor(
     private val repository: AiRepository
 ) {
-    suspend operator fun invoke(imageUrl: String): Resource<ChatMessage> {
-        return repository.analyzeImage(imageUrl)
+    suspend operator fun invoke(
+        imageUrl: String,
+        latitude: Double? = null,
+        longitude: Double? = null,
+        address: String? = null
+    ): Resource<ChatMessage> {
+        return repository.analyzeImage(imageUrl, latitude, longitude, address)
     }
 }
 
 class SendChatMessageUseCase @Inject constructor(
     private val repository: AiRepository
 ) {
-    suspend operator fun invoke(text: String): Resource<ChatMessage> {
-        return repository.sendChatMessage(text)
+    suspend operator fun invoke(
+        text: String,
+        latitude: Double? = null,
+        longitude: Double? = null,
+        address: String? = null
+    ): Resource<ChatMessage> {
+        return repository.sendChatMessage(text, latitude, longitude, address)
     }
 }
 

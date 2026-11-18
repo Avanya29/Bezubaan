@@ -39,11 +39,26 @@ val thickBorder = 3.dp
 fun HomeScreen(
     onNavigateToReport: () -> Unit,
     onNavigateToDetails: (String) -> Unit,
+    onNavigateToTracking: (String) -> Unit,
     onNavigateToProfile: () -> Unit = {},
     onNavigateToNotifications: () -> Unit = {},
+    onSwitchToVolunteer: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                viewModel.fetchLocation()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     val locationPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
@@ -73,8 +88,10 @@ fun HomeScreen(
     ) {
         TopBar(
             locationName = uiState.locationName,
+            onLocationClick = { viewModel.fetchLocation() },
             onProfileClick = onNavigateToProfile,
-            onNotificationsClick = onNavigateToNotifications
+            onNotificationsClick = onNavigateToNotifications,
+            onSwitchToVolunteer = onSwitchToVolunteer
         )
         LiveTicker()
 
@@ -101,7 +118,14 @@ fun HomeScreen(
                 ) 
             }
             item { ActiveRescueSection() }
-            item { NearbyRescuesSection(uiState.nearbyCases, onNavigateToDetails) }
+            item { 
+                NearbyRescuesSection(
+                    cases = uiState.nearbyCases, 
+                    onNavigateToDetails = onNavigateToDetails,
+                    onTrackClick = onNavigateToTracking,
+                    error = uiState.error
+                ) 
+            }
             item { RescueStoriesSection() }
             item { OpenLedgerBlock() }
             item { Spacer(modifier = Modifier.height(24.dp)) }
@@ -112,8 +136,10 @@ fun HomeScreen(
 @Composable
 fun TopBar(
     locationName: String,
+    onLocationClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
-    onNotificationsClick: () -> Unit = {}
+    onNotificationsClick: () -> Unit = {},
+    onSwitchToVolunteer: () -> Unit = {}
 ) {
     Column(modifier = Modifier.fillMaxWidth().background(Color.White)) {
         Row(
@@ -123,7 +149,10 @@ fun TopBar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.clickable { onLocationClick() }
+        ) {
             Box(
                 modifier = Modifier
                     .background(yellow, RoundedCornerShape(8.dp))
@@ -138,7 +167,22 @@ fun TopBar(
                 Text("Home", fontSize = 20.sp, fontWeight = FontWeight.Black)
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .background(darkGreen)
+                    .border(2.dp, Color.Black)
+                    .clickable { onSwitchToVolunteer() }
+                    .padding(horizontal = 8.dp, vertical = 6.dp)
+            ) {
+                Text(
+                    "⚡ VOLUNTEER",
+                    color = yellow,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Black,
+                    fontFamily = FontFamily.Monospace
+                )
+            }
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -450,99 +494,109 @@ fun ActiveRescueSection() {
 }
 
 @Composable
-fun NearbyRescuesSection(cases: List<RescueCase>, onNavigateToDetails: (String) -> Unit) {
+fun NearbyRescuesSection(cases: List<RescueCase>, onNavigateToDetails: (String) -> Unit, onTrackClick: (String) -> Unit, error: String? = null) {
+    var selectedFilter by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("ALL") }
+    val filteredCases = if (selectedFilter == "ALL") cases else cases.filter { it.animal?.species?.uppercase() == selectedFilter }
+    val sortedCases = filteredCases.sortedByDescending { it.createdAt }
+    
+    val dogsCount = cases.count { it.animal?.species?.uppercase() == "DOG" }
+    val catsCount = cases.count { it.animal?.species?.uppercase() == "CAT" }
+    val birdsCount = cases.count { it.animal?.species?.uppercase() == "BIRD" }
+
     Column {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("NEARBY RESCUES (4 WITHIN 3 KM)", fontSize = 12.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
+            Text("NEARBY RESCUES (${cases.size} WITHIN 3 KM)", fontSize = 12.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
             Text("VIEW MAP ➔", fontSize = 10.sp, fontWeight = FontWeight.Bold, textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline, color = Color.Black)
         }
         Spacer(modifier = Modifier.height(12.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            item { NeoFilterChip(text = "ALL (4)", isSelected = true) }
-            item { NeoFilterChip(text = "DOGS (3)", isSelected = false) }
-            item { NeoFilterChip(text = "CATS (1)", isSelected = false) }
-            item { NeoFilterChip(text = "BIRDS (0)", isSelected = false) }
+            item { NeoFilterChip(text = "ALL (${cases.size})", isSelected = selectedFilter == "ALL", onClick = { selectedFilter = "ALL" }) }
+            item { NeoFilterChip(text = "DOGS ($dogsCount)", isSelected = selectedFilter == "DOG", onClick = { selectedFilter = "DOG" }) }
+            item { NeoFilterChip(text = "CATS ($catsCount)", isSelected = selectedFilter == "CAT", onClick = { selectedFilter = "CAT" }) }
+            item { NeoFilterChip(text = "BIRDS ($birdsCount)", isSelected = selectedFilter == "BIRD", onClick = { selectedFilter = "BIRD" }) }
         }
         Spacer(modifier = Modifier.height(16.dp))
         
-        // Card 1
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.White, RoundedCornerShape(12.dp))
-                .border(thickBorder, Color.Black, RoundedCornerShape(12.dp))
-                .padding(16.dp)
-        ) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("CASE #BZ-8938 // CLINICAL ADMISSION", fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                Box(modifier = Modifier.background(mintGreen).border(1.dp, Color.Black).padding(horizontal = 4.dp, vertical = 2.dp)) {
-                    Text("SECURED", fontSize = 8.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            Row {
-                AsyncImage(
-                    model = "https://images.unsplash.com/photo-1599839619722-39751411ea63?auto=format&fit=crop&w=200&q=80",
-                    contentDescription = null,
-                    modifier = Modifier.size(72.dp).border(2.dp, Color.Black),
-                    contentScale = ContentScale.Crop
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Box(modifier = Modifier.background(Color.Black).padding(horizontal = 4.dp, vertical = 2.dp)) {
-                        Text("STATUS: AT CLINIC", color = yellow, fontSize = 8.sp, fontWeight = FontWeight.Bold)
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("INDIE PUPPY W/ FRACTURED PAW", fontSize = 12.sp, fontWeight = FontWeight.Black)
-                    Text("100ft Rd, Indiranagar • 800m away", fontSize = 10.sp, color = Color.Black)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("Dr. Rekha V. • STABLE", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = darkGreen)
-                }
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        // Card 2
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.White, RoundedCornerShape(12.dp))
-                .border(thickBorder, Color.Black, RoundedCornerShape(12.dp))
-                .padding(16.dp)
-        ) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("CASE #BZ-8929 // RESCUE STAGING", fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                Box(modifier = Modifier.background(redAlert).border(1.dp, Color.Black).padding(horizontal = 4.dp, vertical = 2.dp)) {
-                    Text("URGENT FOSTER", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                }
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            Text("ADULT DESI DOG WITH SEVERE MANGE", fontSize = 12.sp, fontWeight = FontWeight.Black)
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
-                Box(modifier = Modifier.background(yellow).border(1.dp, Color.Black).padding(horizontal = 4.dp, vertical = 2.dp)) {
-                    Text("P3 STABLE", fontSize = 8.sp, fontWeight = FontWeight.Black)
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Domlur Flyover Underpass • 1.9 km away", fontSize = 10.sp, color = Color.Black)
+        if (error != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(redAlert, RoundedCornerShape(8.dp))
+                    .border(2.dp, Color.Black, RoundedCornerShape(8.dp))
+                    .padding(12.dp)
+            ) {
+                Text("Error Loading Rescues: $error", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(modifier = Modifier.height(16.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
-                    onClick = { },
-                    modifier = Modifier.weight(1f).height(40.dp).border(2.dp, Color.Black, RoundedCornerShape(4.dp)),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
-                    shape = RoundedCornerShape(4.dp)
-                ) {
-                    Text("OFFER 7-DAY FOSTER", fontSize = 9.sp, fontWeight = FontWeight.Black)
+        }
+
+        if (sortedCases.isEmpty()) {
+            Text("No nearby rescues found.", fontSize = 12.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.padding(vertical = 16.dp))
+        } else {
+            sortedCases.forEach { case ->
+                RescueCaseCard(
+                    case = case, 
+                    onClick = { onNavigateToDetails(case.id) },
+                    onTrackClick = { onTrackClick(case.id) }
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun RescueCaseCard(case: RescueCase, onClick: () -> Unit, onTrackClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White, RoundedCornerShape(12.dp))
+            .border(thickBorder, Color.Black, RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(16.dp)
+    ) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text("CASE #${case.id.takeLast(6).uppercase()}", fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+            Box(modifier = Modifier.background(if (case.status == "RESCUED") mintGreen else yellow).border(1.dp, Color.Black).padding(horizontal = 4.dp, vertical = 2.dp)) {
+                Text(case.status.uppercase(), fontSize = 8.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Row {
+            AsyncImage(
+                model = case.imageUrl ?: "https://images.unsplash.com/photo-1599839619722-39751411ea63?auto=format&fit=crop&w=200&q=80",
+                contentDescription = null,
+                modifier = Modifier.size(72.dp).border(2.dp, Color.Black),
+                contentScale = ContentScale.Crop
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                val speciesDisplay = case.animal?.species?.uppercase() ?: "UNKNOWN"
+                val breedDisplay = case.animal?.breed ?: "MIX"
+                Text("$speciesDisplay - $breedDisplay", fontSize = 12.sp, fontWeight = FontWeight.Black)
+                Text(case.address ?: "Location Pending", fontSize = 10.sp, color = Color.Black)
+                Spacer(modifier = Modifier.height(4.dp))
+                if (case.status.equals("REPORTED", ignoreCase = true) || case.status.equals("DISPATCHED", ignoreCase = true)) {
+                    val dispatchText = if (case.volunteerLocation != null) "Responder En Route • Active Dispatch" else "Awaiting Responder Assignment"
+                    Text(dispatchText, fontSize = 10.sp, color = darkGreen, fontWeight = FontWeight.Bold)
+                } else {
+                    Text(case.description.take(50) + "...", fontSize = 10.sp, color = Color.DarkGray)
                 }
-                Button(
-                    onClick = { },
-                    modifier = Modifier.weight(1f).height(40.dp).border(2.dp, Color.Black, RoundedCornerShape(4.dp)),
-                    colors = ButtonDefaults.buttonColors(containerColor = yellow, contentColor = Color.Black),
-                    shape = RoundedCornerShape(4.dp)
-                ) {
-                    Text("SPONSOR MEDS", fontSize = 9.sp, fontWeight = FontWeight.Black)
+            }
+        }
+        
+        if (case.status.equals("REPORTED", ignoreCase = true) || case.status.equals("DISPATCHED", ignoreCase = true)) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = onTrackClick,
+                modifier = Modifier.fillMaxWidth().height(40.dp).border(2.dp, Color.Black, RoundedCornerShape(4.dp)),
+                colors = ButtonDefaults.buttonColors(containerColor = yellow, contentColor = Color.Black),
+                shape = RoundedCornerShape(4.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.MyLocation, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("TRACK LIVE DISPATCH", fontSize = 12.sp, fontWeight = FontWeight.Black)
                 }
             }
         }
@@ -550,11 +604,12 @@ fun NearbyRescuesSection(cases: List<RescueCase>, onNavigateToDetails: (String) 
 }
 
 @Composable
-fun NeoFilterChip(text: String, isSelected: Boolean) {
+fun NeoFilterChip(text: String, isSelected: Boolean, onClick: () -> Unit = {}) {
     Box(
         modifier = Modifier
             .background(if (isSelected) darkGreen else Color.White, RoundedCornerShape(16.dp))
             .border(2.dp, Color.Black, RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         Text(

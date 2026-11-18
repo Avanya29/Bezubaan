@@ -19,7 +19,7 @@ data class User(
 fun com.bezubaan.app.feature.auth.data.remote.UserDto.toUser(): User {
     return User(
         id = id,
-        name = name,
+        name = name?.takeIf { it.isNotBlank() } ?: email.substringBefore("@"),
         email = email,
         role = role ?: "CITIZEN",
         phone = profile?.phoneNumber,

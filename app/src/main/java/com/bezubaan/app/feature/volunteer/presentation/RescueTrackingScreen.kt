@@ -9,6 +9,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.bezubaan.app.feature.rescue.presentation.RescueTrackingViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,10 +25,18 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun RescueTrackingScreen(
+    rescueId: String,
+    viewModel: RescueTrackingViewModel = hiltViewModel(),
     onCallVolunteer: () -> Unit,
     onChat: () -> Unit,
     onBack: () -> Unit
 ) {
+    val rescueCase by viewModel.rescueCase.collectAsState()
+
+    DisposableEffect(rescueId) {
+        viewModel.startTracking(rescueId)
+        onDispose { viewModel.stopTracking() }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -45,7 +58,7 @@ fun RescueTrackingScreen(
                 Text("RESCUE TRACKING", fontSize = 16.sp, fontWeight = FontWeight.Black)
             }
             Box(modifier = Modifier.background(Color.Black).padding(horizontal = 6.dp, vertical = 2.dp)) {
-                Text("BZ-8921", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                Text(rescueId.takeLast(6).uppercase(), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
             }
         }
         HorizontalDivider(thickness = 3.dp, color = Color.Black)
@@ -78,7 +91,33 @@ fun RescueTrackingScreen(
                         .background(Color.LightGray)
                         .border(3.dp, Color.Black)
                 ) {
-                    Text("MAP TRACKING PLACEHOLDER", modifier = Modifier.align(Alignment.Center), fontWeight = FontWeight.Bold)
+                    val lat = rescueCase?.latitude ?: 28.6139
+                    val lng = rescueCase?.longitude ?: 77.2090
+                    val location = com.google.android.gms.maps.model.LatLng(lat, lng)
+                    val cameraPositionState = com.google.maps.android.compose.rememberCameraPositionState {
+                        position = com.google.android.gms.maps.model.CameraPosition.fromLatLngZoom(location, 15f)
+                    }
+
+                    androidx.compose.runtime.LaunchedEffect(lat, lng) {
+                        cameraPositionState.position = com.google.android.gms.maps.model.CameraPosition.fromLatLngZoom(location, 15f)
+                    }
+
+                    com.google.maps.android.compose.GoogleMap(
+                        modifier = Modifier.fillMaxSize(),
+                        cameraPositionState = cameraPositionState
+                    ) {
+                        com.google.maps.android.compose.Marker(
+                            state = com.google.maps.android.compose.MarkerState(position = location),
+                            title = "Rescue Location"
+                        )
+                        rescueCase?.volunteerLocation?.let { vol ->
+                            com.google.maps.android.compose.Marker(
+                                state = com.google.maps.android.compose.MarkerState(position = com.google.android.gms.maps.model.LatLng(vol.latitude, vol.longitude)),
+                                title = "Volunteer",
+                                icon = com.google.android.gms.maps.model.BitmapDescriptorFactory.defaultMarker(com.google.android.gms.maps.model.BitmapDescriptorFactory.HUE_GREEN)
+                            )
+                        }
+                    }
                 }
             }
 
@@ -95,12 +134,17 @@ fun RescueTrackingScreen(
                             Box(modifier = Modifier.size(40.dp).background(Color.LightGray, RoundedCornerShape(20.dp)))
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
-                                Text("Aakash Verma", fontSize = 16.sp, fontWeight = FontWeight.Black)
-                                Text("CERTIFIED RESPONDER", fontSize = 10.sp, color = Color.Black, fontWeight = FontWeight.Bold)
+                                val volunteerStatus = if (rescueCase?.volunteerLocation != null) "Assigned Volunteer" else "Awaiting Volunteer"
+                                Text(volunteerStatus, fontSize = 16.sp, fontWeight = FontWeight.Black)
+                                if (rescueCase?.volunteerLocation != null) {
+                                    Text("CERTIFIED RESPONDER", fontSize = 10.sp, color = Color.Black, fontWeight = FontWeight.Bold)
+                                }
                             }
                         }
                         Box(modifier = Modifier.background(yellowBtn).padding(horizontal = 8.dp, vertical = 4.dp).border(1.dp, Color.Black)) {
-                            Text("850M AWAY", fontSize = 10.sp, fontWeight = FontWeight.Black)
+                            val distance = rescueCase?.distanceToRescue ?: 0.0
+                            val displayDistance = if (distance > 0) "${distance.toInt()}M AWAY" else "UNKNOWN"
+                            Text(displayDistance, fontSize = 10.sp, fontWeight = FontWeight.Black)
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
@@ -138,10 +182,10 @@ fun RescueTrackingScreen(
                     Text("DISPATCH TIMELINE", fontSize = 12.sp, fontWeight = FontWeight.Black)
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    TimelineItem("Reported (You)", "12:05 PM", true)
-                    TimelineItem("Verified & Logged", "12:07 PM", true)
-                    TimelineItem("Assigned", "12:08 PM", true)
-                    TimelineItem("Volunteer En Route", "12:12 PM", true, isLast = true)
+                    TimelineItem("Reported (You)", rescueCase?.createdAt?.take(10) ?: "Just now", true)
+                    TimelineItem("Verified & Logged", "", rescueCase != null)
+                    TimelineItem("Assigned", "", rescueCase?.volunteerLocation != null)
+                    TimelineItem("Volunteer En Route", "", rescueCase?.volunteerLocation != null, isLast = true)
                 }
             }
             

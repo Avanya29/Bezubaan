@@ -58,6 +58,17 @@ fun RescueAnimalLocationScreen(
             android.widget.Toast.makeText(context, state.error, android.widget.Toast.LENGTH_LONG).show()
         }
     }
+
+    LaunchedEffect(Unit) {
+        if (state.latitude == null || state.longitude == null) {
+            permissionLauncher.launch(
+                arrayOf(
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
     
     Column(
         modifier = Modifier
@@ -302,6 +313,19 @@ private fun LocationInputActions(address: String, onUseGps: () -> Unit, onAddres
 
 @Composable
 private fun MapVisualizer(latitude: Double?, longitude: Double?) {
+    val defaultLocation = com.google.android.gms.maps.model.LatLng(28.6139, 77.2090) // New Delhi
+    val location = if (latitude != null && longitude != null) com.google.android.gms.maps.model.LatLng(latitude, longitude) else defaultLocation
+    
+    val cameraPositionState = com.google.maps.android.compose.rememberCameraPositionState {
+        position = com.google.android.gms.maps.model.CameraPosition.fromLatLngZoom(location, 15f)
+    }
+
+    androidx.compose.runtime.LaunchedEffect(latitude, longitude) {
+        if (latitude != null && longitude != null) {
+            cameraPositionState.position = com.google.android.gms.maps.model.CameraPosition.fromLatLngZoom(com.google.android.gms.maps.model.LatLng(latitude, longitude), 15f)
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -310,59 +334,36 @@ private fun MapVisualizer(latitude: Double?, longitude: Double?) {
             .background(Color(0xFFF0EDEC))
             .border(4.dp, Color.Black)
     ) {
-        // Background Map Graphics (Simplified representation)
-        // In a real app this would be a map view
-        Box(modifier = Modifier.fillMaxSize()) {
-            // Horizontal street line
-            Box(modifier = Modifier.fillMaxWidth().height(8.dp).align(Alignment.Center).background(Color.DarkGray))
-            // Cross street
-            Box(modifier = Modifier.fillMaxHeight().width(8.dp).align(Alignment.Center).background(Color.DarkGray))
-            
-            // Map markers/blocks
-            Box(modifier = Modifier.align(Alignment.TopStart).padding(20.dp).size(80.dp).background(Color(0xFFC0EDCD)).border(2.dp, Color.Black))
-            Box(modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp).size(60.dp).background(Color(0xFFC0EDCD)).border(2.dp, Color.Black))
-            
-            // Targeting circles
-            Box(modifier = Modifier.size(150.dp).align(Alignment.Center).border(2.dp, Color.Gray, CircleShape))
-            Box(modifier = Modifier.size(100.dp).align(Alignment.Center).border(2.dp, Color.Red, CircleShape))
-            
-            // Target Pin
+        com.google.maps.android.compose.GoogleMap(
+            modifier = Modifier.fillMaxSize(),
+            cameraPositionState = cameraPositionState
+        ) {
+            if (latitude != null && longitude != null) {
+                com.google.maps.android.compose.Marker(
+                    state = com.google.maps.android.compose.MarkerState(position = com.google.android.gms.maps.model.LatLng(latitude, longitude)),
+                    title = "Incident Location"
+                )
+            }
+        }
+        
+        // Coordinate Tag
+        if (latitude != null && longitude != null) {
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .size(44.dp)
-                    .shadow(3.dp, CircleShape)
-                    .background(if (latitude != null) Color(0xFFFFE24E) else Color.LightGray, CircleShape)
-                    .border(3.dp, Color.Black, CircleShape),
-                contentAlignment = Alignment.Center
+                    .offset(y = (-30).dp)
+                    .shadow(2.dp, androidx.compose.foundation.shape.RoundedCornerShape(0.dp))
+                    .background(Color(0xFF002210))
+                    .border(2.dp, Color.Black)
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
             ) {
-                Box(
-                    modifier = Modifier.size(24.dp).background(Color(0xFFBA1A1A), CircleShape).border(1.dp, Color.Black, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.LocationSearching, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.White)
-                }
-            }
-            
-            // Coordinate Tag
-            if (latitude != null && longitude != null) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .offset(y = (-30).dp)
-                        .shadow(2.dp, androidx.compose.foundation.shape.RoundedCornerShape(0.dp))
-                        .background(Color(0xFF002210))
-                        .border(2.dp, Color.Black)
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Pets, contentDescription = null, tint = Color(0xFFFFE24E), modifier = Modifier.size(12.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            "${String.format("%.4f", latitude)}° N, ${String.format("%.4f", longitude)}° E",
-                            fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFFFFE24E)
-                        )
-                    }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Pets, contentDescription = null, tint = Color(0xFFFFE24E), modifier = Modifier.size(12.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        "${String.format("%.4f", latitude)}° N, ${String.format("%.4f", longitude)}° E",
+                        fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFFFFE24E)
+                    )
                 }
             }
         }

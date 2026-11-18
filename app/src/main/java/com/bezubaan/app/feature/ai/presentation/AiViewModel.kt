@@ -15,10 +15,12 @@ import java.util.UUID
 import javax.inject.Inject
 import com.bezubaan.app.feature.ai.domain.repository.AiRepository
 import com.bezubaan.app.core.common.Resource
+import com.bezubaan.app.core.location.LocationTracker
 
 @HiltViewModel
 class AiViewModel @Inject constructor(
-    private val repository: AiRepository
+    private val repository: AiRepository,
+    private val locationTracker: LocationTracker
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AiUiState())
@@ -42,7 +44,12 @@ class AiViewModel @Inject constructor(
         }
         
         viewModelScope.launch {
-            val result = repository.analyzeImage(base64Data)
+            val location = locationTracker.getCurrentLocation()
+            val result = repository.analyzeImage(
+                imageUrl = base64Data,
+                latitude = location?.latitude,
+                longitude = location?.longitude
+            )
             when (result) {
                 is Resource.Success -> {
                     val aiReply = result.data
@@ -92,7 +99,12 @@ class AiViewModel @Inject constructor(
         }
         
         viewModelScope.launch {
-            val result = repository.sendChatMessage(text)
+            val location = locationTracker.getCurrentLocation()
+            val result = repository.sendChatMessage(
+                text = text,
+                latitude = location?.latitude,
+                longitude = location?.longitude
+            )
             when (result) {
                 is Resource.Success -> {
                     val aiReply = result.data

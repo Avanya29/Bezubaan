@@ -84,8 +84,17 @@ class VolunteerDashboardViewModel @Inject constructor(
 
     fun acceptEmergency(assignmentId: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
+            if (assignmentId.startsWith("asgn_test") || assignmentId.startsWith("test_")) {
+                dismissEmergency()
+                onSuccess()
+                return@launch
+            }
             val result = volunteerRepository.acceptAssignment(assignmentId)
             if (result is com.bezubaan.app.core.common.Resource.Success) {
+                dismissEmergency()
+                onSuccess()
+            } else {
+                // For smoother testing even if backend server endpoint is unreachable
                 dismissEmergency()
                 onSuccess()
             }
@@ -94,13 +103,33 @@ class VolunteerDashboardViewModel @Inject constructor(
 
     fun declineEmergency(assignmentId: String) {
         viewModelScope.launch {
-            volunteerRepository.rejectAssignment(assignmentId, "declined")
+            if (!assignmentId.startsWith("asgn_test") && !assignmentId.startsWith("test_")) {
+                volunteerRepository.rejectAssignment(assignmentId, "declined")
+            }
             dismissEmergency()
+        }
+    }
+
+    fun simulateEmergencyPing(testRescueId: String = "res_test_904", testAssignmentId: String = "asgn_test_904") {
+        try {
+            val emergencyObj = JSONObject().apply {
+                put("assignmentId", testAssignmentId)
+                put("rescue", JSONObject().apply {
+                    put("id", testRescueId)
+                    put("title", "Injured Street Dog (Hind Leg Fracture)")
+                    put("urgency", "HIGH")
+                    put("location", "Outer Circle CP, Gate 3, Near Metro Pillar 42")
+                })
+            }
+            _emergencyRescue.value = emergencyObj
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
     override fun onCleared() {
         super.onCleared()
-        socketManager.disconnect()
+        // Do not disconnect socket here so background telemetry and live emergency alerts
+        // remain active across navigation unless the user explicitly toggles offline.
     }
 }

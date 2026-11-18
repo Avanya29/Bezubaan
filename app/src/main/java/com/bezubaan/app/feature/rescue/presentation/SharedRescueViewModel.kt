@@ -17,7 +17,9 @@ import javax.inject.Inject
 
 data class SharedRescueState(
     val photoUri: Uri? = null,
+    val animalTag: String = "",
     val species: String = "DOG",
+    val breedType: String = "",
     val sex: String = "UNKNOWN",
     val lifeStage: String = "ADULT",
     val size: String = "MEDIUM",
@@ -47,8 +49,16 @@ class SharedRescueViewModel @Inject constructor(
         _state.update { it.copy(photoUri = uri) }
     }
 
+    fun updateAnimalTag(tag: String) {
+        _state.update { it.copy(animalTag = tag) }
+    }
+
     fun updateSpecies(species: String) {
         _state.update { it.copy(species = species) }
+    }
+
+    fun updateBreedType(breed: String) {
+        _state.update { it.copy(breedType = breed) }
     }
 
     fun updateSex(sex: String) {
@@ -117,6 +127,7 @@ class SharedRescueViewModel @Inject constructor(
             
             // Construct a detailed description from the form fields
             val description = buildString {
+                if (currentState.animalTag.isNotBlank()) append("Name/Tag: ${currentState.animalTag}. ")
                 append("Sex: ${currentState.sex}, Age: ${currentState.lifeStage}, Size: ${currentState.size}. ")
                 if (currentState.coatColor.isNotBlank()) append("Coat: ${currentState.coatColor}. ")
                 if (currentState.marks.isNotBlank()) append("Marks: ${currentState.marks}. ")
@@ -129,8 +140,10 @@ class SharedRescueViewModel @Inject constructor(
                 lng = lng,
                 address = currentState.address,
                 animalSpecies = currentState.species,
+                animalBreed = currentState.breedType,
                 animalSex = currentState.sex,
                 animalAge = currentState.lifeStage,
+
                 animalColor = currentState.coatColor,
                 animalSize = currentState.size
             ).collect { result ->

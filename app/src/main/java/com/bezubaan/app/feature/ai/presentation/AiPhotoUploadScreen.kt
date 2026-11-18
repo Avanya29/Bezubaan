@@ -40,6 +40,56 @@ fun AiPhotoUploadScreen(
             onContinue()
         }
     }
+    
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var photoUri by remember { mutableStateOf<android.net.Uri?>(null) }
+
+    val cameraLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            photoUri?.let {
+                sharedViewModel.updatePhoto(it)
+                onContinue()
+            }
+        }
+    }
+
+    val cameraPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            val file = java.io.File(context.cacheDir, "camera_images")
+            file.mkdirs()
+            val imageFile = java.io.File(file, "photo_${System.currentTimeMillis()}.jpg")
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                imageFile
+            )
+            photoUri = uri
+            cameraLauncher.launch(uri)
+        } else {
+            android.widget.Toast.makeText(context, "Camera permission denied", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val launchCamera = {
+        if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            val file = java.io.File(context.cacheDir, "camera_images")
+            file.mkdirs()
+            val imageFile = java.io.File(file, "photo_${System.currentTimeMillis()}.jpg")
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                imageFile
+            )
+            photoUri = uri
+            cameraLauncher.launch(uri)
+        } else {
+            cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -57,7 +107,7 @@ fun AiPhotoUploadScreen(
             item { CameraReticleDropzone() }
             item { ActionButtons(
                 onGalleryClick = { galleryLauncher.launch("image/*") },
-                onCameraClick = { /* TODO: Camera */ }
+                onCameraClick = { launchCamera() }
             ) }
             item { TriageCaptureProtocol() }
             item { RecentRescuePreview() }

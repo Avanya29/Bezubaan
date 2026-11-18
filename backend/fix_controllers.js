@@ -1,4 +1,4 @@
- const fs = require('fs');
+  const fs = require('fs');
 const glob = require('glob');
 
 glob.sync('src/**/*.controller.ts').forEach(f => {

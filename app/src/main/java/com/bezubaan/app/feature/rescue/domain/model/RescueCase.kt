@@ -12,6 +12,11 @@ data class AnimalDetails(
     val description: String? = null
 )
 
+data class VolunteerLocation(
+    val latitude: Double,
+    val longitude: Double
+)
+
 data class RescueCase(
     val id: String,
     val reporterId: String? = null,
@@ -22,5 +27,7 @@ data class RescueCase(
     val status: String,
     val createdAt: String? = null,
     val imageUrl: String? = null,
-    val animal: AnimalDetails? = null
+    val animal: AnimalDetails? = null,
+    val distanceToRescue: Double? = null,
+    val volunteerLocation: VolunteerLocation? = null
 )

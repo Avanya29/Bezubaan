@@ -2,6 +2,7 @@ package com.bezubaan.app.feature.volunteer.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -39,7 +40,8 @@ val thickBorder = 3.dp
 @Composable
 fun VolunteerDashboardScreen(
     viewModel: VolunteerDashboardViewModel = hiltViewModel(),
-    onNavigateToEmergencyDispatch: (String, String) -> Unit = { _, _ -> }
+    onNavigateToEmergencyDispatch: (String, String) -> Unit = { _, _ -> },
+    onSwitchPersona: () -> Unit = {}
 ) {
     val isOffline by viewModel.isOffline.collectAsStateWithLifecycle()
     val emergencyRescue by viewModel.emergencyRescue.collectAsStateWithLifecycle()
@@ -87,14 +89,14 @@ fun VolunteerDashboardScreen(
             .fillMaxSize()
             .background(bgGray)
     ) {
-        TopBar()
+        TopBar(onSwitchPersona = onSwitchPersona)
         
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item { UnitCallsignCard(isOffline, user) }
+            item { UnitCallsignCard(isOffline, user, onSwitchPersona) }
             
             if (isOffline) {
                 item { OfflineStatusCard(onGoAvailable = { viewModel.setOffline(false) }) }
@@ -105,7 +107,7 @@ fun VolunteerDashboardScreen(
             } else {
                 item { ResponderStatusCard(onGoUnavailable = { viewModel.setOffline(true) }) }
                 item { RadarActiveStrip() }
-                // The dispatch card is now shown as a Dialog popup instead of inline!
+                item { TestDispatchTriggerCard(onSimulate = { viewModel.simulateEmergencyPing() }) }
                 item { EquipmentCard() }
                 item { StatsRow() }
                 item { DirectCommandHotlineCard() }
@@ -117,7 +119,7 @@ fun VolunteerDashboardScreen(
 }
 
 @Composable
-private fun TopBar() {
+private fun TopBar(onSwitchPersona: () -> Unit = {}) {
     Column(modifier = Modifier.fillMaxWidth().background(Color.White)) {
         Row(
             modifier = Modifier
@@ -138,21 +140,25 @@ private fun TopBar() {
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text("BEZUBAAN", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                    Text("RESCUE", fontSize = 16.sp, fontWeight = FontWeight.Black)
+                    Text("VOLUNTEER HQ", fontSize = 16.sp, fontWeight = FontWeight.Black)
                 }
             }
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .border(2.dp, Color.Black, CircleShape)
-            ) {
-                AsyncImage(
-                    model = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80",
-                    contentDescription = "Profile",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .background(yellow)
+                        .border(2.dp, Color.Black)
+                        .clickable { onSwitchPersona() }
+                        .padding(horizontal = 8.dp, vertical = 5.dp)
+                ) {
+                    Text(
+                        "🔁 CITIZEN MODE",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Black,
+                        fontFamily = FontFamily.Monospace,
+                        color = Color.Black
+                    )
+                }
             }
         }
         HorizontalDivider(thickness = thickBorder, color = Color.Black)
@@ -160,7 +166,11 @@ private fun TopBar() {
 }
 
 @Composable
-private fun UnitCallsignCard(isOffline: Boolean, user: com.bezubaan.app.feature.auth.domain.model.User?) {
+private fun UnitCallsignCard(
+    isOffline: Boolean,
+    user: com.bezubaan.app.feature.auth.domain.model.User?,
+    onSwitchPersona: () -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -196,12 +206,75 @@ private fun UnitCallsignCard(isOffline: Boolean, user: com.bezubaan.app.feature.
                 }
             }
             Spacer(modifier = Modifier.width(8.dp))
-            Row(modifier = Modifier.border(2.dp, Color.Black).padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier
+                    .border(2.dp, Color.Black)
+                    .clickable { onSwitchPersona() }
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 if (isOffline) {
                     Icon(Icons.Default.Logout, contentDescription = null, tint = redAlert, modifier = Modifier.size(10.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                 }
-                Text("EXIT", fontSize = 10.sp, fontWeight = FontWeight.Black, color = redAlert)
+                Text("EXIT TO REPORTER", fontSize = 10.sp, fontWeight = FontWeight.Black, color = redAlert)
+            }
+        }
+    }
+}
+
+@Composable
+fun TestDispatchTriggerCard(onSimulate: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .border(thickBorder, Color.Black)
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .background(yellow)
+                    .border(1.5.dp, Color.Black)
+                    .padding(horizontal = 8.dp, vertical = 3.dp)
+            ) {
+                Text(
+                    "QA & SIMULATION // 24/7",
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Black,
+                    fontFamily = FontFamily.Monospace
+                )
+            }
+            Text("PROXIMITY: 0.8 KM", fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Text("TEST EMERGENCY DISPATCH", fontSize = 16.sp, fontWeight = FontWeight.Black)
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            "Trigger a simulated P1 critical injury dispatch to test your live alert dialog, acceptance flow, on-site tactical checklist, and animal tracking telemetry.",
+            fontSize = 11.sp,
+            color = Color.DarkGray,
+            lineHeight = 15.sp
+        )
+        Spacer(modifier = Modifier.height(14.dp))
+        Button(
+            onClick = onSimulate,
+            modifier = Modifier.fillMaxWidth().height(48.dp).border(thickBorder, Color.Black),
+            colors = ButtonDefaults.buttonColors(containerColor = yellow, contentColor = Color.Black),
+            shape = RoundedCornerShape(0.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("⚡ TRIGGER TEST DISPATCH PING", fontSize = 12.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
+                Text("➔", fontSize = 14.sp, fontWeight = FontWeight.Black)
             }
         }
     }

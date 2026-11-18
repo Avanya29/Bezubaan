@@ -40,7 +40,7 @@ data class UserProfileDto(
 @Serializable
 data class UserDto(
     val id: String,
-    val name: String,
+    val name: String? = null,
     val email: String,
     val role: String? = null,
     val profile: UserProfileDto? = null

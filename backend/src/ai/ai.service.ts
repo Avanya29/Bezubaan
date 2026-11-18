@@ -30,7 +30,12 @@ export class AiService {
       1000;
   }
 
-  async analyzeImage(imageUrl: string) {
+  async analyzeImage(
+    imageUrl: string,
+    latitude?: number,
+    longitude?: number,
+    address?: string,
+  ) {
     try {
       const rescueId = `img-${Date.now()}`;
 
@@ -55,13 +60,18 @@ export class AiService {
         finalImageUrl = `${host}/uploads/${filename}`;
       }
 
+      const locationPayload =
+        latitude && longitude && (latitude !== 0 || longitude !== 0)
+          ? { latitude, longitude, address: address || 'User GPS Synced' }
+          : { latitude: 0.0, longitude: 0.0, address: address || 'Location not specified' };
+
       const response = await fetch(`${this.aiServiceUrl}/api/v1/triage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           rescue_id: rescueId,
           description: 'User uploaded image for AI vet analysis.',
-          location: { latitude: 12.9716, longitude: 77.5946 }, // Bangalore default
+          location: locationPayload,
           image_url: finalImageUrl,
         }),
         signal: AbortSignal.timeout(this.timeoutMs),
@@ -79,6 +89,18 @@ export class AiService {
           '\n✅ Recommended Actions:\n• ' +
             data.recommended_actions.join('\n• '),
         );
+      if (data.nearby_veterinary_help?.providers?.length) {
+        lines.push(
+          '\n🏥 Nearest Veterinary Care:\n' +
+            data.nearby_veterinary_help.providers
+              .slice(0, 3)
+              .map(
+                (p: any) =>
+                  `• ${p.name} (~${Math.round((p.distance_meters || 0) / 100) / 10} km)\n  📍 ${p.address}${p.phone ? '\n  📞 ' + p.phone : ''}`,
+              )
+              .join('\n'),
+        );
+      }
       if (data.safety_warnings?.length)
         lines.push(
           '\n⚠️ Safety Warnings:\n• ' + data.safety_warnings.join('\n• '),
@@ -102,16 +124,26 @@ export class AiService {
     }
   }
 
-  async sendChatMessage(text: string) {
+  async sendChatMessage(
+    text: string,
+    latitude?: number,
+    longitude?: number,
+    address?: string,
+  ) {
     try {
       const rescueId = `chat-${Date.now()}`;
+      const locationPayload =
+        latitude && longitude && (latitude !== 0 || longitude !== 0)
+          ? { latitude, longitude, address: address || 'User GPS Synced' }
+          : { latitude: 0.0, longitude: 0.0, address: address || 'Location not specified' };
+
       const response = await fetch(`${this.aiServiceUrl}/api/v1/triage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           rescue_id: rescueId,
           description: text,
-          location: { latitude: 12.9716, longitude: 77.5946 }, // Bangalore default
+          location: locationPayload,
         }),
         signal: AbortSignal.timeout(this.timeoutMs),
       });
@@ -128,6 +160,18 @@ export class AiService {
           '\n✅ Recommended Actions:\n• ' +
             data.recommended_actions.join('\n• '),
         );
+      if (data.nearby_veterinary_help?.providers?.length) {
+        lines.push(
+          '\n🏥 Nearest Veterinary Care:\n' +
+            data.nearby_veterinary_help.providers
+              .slice(0, 3)
+              .map(
+                (p: any) =>
+                  `• ${p.name} (~${Math.round((p.distance_meters || 0) / 100) / 10} km)\n  📍 ${p.address}${p.phone ? '\n  📞 ' + p.phone : ''}`,
+              )
+              .join('\n'),
+        );
+      }
       if (data.safety_warnings?.length)
         lines.push(
           '\n⚠️ Safety Warnings:\n• ' + data.safety_warnings.join('\n• '),

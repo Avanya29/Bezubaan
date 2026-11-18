@@ -34,6 +34,8 @@ import android.util.Base64
 import androidx.compose.ui.platform.LocalContext
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import androidx.core.content.FileProvider
+import java.io.File
 import java.io.ByteArrayOutputStream
 
 val bgOffWhite = Color(0xFFF9F9F9)
@@ -456,6 +458,30 @@ private fun BottomInputArea(onSend: (String) -> Unit, onImageSelect: (Uri) -> Un
         uri?.let { onImageSelect(it) }
     }
 
+    val context = LocalContext.current
+    var photoUri by remember { mutableStateOf<Uri?>(null) }
+    
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            photoUri?.let { onImageSelect(it) }
+        }
+    }
+
+    val launchCamera = {
+        val file = File(context.cacheDir, "camera_images")
+        file.mkdirs()
+        val imageFile = File(file, "photo_${System.currentTimeMillis()}.jpg")
+        val uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            imageFile
+        )
+        photoUri = uri
+        cameraLauncher.launch(uri)
+    }
+
     Column(modifier = Modifier.fillMaxWidth().background(bgOffWhite)) {
         HorizontalDivider(thickness = thickBorder, color = Color.Black)
         
@@ -480,7 +506,7 @@ private fun BottomInputArea(onSend: (String) -> Unit, onImageSelect: (Uri) -> Un
         ) {
             Box(modifier = Modifier
                 .border(2.dp, Color.Black)
-                .clickable { /* Camera logic usually needs a temp file URI, just using gallery for now */ galleryLauncher.launch("image/*") }
+                .clickable { launchCamera() }
                 .padding(10.dp)
                 .background(Color.White)
             ) {

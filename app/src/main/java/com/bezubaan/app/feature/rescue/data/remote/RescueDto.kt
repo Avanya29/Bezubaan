@@ -18,16 +18,24 @@ data class AnimalDto(
 )
 
 @Serializable
+data class VolunteerLocationDto(
+    val latitude: Double,
+    val longitude: Double
+)
+
+@Serializable
 data class RescueDto(
     val id: String,
     val reporterId: String? = null,
     val status: String,
     val description: String,
-    val latitude: Double,
-    val longitude: Double,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
     val address: String? = null,
     val createdAt: String? = null,
-    val animal: AnimalDto? = null
+    val animal: AnimalDto? = null,
+    val distanceToRescue: Double? = null,
+    val volunteerLocation: VolunteerLocationDto? = null
 )
 
 @Serializable
@@ -45,8 +53,8 @@ fun RescueDto.toDomain(): RescueCase {
         reporterId = reporterId,
         status = status,
         description = description,
-        latitude = latitude,
-        longitude = longitude,
+        latitude = latitude ?: 0.0,
+        longitude = longitude ?: 0.0,
         address = address,
         createdAt = createdAt,
         animal = animal?.let {
@@ -61,6 +69,10 @@ fun RescueDto.toDomain(): RescueCase {
                 name = it.name,
                 description = it.description
             )
+        },
+        distanceToRescue = distanceToRescue,
+        volunteerLocation = volunteerLocation?.let {
+            com.bezubaan.app.feature.rescue.domain.model.VolunteerLocation(it.latitude, it.longitude)
         }
     )
 }

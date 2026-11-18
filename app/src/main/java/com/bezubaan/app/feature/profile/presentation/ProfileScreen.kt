@@ -40,6 +40,7 @@ fun ProfileScreen(
     onNavigateToSettings: () -> Unit = {},
     onNavigateToVolunteerActivation: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
+    isVolunteerMode: Boolean = false,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -60,7 +61,7 @@ fun ProfileScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item { IdentityCard(uiState.user, uiState.stats, onNavigateToEditProfile) }
-                item { RoleDispatchCard(onNavigateToVolunteerActivation) }
+                item { RoleDispatchCard(isVolunteerMode = isVolunteerMode, onSwitchRoleClick = onNavigateToVolunteerActivation) }
                 
                 // TODO: Hide mock data sections until backend supports them
                 // item { ActiveIncidentReports() }
@@ -144,7 +145,9 @@ private fun IdentityCard(user: com.bezubaan.app.feature.auth.domain.model.User?,
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.NearMe, contentDescription = null, tint = redAlert, modifier = Modifier.size(12.dp))
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("BANGALORE", fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.Black)
+                // Fallback to location from auth if available, else standard placeholder
+                val locationDisplay = user?.address?.split(",")?.firstOrNull()?.trim()?.uppercase() ?: "LOCATING..."
+                Text(locationDisplay, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = Color.Black)
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
@@ -219,7 +222,10 @@ private fun StatBox(value: String, label: String, modifier: Modifier = Modifier)
 }
 
 @Composable
-private fun RoleDispatchCard(onSwitchToVolunteerClick: () -> Unit = {}) {
+private fun RoleDispatchCard(
+    isVolunteerMode: Boolean = false,
+    onSwitchRoleClick: () -> Unit = {}
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -234,7 +240,7 @@ private fun RoleDispatchCard(onSwitchToVolunteerClick: () -> Unit = {}) {
                 Text("ROLE & DISPATCH MODE", fontSize = 12.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
             }
             Box(modifier = Modifier.background(darkGreen).border(1.dp, Color.Black).padding(horizontal = 6.dp, vertical = 2.dp)) {
-                Text("LIVE TRIAGE", color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Black)
+                Text(if (isVolunteerMode) "VOLUNTEER ACTIVE" else "CITIZEN ACTIVE", color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Black)
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
@@ -242,46 +248,60 @@ private fun RoleDispatchCard(onSwitchToVolunteerClick: () -> Unit = {}) {
         Spacer(modifier = Modifier.height(12.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Column(
-                modifier = Modifier.weight(1f).background(darkGreen, RoundedCornerShape(4.dp)).border(2.dp, Color.Black, RoundedCornerShape(4.dp)).padding(vertical = 12.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .background(if (!isVolunteerMode) darkGreen else Color.White, RoundedCornerShape(4.dp))
+                    .border(2.dp, Color.Black, RoundedCornerShape(4.dp))
+                    .padding(vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Person, contentDescription = null, tint = mintGreen, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Default.Person, contentDescription = null, tint = if (!isVolunteerMode) mintGreen else Color.Black, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("USER MODE", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Black)
+                    Text("USER MODE", color = if (!isVolunteerMode) Color.White else Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Black)
                 }
-                Text("REPORTING & CARE", color = mintGreen, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                Text("REPORTING & CARE", color = if (!isVolunteerMode) mintGreen else Color.Gray, fontSize = 8.sp, fontWeight = FontWeight.Bold)
             }
             Column(
-                modifier = Modifier.weight(1f).background(Color.White, RoundedCornerShape(4.dp)).border(2.dp, Color.Black, RoundedCornerShape(4.dp)).padding(vertical = 12.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .background(if (isVolunteerMode) darkGreen else Color.White, RoundedCornerShape(4.dp))
+                    .border(2.dp, Color.Black, RoundedCornerShape(4.dp))
+                    .padding(vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Star, contentDescription = null, tint = yellow, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Default.Star, contentDescription = null, tint = if (isVolunteerMode) yellow else Color.Black, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("VOLUNTEER", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Black)
+                    Text("VOLUNTEER", color = if (isVolunteerMode) Color.White else Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Black)
                 }
-                Text("RESPONDER SOS", color = redAlert, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                Text("RESPONDER SOS", color = if (isVolunteerMode) yellow else redAlert, fontSize = 8.sp, fontWeight = FontWeight.Bold)
             }
         }
         Spacer(modifier = Modifier.height(12.dp))
         Row {
-            Icon(Icons.Default.Info, contentDescription = null, tint = yellow, modifier = Modifier.size(16.dp).padding(top = 2.dp))
+            Icon(Icons.Default.Info, contentDescription = null, tint = if (isVolunteerMode) mintGreen else yellow, modifier = Modifier.size(16.dp).padding(top = 2.dp))
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Switch to Volunteer Mode to receive live emergency dispatches, activate your 5km proximity radar, and take custody of street rescues in real time.", fontSize = 10.sp, lineHeight = 14.sp, color = Color.Black)
+            Text(
+                if (isVolunteerMode)
+                    "You are currently in Volunteer Mode. Switch to Citizen Mode to report injured animals, request assistance, or browse adoptions."
+                else
+                    "Switch to Volunteer Mode to receive live emergency dispatches, activate your 3.5km proximity radar, and take custody of street rescues in real time.",
+                fontSize = 10.sp, lineHeight = 14.sp, color = Color.Black
+            )
         }
         Spacer(modifier = Modifier.height(16.dp))
         Button(
-            onClick = onSwitchToVolunteerClick,
+            onClick = onSwitchRoleClick,
             modifier = Modifier.fillMaxWidth().height(48.dp).border(thickBorder, Color.Black, RoundedCornerShape(4.dp)),
-            colors = ButtonDefaults.buttonColors(containerColor = yellow, contentColor = Color.Black),
+            colors = ButtonDefaults.buttonColors(containerColor = if (isVolunteerMode) mintGreen else yellow, contentColor = Color.Black),
             shape = RoundedCornerShape(4.dp)
         ) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.PowerSettingsNew, contentDescription = null)
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text("SWITCH TO VOLUNTEER MODE", fontSize = 12.sp, fontWeight = FontWeight.Black)
+                    Text(if (isVolunteerMode) "SWITCH TO CITIZEN / REPORTER MODE" else "SWITCH TO VOLUNTEER MODE", fontSize = 12.sp, fontWeight = FontWeight.Black)
                 }
                 Text("➔", fontSize = 16.sp, fontWeight = FontWeight.Black)
             }

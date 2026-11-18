@@ -24,12 +24,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 
+import com.bezubaan.app.feature.rescue.presentation.SharedRescueViewModel
+import com.bezubaan.app.feature.rescue.domain.model.RescueCase
+
 @Composable
 fun RescueReportSentScreen(
+    sharedViewModel: SharedRescueViewModel,
     rescueId: String,
     onTrackRescue: () -> Unit,
     onBackToDashboard: () -> Unit
 ) {
+    val state by sharedViewModel.state.collectAsState()
+    val case = state.successCase
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -45,7 +52,7 @@ fun RescueReportSentScreen(
             item { StepTelemetry() }
             item { ScreenHeadline() }
             item { RadarVisualCard() }
-            item { CaseDossierDetailsCard() }
+            item { CaseDossierDetailsCard(case, rescueId) }
             item { CriticalProtocolList() }
             item { ActionButtons(onTrackRescue, onBackToDashboard) }
             
@@ -286,7 +293,7 @@ private fun RadarVisualCard() {
 }
 
 @Composable
-private fun CaseDossierDetailsCard() {
+private fun CaseDossierDetailsCard(case: RescueCase?, fallbackId: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -305,7 +312,8 @@ private fun CaseDossierDetailsCard() {
             Column {
                 Text("OFFICIAL RESCUE CASE", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF414942))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("#BZ-804", fontSize = 28.sp, fontWeight = FontWeight.Black, letterSpacing = (-0.56).sp)
+                    val displayId = case?.id?.takeLast(6)?.uppercase() ?: fallbackId.takeLast(6).uppercase()
+                    Text("#BZ-$displayId", fontSize = 28.sp, fontWeight = FontWeight.Black, letterSpacing = (-0.56).sp)
                     Spacer(modifier = Modifier.width(8.dp))
                     Box(
                         modifier = Modifier
@@ -339,9 +347,16 @@ private fun CaseDossierDetailsCard() {
         
         // Items
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            DossierRow(icon = Icons.Default.Pets, title = "ANIMAL TRIAGED", desc = "Desi Dog (\"Rusty\") • Adult Female (Brown/Tan)")
-            DossierRow(icon = Icons.Default.LocationOn, title = "INCIDENT LOCATION", desc = "Connaught Place Outer Circle, Behind Sharma Tea Stall")
-            DossierRow(icon = Icons.Default.LocalHospital, title = "AI CLINICAL TRIAGE ASSIGNMENT", desc = "Limping Left Foreleg • Superficial Abrasion • Stable Vitals")
+            val animalDesc = buildString {
+                if (case?.animal?.name?.isNotBlank() == true) append("${case.animal.name} • ")
+                append(case?.animal?.species?.capitalize() ?: "Unknown")
+                if (case?.animal?.breed?.isNotBlank() == true) append(" (${case.animal.breed})")
+                if (case?.animal?.approximateAge?.isNotBlank() == true) append(" • ${case.animal.approximateAge}")
+                if (case?.animal?.color?.isNotBlank() == true) append(" (${case.animal.color})")
+            }
+            DossierRow(icon = Icons.Default.Pets, title = "ANIMAL TRIAGED", desc = animalDesc)
+            DossierRow(icon = Icons.Default.LocationOn, title = "INCIDENT LOCATION", desc = case?.address ?: "Location pending precision fix")
+            DossierRow(icon = Icons.Default.LocalHospital, title = "AI CLINICAL TRIAGE ASSIGNMENT", desc = case?.description ?: "Vitals evaluation pending")
             
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
                 Box(
@@ -356,7 +371,7 @@ private fun CaseDossierDetailsCard() {
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text("RESPONDER ESTIMATE", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF414942))
-                    Text("Squad Volunteer \"Aakash V.\" (ETA 8–12 mins)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text("Waiting for volunteer assignment (ETA pending)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }

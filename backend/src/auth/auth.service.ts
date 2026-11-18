@@ -93,6 +93,9 @@ export class AuthService {
     });
 
     const { passwordHash, ...result } = user;
-    return result;
+    return {
+      ...result,
+      name: registerDto.name || registerDto.email.split('@')[0],
+    };
   }
 }

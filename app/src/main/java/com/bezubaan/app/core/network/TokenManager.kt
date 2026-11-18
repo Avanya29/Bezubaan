@@ -17,6 +17,10 @@ class TokenManager @Inject constructor(
 ) {
     private val tokenKey = stringPreferencesKey(Constants.JWT_TOKEN_KEY)
 
+    val tokenFlow: kotlinx.coroutines.flow.Flow<String?> = dataStore.data.map { preferences ->
+        preferences[tokenKey]
+    }
+
     suspend fun saveToken(token: String) {
         dataStore.edit { preferences ->
             preferences[tokenKey] = token

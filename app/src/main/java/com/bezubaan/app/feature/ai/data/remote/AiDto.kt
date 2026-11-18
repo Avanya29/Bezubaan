@@ -6,7 +6,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ImageAnalysisRequest(
-    val imageUrl: String
+    val imageUrl: String,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val address: String? = null
 )
 
 @Serializable
@@ -26,7 +29,10 @@ data class AiAnalysisDto(
 
 @Serializable
 data class ChatRequest(
-    val text: String
+    val text: String,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val address: String? = null
 )
 
 @Serializable

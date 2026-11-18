@@ -40,16 +40,17 @@ class ProfileViewModel @Inject constructor(
             val profileResult = authRepository.getProfile()
             val statsResult = authRepository.getStats()
             
-            if (profileResult is Resource.Success && statsResult is Resource.Success) {
+            if (profileResult is Resource.Success) {
                 _uiState.update { 
                     it.copy(
                         isLoading = false, 
                         user = profileResult.data,
-                        stats = statsResult.data
+                        stats = if (statsResult is Resource.Success) statsResult.data else null,
+                        error = if (statsResult is Resource.Error) statsResult.message else null
                     ) 
                 }
             } else {
-                val error = if (profileResult is Resource.Error) profileResult.message else if (statsResult is Resource.Error) statsResult.message else "Unknown Error"
+                val error = if (profileResult is Resource.Error) profileResult.message else "Unknown Error"
                 _uiState.update { it.copy(isLoading = false, error = error) }
             }
         }

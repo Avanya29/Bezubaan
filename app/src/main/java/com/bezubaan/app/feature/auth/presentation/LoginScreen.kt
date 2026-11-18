@@ -1,5 +1,7 @@
 package com.bezubaan.app.feature.auth.presentation
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,8 +25,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.CommonStatusCodes
 import com.bezubaan.app.ui.components.NeoButton
 import com.bezubaan.app.ui.components.NeoInput
+import com.bezubaan.app.ui.components.NeoPasswordInput
 import com.bezubaan.app.ui.components.NeoOutlinedButton
 
 @Composable
@@ -32,14 +41,42 @@ fun LoginScreen(
     onNavigateToRegister: () -> Unit,
     onNavigateToForgot: () -> Unit,
     onLoginSuccess: () -> Unit,
+    isVolunteerMode: Boolean = false,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
     
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var keepSessionActive by remember { mutableStateOf(true) }
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            val idToken = account?.idToken
+            if (!idToken.isNullOrBlank()) {
+                viewModel.authenticateWithGoogleIdToken(idToken)
+            } else {
+                viewModel.setAuthError("Google Sign-In completed, but no ID token was returned by Google.")
+            }
+        } catch (e: ApiException) {
+            val errorMsg = when (e.statusCode) {
+                CommonStatusCodes.DEVELOPER_ERROR -> "Google Sign-In Error 10 (DEVELOPER_ERROR): Verify debug SHA-1 & package name in Google Cloud Console."
+                CommonStatusCodes.SIGN_IN_REQUIRED -> "Google Sign-In was cancelled."
+                CommonStatusCodes.NETWORK_ERROR -> "Network error during Google Sign-In. Please check your internet."
+                else -> "Google Sign-In error (Code ${e.statusCode}): ${e.message ?: "Unknown error"}"
+            }
+            viewModel.setAuthError(errorMsg)
+        } catch (e: Exception) {
+            viewModel.setAuthError(e.localizedMessage ?: "Google Sign-In failed")
+        }
+    }
 
     LaunchedEffect(uiState.isAuthenticated) {
         if (uiState.isAuthenticated) {
@@ -240,10 +277,11 @@ fun LoginScreen(
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
-        NeoInput(
+        NeoPasswordInput(
             value = password,
             onValueChange = { password = it },
-            label = "••••••••••••"
+            label = "••••••••••••",
+            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = Color.Black) }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -312,29 +350,91 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Secondary Action (Google)
+        // Secondary Action (Google) - Uses Play Services Intent Chooser (Always Forces Full Dialog)
         Button(
-            onClick = { viewModel.googleSignIn(context) },
+            onClick = {
+                keyboardController?.hide()
+                focusManager.clearFocus()
+                try {
+                    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestIdToken(com.bezubaan.app.core.common.Constants.GOOGLE_WEB_CLIENT_ID)
+                        .requestEmail()
+                        .build()
+                    val googleClient = GoogleSignIn.getClient(context, gso)
+                    // Clear previous session so the Google Account Chooser is guaranteed to open every time
+                    googleClient.signOut().addOnCompleteListener {
+                        googleSignInLauncher.launch(googleClient.signInIntent)
+                    }
+                } catch (e: Exception) {
+                    viewModel.setAuthError(e.localizedMessage ?: "Failed to launch Google Sign-In")
+                }
+            },
+            enabled = !uiState.isLoading,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
                 .border(3.dp, Color.Black),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.White,
-                contentColor = Color.Black
+                contentColor = Color.Black,
+                disabledContainerColor = Color(0xFFEBEBEB),
+                disabledContentColor = Color.DarkGray
             ),
             shape = RoundedCornerShape(0.dp)
         ) {
-            Text(
-                text = "G CONTINUE WITH GOOGLE SECURE",
-                fontWeight = FontWeight.Black,
-                fontSize = 14.sp
-            )
+            if (uiState.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp,
+                    color = Color.Black
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = "CONNECTING...",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 14.sp
+                )
+            } else {
+                Text(
+                    text = "G CONTINUE WITH GOOGLE SECURE",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 14.sp
+                )
+            }
+        }
+
+        // Inline Error Notification right below the Google Button
+        if (uiState.error != null) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White)
+                    .border(2.dp, redAlert)
+                    .padding(12.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = redAlert,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "ERROR: ${uiState.error}",
+                        color = redAlert,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // New Volunteer Box
+        // Registration CTA Box
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -344,7 +444,7 @@ fun LoginScreen(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    "NEW CITIZEN OR VOLUNTEER?",
+                    text = if (isVolunteerMode) "NEW FIELD RESPONDER?" else "NEW TO BEZUBAAN?",
                     fontWeight = FontWeight.Black,
                     fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                     fontSize = 14.sp,
@@ -364,7 +464,7 @@ fun LoginScreen(
                     shape = RoundedCornerShape(0.dp)
                 ) {
                     Text(
-                        text = "🛈 REGISTER AS RESCUER / VOLUNTEER",
+                        text = if (isVolunteerMode) "🛈 REGISTER AS VOLUNTEER" else "🛈 CREATE CITIZEN ACCOUNT",
                         fontWeight = FontWeight.Bold,
                         fontSize = 12.sp,
                         fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace

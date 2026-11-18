@@ -38,6 +38,8 @@ fun MainAppScreen(mainViewModel: MainViewModel) {
         }
     }
 
+    val isVolunteerModeActive by mainViewModel.isVolunteerModeActive.collectAsState()
+
     // We don't want to show the bottom bar on Auth screens, Splash screen, or detailed nested screens if preferred.
     // For now, let's hide it if the route is part of AuthGraph (which includes Splash, Login, Register, etc.)
     // We can also hide it on detailed screens by checking the currentRoute string.
@@ -45,6 +47,7 @@ fun MainAppScreen(mainViewModel: MainViewModel) {
         SplashRoute::class.qualifiedName,
         WelcomeRoute::class.qualifiedName,
         OnboardingRoute::class.qualifiedName,
+        PersonaSelectionRoute::class.qualifiedName,
         LoginRoute::class.qualifiedName,
         RegisterRoute::class.qualifiedName,
         ForgotPasswordRoute::class.qualifiedName,
@@ -54,7 +57,9 @@ fun MainAppScreen(mainViewModel: MainViewModel) {
         RescueReportSentRoute::class.qualifiedName,
         RescueTimelineRoute::class.qualifiedName,
         CreatePostRoute::class.qualifiedName,
-        AiChatRoute::class.qualifiedName
+        AiChatRoute::class.qualifiedName,
+        EmergencyDispatchRoute::class.qualifiedName,
+        ActiveRescueRoute::class.qualifiedName
     )
 
     val shouldShowBottomBar = hideBottomBarRoutes.none { routeName -> 
@@ -72,7 +77,7 @@ fun MainAppScreen(mainViewModel: MainViewModel) {
                     horizontalArrangement = Arrangement.SpaceAround,
                     verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                 ) {
-                    val currentNavItems = universalBottomNavItems
+                    val currentNavItems = if (isVolunteerModeActive) volunteerBottomNavItems else reporterBottomNavItems
                     
                     currentNavItems.forEach { item ->
                         val itemRouteName = item.route::class.qualifiedName ?: ""
@@ -116,7 +121,8 @@ fun MainAppScreen(mainViewModel: MainViewModel) {
     ) { innerPadding ->
         BezubaanNavHost(
             modifier = Modifier.padding(innerPadding),
-            navController = navController
+            navController = navController,
+            mainViewModel = mainViewModel
         )
     }
 }

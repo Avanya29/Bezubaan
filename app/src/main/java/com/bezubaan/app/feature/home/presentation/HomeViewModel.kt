@@ -108,7 +108,8 @@ class HomeViewModel @Inject constructor(
                         _uiState.update { it.copy(isLoading = true) }
                     }
                     is com.bezubaan.app.core.common.Resource.Error -> {
-                        _uiState.update { it.copy(isLoading = false) }
+                        android.util.Log.e("HomeViewModel", "Error loading cases: ${result.message}")
+                        _uiState.update { it.copy(isLoading = false, error = result.message) }
                     }
                 }
             }

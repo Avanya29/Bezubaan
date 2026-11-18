@@ -10,7 +10,10 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.MedicalServices
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material.icons.outlined.Radar
 import androidx.compose.material.icons.outlined.VolunteerActivism
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -20,14 +23,23 @@ data class BottomNavItem(
     val route: Any
 )
 
-// Define different bottom navigation bars depending on the user role
-
-
-// Define universal bottom navigation bar matching the design
-val universalBottomNavItems = listOf(
+// Reporter / Citizen bottom navigation bar
+val reporterBottomNavItems = listOf(
     BottomNavItem("HOME", Icons.Outlined.Home, HomeRoute),
-    BottomNavItem("RESCUE", Icons.Outlined.LocationOn, RescueFlowGraph),
+    BottomNavItem("REPORT", Icons.Outlined.LocationOn, RescueFlowGraph),
     BottomNavItem("AI VET", Icons.Outlined.Psychology, AiChatRoute()),
     BottomNavItem("SQUAD", Icons.Outlined.Groups, CommunityFeedRoute),
-    BottomNavItem("DONATE", Icons.Outlined.VolunteerActivism, DonateRoute)
+    BottomNavItem("PROFILE", Icons.Outlined.Person, ProfileRoute)
 )
+
+// Volunteer / Responder bottom navigation bar
+val volunteerBottomNavItems = listOf(
+    BottomNavItem("RADAR", Icons.Outlined.Radar, VolunteerDashboardRoute),
+    BottomNavItem("CASES", Icons.Outlined.LocationOn, RescueFlowGraph),
+    BottomNavItem("AI VET", Icons.Outlined.Psychology, AiChatRoute()),
+    BottomNavItem("SQUAD", Icons.Outlined.Groups, CommunityFeedRoute),
+    BottomNavItem("PROFILE", Icons.Outlined.Person, ProfileRoute)
+)
+
+// Define universal bottom navigation bar matching the design
+val universalBottomNavItems = reporterBottomNavItems

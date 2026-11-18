@@ -11,6 +11,7 @@ import kotlinx.serialization.Serializable
 @Serializable data object SplashRoute
 @Serializable data object WelcomeRoute
 @Serializable data object OnboardingRoute
+@Serializable data object PersonaSelectionRoute
 @Serializable data object LoginRoute
 @Serializable data object RegisterRoute
 @Serializable data object ForgotPasswordRoute
@@ -48,7 +49,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable data class EmergencyDispatchRoute(val assignmentId: String, val rescueId: String)
 @Serializable data class ActiveRescueRoute(val assignmentId: String, val rescueId: String)
-@Serializable data object RescueTrackingRoute
+@Serializable data class RescueTrackingRoute(val rescueId: String)
 
 @Serializable data object MapRoute
 @Serializable data object VetSearchRoute
