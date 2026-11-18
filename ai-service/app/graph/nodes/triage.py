@@ -2,8 +2,10 @@ import logging
 from typing import Dict, Any, List
 from pydantic import BaseModel, Field
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage
 from app.graph.state import TriageGraphState
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +34,23 @@ async def triage_node(state: TriageGraphState) -> Dict[str, Any]:
         }
         
     try:
-        llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0)
-        structured_llm = llm.with_structured_output(TriageOutput)
+        # We use ChatGroq as the primary, falling back to Gemini
+        # Primary LLM: Groq
+        primary_llm = ChatGroq(
+            model="openai/gpt-oss-20b",
+            temperature=0,
+            api_key=settings.groq_api_key
+        ).with_structured_output(TriageOutput)
+
+        # Fallback LLM: Gemini
+        fallback_llm = ChatGoogleGenerativeAI(
+            model="gemini-2.5-flash", 
+            temperature=0,
+            google_api_key=settings.llm_api_key
+        ).with_structured_output(TriageOutput)
+
+        # Chain them using LangChain's native fallback feature
+        llm_with_fallback = primary_llm.with_fallbacks([fallback_llm])
         
         vision_context = "\n".join(vision_findings) if vision_findings else "None provided."
         
@@ -42,20 +59,19 @@ async def triage_node(state: TriageGraphState) -> Dict[str, Any]:
         
         prompt = (
             "You are Jeev, an expert AI triage assistant for the Bezubaan animal rescue platform.\n"
-            "Analyze the following incident report and visual evidence to provide a structured preliminary assessment.\n"
+            "Analyze the user's input to provide a structured response.\n"
             "IMPORTANT SAFETY RULES:\n"
-            "1. You provide a PRELIMINARY assessment, NOT a verified veterinary diagnosis.\n"
-            "2. DO NOT invent clinical thresholds or fake medical terms.\n"
-            "3. If symptoms suggest severe trauma, emphasize human and animal safety in warnings.\n"
-            "4. Base your recommendations strictly on the provided Rescue SOP context if applicable.\n"
-            "5. NEVER assume or suggest Karnataka or Bangalore clinics unless explicitly present in the evidence. Always advise taking the animal to the nearest local veterinary hospital or facility.\n\n"
+            "1. If the user is just saying hello or asking a general conversational question, reply warmly in 'preliminary_assessment', greet them as Jeev, and set severity_estimate to 'UNKNOWN'.\n"
+            "2. If it IS an animal incident, provide a PRELIMINARY assessment, NOT a verified veterinary diagnosis.\n"
+            "3. DO NOT invent clinical thresholds or fake medical terms.\n"
+            "4. Base your recommendations strictly on the provided Rescue SOP context if applicable.\n\n"
             f"Rescue SOP Context:\n{rag_context}\n\n"
             f"Reporter Description:\n{description}\n\n"
             f"Visual Evidence Extracted from Image:\n{vision_context}\n"
         )
         
         message = HumanMessage(content=prompt)
-        result = await structured_llm.ainvoke([message])
+        result = await llm_with_fallback.ainvoke([message])
         
         return {
             "preliminary_assessment": result.preliminary_assessment,
@@ -64,9 +80,9 @@ async def triage_node(state: TriageGraphState) -> Dict[str, Any]:
             "safety_warnings": result.safety_warnings
         }
     except Exception as e:
-        logger.error(f"Triage model failed: {e}")
+        logger.error(f"Both primary (Groq) and fallback (Gemini) models failed: {e}")
         return {
-            "preliminary_assessment": "AI triage processing failed. Manual review required.",
+            "preliminary_assessment": "AI triage processing failed on all models. Manual review required.",
             "severity_estimate": "UNKNOWN",
             "recommended_actions": ["Manual review required due to AI service error."],
             "safety_warnings": ["Always prioritize human safety when approaching unknown animals."]

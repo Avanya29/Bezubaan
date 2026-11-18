@@ -19,15 +19,8 @@ import { CommunityModule } from './community/community.module';
 import { LostFoundModule } from './lost-found/lost-found.module';
 import { DonationsModule } from './donations/donations.module';
 import { NotificationsModule } from './notifications/notifications.module';
-
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
-
 @Module({
   imports: [
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'),
-    }),
     AppConfigModule,
     DatabaseModule,
     HealthModule,

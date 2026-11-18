@@ -7,6 +7,3 @@ rails:
   input:
     flows:
       - check jailbreak
-  output:
-    flows:
-      - check safety

@@ -49,10 +49,8 @@ async def location_node(state: TriageGraphState) -> Dict[str, Any]:
     except (ValueError, TypeError):
         return {"nearby_vets": {"status": "LOCATION_UNAVAILABLE", "providers": []}}
 
-    # Check urgency
+    # Remove urgency check so we always search for vets if asked, or just provide them proactively
     severity = state.get("severity_estimate", "UNKNOWN")
-    if severity not in ["High", "Critical"]:
-        return {"nearby_vets": {"status": "NOT_URGENT", "providers": []}}
 
     # Check API Key
     api_key = settings.google_maps_api_key
