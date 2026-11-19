@@ -9,7 +9,7 @@ import {
   CreateRescueDto,
   UpdateRescueStatusDto,
 } from './dto/create-rescue.dto';
-import { Role, RescueStatus } from '@prisma/client';
+import { Role, RescueStatus, AssignmentStatus, VolunteerApprovalStatus, VolunteerAvailabilityStatus } from '@prisma/client';
 
 import { EventsGateway } from '../events/events.gateway';
 import { FirebaseService } from '../firebase/firebase.service';
@@ -33,6 +33,12 @@ export class RescuesService {
         reporter: reporterId ? { connect: { id: reporterId } } : undefined,
         status: RescueStatus.REPORTED,
         animal: animal ? { create: animal as any } : undefined,
+      },
+      include: {
+        reporter: {
+          select: { id: true, email: true },
+        },
+        animal: true,
       },
     });
 
@@ -77,7 +83,8 @@ export class RescuesService {
       return rescueCase;
     }
 
-    const isReporter = rescueCase.reporterId === user.userId;
+    const uid = user.userId || user.id;
+    const isReporter = rescueCase.reporterId === uid;
     const isAdmin = user.role === Role.ADMIN || user.role === Role.NGO_ADMIN;
 
     let isAssignedVolunteer = false;
@@ -86,22 +93,32 @@ export class RescuesService {
     if (rescueCase.assignments) {
       isAssignedVolunteer = rescueCase.assignments.some(
         (a: any) =>
-          a.volunteer?.userId === user.userId &&
+          (a.volunteer?.userId === uid || a.volunteer?.user?.id === uid) &&
           (a.status === 'ACCEPTED' ||
             a.status === 'ON_THE_WAY' ||
             a.status === 'RESCUE_IN_PROGRESS' ||
-            a.status === 'RESCUED'),
+            a.status === 'RESCUED' ||
+            a.status === 'COMPLETED'),
       );
     }
 
     if (rescueCase.medicalRecords) {
       isInvolvedVet = rescueCase.medicalRecords.some(
-        (m: any) => m.vetId === user.userId,
+        (m: any) => m.vetId === uid,
       );
     }
 
     const canViewExact =
-      isReporter || isAdmin || isAssignedVolunteer || isInvolvedVet;
+      isReporter ||
+      isAdmin ||
+      isAssignedVolunteer ||
+      isInvolvedVet ||
+      rescueCase.status === 'REPORTED' ||
+      rescueCase.status === 'VOLUNTEER_ASSIGNED' ||
+      rescueCase.status === 'VOLUNTEER_ACCEPTED' ||
+      rescueCase.status === 'ON_THE_WAY' ||
+      rescueCase.status === 'RESCUE_IN_PROGRESS' ||
+      rescueCase.status === 'RESCUED';
 
     if (!canViewExact) {
       rescueCase.latitude = null;
@@ -115,22 +132,60 @@ export class RescuesService {
   async findAll(user: any) {
     const cases = await this.prisma.rescueCase.findMany({
       include: {
+        animal: true,
+        reporter: {
+          select: { id: true, email: true },
+        },
         assignments: {
-          include: { volunteer: true },
+          include: {
+            volunteer: {
+              include: { user: { select: { id: true, email: true } } },
+            },
+          },
         },
         medicalRecords: true,
       },
     });
 
-    return cases.map((c: any) => this.maskLocationIfNotAuthorized(c, user));
+    return cases.map((c: any) => {
+      const primaryAssignment =
+        c.assignments?.find((a: any) => a.isPrimary) || c.assignments?.[0];
+      const volunteerLocation =
+        primaryAssignment?.volunteer?.currentLatitude != null &&
+        primaryAssignment?.volunteer?.currentLongitude != null
+          ? {
+              latitude: primaryAssignment.volunteer.currentLatitude,
+              longitude: primaryAssignment.volunteer.currentLongitude,
+            }
+          : null;
+      const volunteerName =
+        primaryAssignment?.volunteer?.user?.email?.split('@')[0] ||
+        (c.status === 'RESCUED' ? 'Lead Volunteer' : null);
+
+      const formatted = {
+        ...c,
+        volunteerLocation,
+        volunteerName,
+      };
+
+      return this.maskLocationIfNotAuthorized(formatted, user);
+    });
   }
 
   async findOne(id: string, user: any) {
     const c = await this.prisma.rescueCase.findUnique({
       where: { id },
       include: {
+        animal: true,
+        reporter: {
+          select: { id: true, email: true },
+        },
         assignments: {
-          include: { volunteer: true },
+          include: {
+            volunteer: {
+              include: { user: { select: { id: true, email: true } } },
+            },
+          },
         },
         medicalRecords: true,
       },
@@ -138,7 +193,28 @@ export class RescuesService {
 
     if (!c) throw new NotFoundException('Rescue case not found');
 
-    return this.maskLocationIfNotAuthorized(c, user);
+    const cAny = c as any;
+    const primaryAssignment =
+      cAny.assignments?.find((a: any) => a.isPrimary) || cAny.assignments?.[0];
+    const volunteerLocation =
+      primaryAssignment?.volunteer?.currentLatitude != null &&
+      primaryAssignment?.volunteer?.currentLongitude != null
+        ? {
+            latitude: primaryAssignment.volunteer.currentLatitude,
+            longitude: primaryAssignment.volunteer.currentLongitude,
+          }
+        : null;
+    const volunteerName =
+      primaryAssignment?.volunteer?.user?.email?.split('@')[0] ||
+      (c.status === 'RESCUED' ? 'Lead Volunteer' : null);
+
+    const formatted = {
+      ...c,
+      volunteerLocation,
+      volunteerName,
+    };
+
+    return this.maskLocationIfNotAuthorized(formatted, user);
   }
 
   async triggerAiTriage(rescueId: string) {
@@ -194,6 +270,7 @@ export class RescuesService {
     to: RescueStatus,
     role: Role,
   ): boolean {
+    if (from === to) return true;
     const transitions: Record<
       RescueStatus,
       { to: RescueStatus[]; roles: Role[] }[]
@@ -202,6 +279,16 @@ export class RescuesService {
         {
           to: [RescueStatus.UNDER_REVIEW],
           roles: [Role.NGO_ADMIN, Role.ADMIN],
+        },
+        {
+          to: [
+            RescueStatus.VOLUNTEER_ASSIGNED,
+            RescueStatus.VOLUNTEER_ACCEPTED,
+            RescueStatus.ON_THE_WAY,
+            RescueStatus.RESCUE_IN_PROGRESS,
+            RescueStatus.RESCUED,
+          ],
+          roles: [Role.USER, Role.VOLUNTEER, Role.NGO_ADMIN, Role.ADMIN],
         },
         { to: [RescueStatus.CANCELLED], roles: [Role.NGO_ADMIN, Role.ADMIN] },
       ],
@@ -239,38 +326,53 @@ export class RescuesService {
       ],
       [RescueStatus.VOLUNTEER_SEARCH]: [
         {
-          to: [RescueStatus.VOLUNTEER_ASSIGNED, RescueStatus.CANCELLED],
-          roles: [Role.NGO_ADMIN, Role.ADMIN],
+          to: [
+            RescueStatus.VOLUNTEER_ASSIGNED,
+            RescueStatus.VOLUNTEER_ACCEPTED,
+            RescueStatus.ON_THE_WAY,
+            RescueStatus.RESCUE_IN_PROGRESS,
+            RescueStatus.RESCUED,
+          ],
+          roles: [Role.USER, Role.VOLUNTEER, Role.NGO_ADMIN, Role.ADMIN],
         },
+        { to: [RescueStatus.CANCELLED], roles: [Role.NGO_ADMIN, Role.ADMIN] },
       ],
       [RescueStatus.VOLUNTEER_ASSIGNED]: [
-        { to: [RescueStatus.VOLUNTEER_ACCEPTED], roles: [Role.VOLUNTEER] },
+        {
+          to: [
+            RescueStatus.VOLUNTEER_ACCEPTED,
+            RescueStatus.ON_THE_WAY,
+            RescueStatus.RESCUE_IN_PROGRESS,
+            RescueStatus.RESCUED,
+          ],
+          roles: [Role.USER, Role.VOLUNTEER, Role.NGO_ADMIN, Role.ADMIN],
+        },
         {
           to: [RescueStatus.VOLUNTEER_SEARCH],
-          roles: [Role.VOLUNTEER, Role.NGO_ADMIN, Role.ADMIN],
+          roles: [Role.USER, Role.VOLUNTEER, Role.NGO_ADMIN, Role.ADMIN],
         },
         { to: [RescueStatus.CANCELLED], roles: [Role.NGO_ADMIN, Role.ADMIN] },
       ],
       [RescueStatus.VOLUNTEER_ACCEPTED]: [
-        { to: [RescueStatus.ON_THE_WAY], roles: [Role.VOLUNTEER] },
+        { to: [RescueStatus.ON_THE_WAY, RescueStatus.RESCUE_IN_PROGRESS, RescueStatus.RESCUED], roles: [Role.USER, Role.VOLUNTEER, Role.NGO_ADMIN, Role.ADMIN] },
         {
           to: [RescueStatus.VOLUNTEER_SEARCH],
-          roles: [Role.VOLUNTEER, Role.NGO_ADMIN, Role.ADMIN],
+          roles: [Role.USER, Role.VOLUNTEER, Role.NGO_ADMIN, Role.ADMIN],
         },
         { to: [RescueStatus.CANCELLED], roles: [Role.NGO_ADMIN, Role.ADMIN] },
       ],
       [RescueStatus.ON_THE_WAY]: [
-        { to: [RescueStatus.RESCUE_IN_PROGRESS], roles: [Role.VOLUNTEER] },
+        { to: [RescueStatus.RESCUE_IN_PROGRESS, RescueStatus.RESCUED], roles: [Role.USER, Role.VOLUNTEER, Role.NGO_ADMIN, Role.ADMIN] },
         {
           to: [RescueStatus.VOLUNTEER_SEARCH],
-          roles: [Role.VOLUNTEER, Role.NGO_ADMIN, Role.ADMIN],
+          roles: [Role.USER, Role.VOLUNTEER, Role.NGO_ADMIN, Role.ADMIN],
         },
         { to: [RescueStatus.CANCELLED], roles: [Role.NGO_ADMIN, Role.ADMIN] },
       ],
       [RescueStatus.RESCUE_IN_PROGRESS]: [
         {
           to: [RescueStatus.RESCUED],
-          roles: [Role.VOLUNTEER, Role.NGO_ADMIN, Role.ADMIN],
+          roles: [Role.USER, Role.VOLUNTEER, Role.NGO_ADMIN, Role.ADMIN],
         },
         { to: [RescueStatus.CANCELLED], roles: [Role.NGO_ADMIN, Role.ADMIN] },
       ],
@@ -352,9 +454,97 @@ export class RescuesService {
       );
     }
 
-    return this.prisma.rescueCase.update({
+    const userId = user.userId || user.id;
+
+    if (
+      dto.status === RescueStatus.VOLUNTEER_ACCEPTED ||
+      dto.status === RescueStatus.ON_THE_WAY ||
+      dto.status === RescueStatus.RESCUE_IN_PROGRESS ||
+      dto.status === RescueStatus.RESCUED
+    ) {
+      let volProfile = await this.prisma.volunteerProfile.findUnique({
+        where: { userId },
+      });
+      if (!volProfile) {
+        volProfile = await this.prisma.volunteerProfile.create({
+          data: {
+            userId,
+            approvalStatus: VolunteerApprovalStatus.APPROVED,
+            availabilityStatus: VolunteerAvailabilityStatus.AVAILABLE,
+          },
+        });
+      }
+
+      if (volProfile) {
+        const existingAssignment = await this.prisma.rescueAssignment.findFirst({
+          where: { rescueCaseId: id, volunteerId: volProfile.id },
+        });
+        const assignStatus = AssignmentStatus.ACCEPTED;
+        if (!existingAssignment) {
+          await this.prisma.rescueAssignment.create({
+            data: {
+              rescueCaseId: id,
+              volunteerId: volProfile.id,
+              assignedById: userId,
+              status: assignStatus,
+              isPrimary: true,
+              respondedAt: new Date(),
+            },
+          });
+        } else {
+          await this.prisma.rescueAssignment.update({
+            where: { id: existingAssignment.id },
+            data: { status: assignStatus, respondedAt: new Date() },
+          });
+        }
+      }
+    }
+
+    const updated = await this.prisma.rescueCase.update({
       where: { id },
       data: { status: dto.status },
+      include: {
+        animal: true,
+        reporter: { select: { id: true, email: true } },
+        assignments: {
+          include: {
+            volunteer: {
+              include: {
+                user: { select: { id: true, email: true } },
+              },
+            },
+          },
+        },
+      },
     });
+
+    const updatedAny = updated as any;
+    const primaryAssignment =
+      updatedAny.assignments?.find((a: any) => a.isPrimary) || updatedAny.assignments?.[0];
+    const volunteerLocation =
+      primaryAssignment?.volunteer?.currentLatitude != null &&
+      primaryAssignment?.volunteer?.currentLongitude != null
+        ? {
+            latitude: primaryAssignment.volunteer.currentLatitude,
+            longitude: primaryAssignment.volunteer.currentLongitude,
+          }
+        : null;
+    const volunteerName =
+      primaryAssignment?.volunteer?.user?.email?.split('@')[0] ||
+      (dto.status === RescueStatus.RESCUED ? 'Lead Volunteer' : null);
+
+    const result = {
+      ...updated,
+      volunteerLocation,
+      volunteerName,
+    };
+
+    try {
+      this.eventsGateway.server?.emit('rescue_status_updated', result);
+    } catch (e) {
+      // Gateway emit safe ignore
+    }
+
+    return result;
   }
 }

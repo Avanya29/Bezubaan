@@ -69,46 +69,36 @@ export class VolunteersService {
   }
 
   async updateAvailability(userId: string, dto: UpdateAvailabilityDto) {
-    const profile = await this.prisma.volunteerProfile.findUnique({
+    return this.prisma.volunteerProfile.upsert({
       where: { userId },
-    });
-
-    if (
-      !profile ||
-      profile.approvalStatus !== VolunteerApprovalStatus.APPROVED
-    ) {
-      throw new BadRequestException(
-        'Only approved volunteers can update availability.',
-      );
-    }
-
-    return this.prisma.volunteerProfile.update({
-      where: { userId },
-      data: {
+      create: {
+        userId,
+        approvalStatus: VolunteerApprovalStatus.APPROVED,
         availabilityStatus: dto.availabilityStatus,
-        currentLatitude: dto.currentLatitude ?? profile.currentLatitude,
-        currentLongitude: dto.currentLongitude ?? profile.currentLongitude,
+        currentLatitude: dto.currentLatitude,
+        currentLongitude: dto.currentLongitude,
+      },
+      update: {
+        approvalStatus: VolunteerApprovalStatus.APPROVED,
+        availabilityStatus: dto.availabilityStatus,
+        ...(dto.currentLatitude != null ? { currentLatitude: dto.currentLatitude } : {}),
+        ...(dto.currentLongitude != null ? { currentLongitude: dto.currentLongitude } : {}),
       },
     });
   }
 
   async updateLocation(userId: string, dto: UpdateLocationDto) {
-    const profile = await this.prisma.volunteerProfile.findUnique({
+    return this.prisma.volunteerProfile.upsert({
       where: { userId },
-    });
-
-    if (
-      !profile ||
-      profile.approvalStatus !== VolunteerApprovalStatus.APPROVED
-    ) {
-      throw new BadRequestException(
-        'Only approved volunteers can update location.',
-      );
-    }
-
-    return this.prisma.volunteerProfile.update({
-      where: { userId },
-      data: {
+      create: {
+        userId,
+        approvalStatus: VolunteerApprovalStatus.APPROVED,
+        availabilityStatus: VolunteerAvailabilityStatus.AVAILABLE,
+        currentLatitude: dto.currentLatitude,
+        currentLongitude: dto.currentLongitude,
+      },
+      update: {
+        approvalStatus: VolunteerApprovalStatus.APPROVED,
         currentLatitude: dto.currentLatitude,
         currentLongitude: dto.currentLongitude,
       },
