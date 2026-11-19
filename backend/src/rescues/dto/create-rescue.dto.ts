@@ -1,3 +1,4 @@
+
 import {
   IsString,
   IsNumber,
@@ -59,6 +60,10 @@ export class CreateRescueDto {
   @IsString()
   @IsOptional()
   address?: string;
+
+  @IsString()
+  @IsOptional()
+  imageUrl?: string;
 
   @IsOptional()
   @ValidateNested()

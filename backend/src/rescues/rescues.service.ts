@@ -25,7 +25,7 @@ export class RescuesService {
   ) {}
 
   async create(createRescueDto: CreateRescueDto, reporterId: string | null) {
-    const { animal, ...rescueData } = createRescueDto;
+    const { animal, imageUrl, ...rescueData } = createRescueDto;
 
     const newRescue = await this.prisma.rescueCase.create({
       data: {
@@ -42,8 +42,51 @@ export class RescuesService {
       },
     });
 
+    let savedImageUrl: string | null = null;
+    if (imageUrl) {
+      try {
+        if (imageUrl.startsWith('data:image')) {
+          const fs = require('fs');
+          const path = require('path');
+          const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, '');
+          const buffer = Buffer.from(base64Data, 'base64');
+          const filename = `${newRescue.id}.jpg`;
+          const publicDir = path.join(__dirname, '..', '..', '..', 'public', 'uploads');
+          if (!fs.existsSync(publicDir)) {
+            fs.mkdirSync(publicDir, { recursive: true });
+          }
+          fs.writeFileSync(path.join(publicDir, filename), buffer);
+
+          const host = process.env.RENDER_EXTERNAL_HOSTNAME
+            ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}`
+            : 'https://bezubaan-api.onrender.com';
+          savedImageUrl = `${host}/uploads/${filename}`;
+        } else {
+          savedImageUrl = imageUrl;
+        }
+
+        if (savedImageUrl && (this.prisma as any).media) {
+          await this.prisma.media.create({
+            data: {
+              url: savedImageUrl,
+              mimeType: 'image/jpeg',
+              sizeBytes: 1024,
+              rescueCaseId: newRescue.id,
+            },
+          });
+        }
+      } catch (imgErr) {
+        console.error('Failed to process/save image for rescue', imgErr);
+      }
+    }
+
+    const payload = {
+      ...newRescue,
+      imageUrl: savedImageUrl,
+    };
+
     // 1) WebSocket Broadcast (for users with the app OPEN)
-    this.eventsGateway.broadcastEmergency(newRescue);
+    this.eventsGateway.broadcastEmergency(payload);
 
     // 2) FCM Push Notification (for users with the app CLOSED)
     try {
@@ -64,13 +107,18 @@ export class RescuesService {
         .filter((t): t is string => t !== null);
 
       if (tokens.length > 0) {
-        await this.firebaseService.sendEmergencyPush(tokens, newRescue);
+        await this.firebaseService.sendEmergencyPush(tokens, payload);
       }
     } catch (fcmError) {
       console.error('Failed to send FCM push for new rescue', fcmError);
     }
 
-    return newRescue;
+    // 3) Trigger AI Triage asynchronously in the background so the rescue is checked!
+    this.triggerAiTriage(newRescue.id).catch((aiErr) => {
+      console.warn(`Background AI triage notice for ${newRescue.id}: ${aiErr.message}`);
+    });
+
+    return payload;
   }
 
   // Applies confirmed Phase 7 Privacy Masking rules
@@ -131,8 +179,10 @@ export class RescuesService {
 
   async findAll(user: any) {
     const cases = await this.prisma.rescueCase.findMany({
+      orderBy: { createdAt: 'desc' },
       include: {
         animal: true,
+        media: true,
         reporter: {
           select: { id: true, email: true },
         },
@@ -161,9 +211,12 @@ export class RescuesService {
       const volunteerName =
         primaryAssignment?.volunteer?.user?.email?.split('@')[0] ||
         (c.status === 'RESCUED' ? 'Lead Volunteer' : null);
+      const imageUrl =
+        c.media && c.media.length > 0 ? c.media[0].url : c.imageUrl || null;
 
       const formatted = {
         ...c,
+        imageUrl,
         volunteerLocation,
         volunteerName,
       };
@@ -177,6 +230,7 @@ export class RescuesService {
       where: { id },
       include: {
         animal: true,
+        media: true,
         reporter: {
           select: { id: true, email: true },
         },
@@ -207,9 +261,12 @@ export class RescuesService {
     const volunteerName =
       primaryAssignment?.volunteer?.user?.email?.split('@')[0] ||
       (c.status === 'RESCUED' ? 'Lead Volunteer' : null);
+    const imageUrl =
+      cAny.media && cAny.media.length > 0 ? cAny.media[0].url : cAny.imageUrl || null;
 
     const formatted = {
       ...c,
+      imageUrl,
       volunteerLocation,
       volunteerName,
     };
@@ -233,35 +290,46 @@ export class RescuesService {
 
     const mappedVolunteers = availableVolunteers.map((v) => ({
       id: v.id,
-      name: v.user.email, // using email as a fallback, should use user profile name if available
+      name: v.user.email,
       experience_level: v.experience || 'Unknown',
       capabilities: v.capabilities,
-      // We could calculate distance using Haversine formula here if needed
-      // distance_meters: 1000
     }));
 
-    // Trigger the AI service
-    const aiResponse = await this.aiService.requestTriage({
-      rescueId: rescue.id,
-      description: rescue.description,
-      latitude: rescue.latitude,
-      longitude: rescue.longitude,
-      address: rescue.address || undefined,
-      imageUrl: rescue.media[0]?.url, // Pass first media URL if exists
-      animalSpecies: rescue.animal?.species,
-      volunteers: mappedVolunteers,
-    });
+    try {
+      // Trigger the AI service with real uploaded media and incident telemetry
+      const aiResponse = await this.aiService.requestTriage({
+        rescueId: rescue.id,
+        description: rescue.description,
+        latitude: rescue.latitude,
+        longitude: rescue.longitude,
+        address: rescue.address || undefined,
+        imageUrl: rescue.media[0]?.url,
+        animalSpecies: rescue.animal?.species,
+        volunteers: mappedVolunteers,
+      });
 
-    // Save AI output to aiTriageData JSON field
-    await this.prisma.rescueCase.update({
-      where: { id: rescueId },
-      data: {
-        aiTriageData: aiResponse as any,
-        status: RescueStatus.PENDING_VERIFICATION, // Move status after analysis
-      },
-    });
+      // Save AI output to aiTriageData JSON field while preserving active field dispatch status
+      await this.prisma.rescueCase.update({
+        where: { id: rescueId },
+        data: {
+          aiTriageData: aiResponse as any,
+        },
+      });
 
-    return aiResponse;
+      try {
+        this.eventsGateway.server?.emit('rescue_triage_updated', {
+          rescueId,
+          aiTriageData: aiResponse,
+        });
+      } catch (e) {
+        // gateway safe ignore
+      }
+
+      return aiResponse;
+    } catch (err: any) {
+      console.warn(`AI Triage execution notice for ${rescueId}:`, err?.message || err);
+      return null;
+    }
   }
 
   // Exact Graph Implementation
@@ -505,6 +573,7 @@ export class RescuesService {
       data: { status: dto.status },
       include: {
         animal: true,
+        media: true,
         reporter: { select: { id: true, email: true } },
         assignments: {
           include: {
@@ -532,9 +601,12 @@ export class RescuesService {
     const volunteerName =
       primaryAssignment?.volunteer?.user?.email?.split('@')[0] ||
       (dto.status === RescueStatus.RESCUED ? 'Lead Volunteer' : null);
+    const imageUrl =
+      updatedAny.media && updatedAny.media.length > 0 ? updatedAny.media[0].url : updatedAny.imageUrl || null;
 
     const result = {
       ...updated,
+      imageUrl,
       volunteerLocation,
       volunteerName,
     };
