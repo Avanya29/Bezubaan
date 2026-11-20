@@ -46,7 +46,7 @@ export class AiService {
         const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, '');
         const buffer = Buffer.from(base64Data, 'base64');
         const filename = `${rescueId}.jpg`;
-        const publicDir = path.join(__dirname, '..', '..', '..', 'public');
+        const publicDir = path.join(process.cwd(), 'public', 'uploads');
         if (!fs.existsSync(publicDir)) {
           fs.mkdirSync(publicDir, { recursive: true });
         }

@@ -27,10 +27,12 @@ async function bootstrap() {
 
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-  app.use(
-    '/uploads',
-    express.static(path.join(__dirname, '..', '..', 'public')),
-  );
+  const fs = require('fs');
+  const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  app.use('/uploads', express.static(uploadsDir));
 
   app.enableCors({
     origin: corsOrigin,

@@ -51,7 +51,7 @@ export class RescuesService {
           const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, '');
           const buffer = Buffer.from(base64Data, 'base64');
           const filename = `${newRescue.id}.jpg`;
-          const publicDir = path.join(__dirname, '..', '..', '..', 'public', 'uploads');
+          const publicDir = path.join(process.cwd(), 'public', 'uploads');
           if (!fs.existsSync(publicDir)) {
             fs.mkdirSync(publicDir, { recursive: true });
           }
@@ -59,7 +59,7 @@ export class RescuesService {
 
           const host = process.env.RENDER_EXTERNAL_HOSTNAME
             ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}`
-            : 'https://bezubaan-api.onrender.com';
+            : (process.env.BACKEND_URL || 'https://bezubaan-api.onrender.com');
           savedImageUrl = `${host}/uploads/${filename}`;
         } else {
           savedImageUrl = imageUrl;
@@ -210,7 +210,12 @@ export class RescuesService {
           : null;
       const volunteerName =
         primaryAssignment?.volunteer?.user?.email?.split('@')[0] ||
-        (c.status === 'RESCUED' ? 'Lead Volunteer' : null);
+        (c.status === 'RESCUED' ||
+        c.status === 'VOLUNTEER_ACCEPTED' ||
+        c.status === 'ON_THE_WAY' ||
+        c.status === 'RESCUE_IN_PROGRESS'
+          ? 'Lead Volunteer'
+          : null);
       const imageUrl =
         c.media && c.media.length > 0 ? c.media[0].url : c.imageUrl || null;
 
@@ -260,7 +265,12 @@ export class RescuesService {
         : null;
     const volunteerName =
       primaryAssignment?.volunteer?.user?.email?.split('@')[0] ||
-      (c.status === 'RESCUED' ? 'Lead Volunteer' : null);
+      (c.status === 'RESCUED' ||
+      c.status === 'VOLUNTEER_ACCEPTED' ||
+      c.status === 'ON_THE_WAY' ||
+      c.status === 'RESCUE_IN_PROGRESS'
+        ? 'Lead Volunteer'
+        : null);
     const imageUrl =
       cAny.media && cAny.media.length > 0 ? cAny.media[0].url : cAny.imageUrl || null;
 
@@ -511,18 +521,19 @@ export class RescuesService {
     const rescue = await this.prisma.rescueCase.findUnique({ where: { id } });
     if (!rescue) throw new NotFoundException('Rescue not found');
 
+    const effectiveRole = user?.role || Role.VOLUNTEER;
     const authorized = this.isValidTransition(
       rescue.status,
       dto.status,
-      user.role,
+      effectiveRole,
     );
     if (!authorized) {
       throw new ForbiddenException(
-        `Invalid or unauthorized state transition from ${rescue.status} to ${dto.status} for role ${user.role}`,
+        `Invalid or unauthorized state transition from ${rescue.status} to ${dto.status} for role ${effectiveRole}`,
       );
     }
 
-    const userId = user.userId || user.id;
+    const userId = user?.userId || user?.id;
 
     if (
       dto.status === RescueStatus.VOLUNTEER_ACCEPTED ||
@@ -530,40 +541,51 @@ export class RescuesService {
       dto.status === RescueStatus.RESCUE_IN_PROGRESS ||
       dto.status === RescueStatus.RESCUED
     ) {
-      let volProfile = await this.prisma.volunteerProfile.findUnique({
-        where: { userId },
-      });
-      if (!volProfile) {
-        volProfile = await this.prisma.volunteerProfile.create({
-          data: {
-            userId,
-            approvalStatus: VolunteerApprovalStatus.APPROVED,
-            availabilityStatus: VolunteerAvailabilityStatus.AVAILABLE,
-          },
-        });
-      }
+      let validUserId = userId;
+      if (validUserId) {
+        let userRecord = await this.prisma.user.findUnique({ where: { id: validUserId } });
+        if (!userRecord && user?.email) {
+          userRecord = await this.prisma.user.findUnique({ where: { email: user.email } });
+          if (userRecord) validUserId = userRecord.id;
+        }
 
-      if (volProfile) {
-        const existingAssignment = await this.prisma.rescueAssignment.findFirst({
-          where: { rescueCaseId: id, volunteerId: volProfile.id },
-        });
-        const assignStatus = AssignmentStatus.ACCEPTED;
-        if (!existingAssignment) {
-          await this.prisma.rescueAssignment.create({
-            data: {
-              rescueCaseId: id,
-              volunteerId: volProfile.id,
-              assignedById: userId,
-              status: assignStatus,
-              isPrimary: true,
-              respondedAt: new Date(),
-            },
+        if (userRecord) {
+          let volProfile = await this.prisma.volunteerProfile.findUnique({
+            where: { userId: validUserId },
           });
-        } else {
-          await this.prisma.rescueAssignment.update({
-            where: { id: existingAssignment.id },
-            data: { status: assignStatus, respondedAt: new Date() },
-          });
+          if (!volProfile) {
+            volProfile = await this.prisma.volunteerProfile.create({
+              data: {
+                userId: validUserId,
+                approvalStatus: VolunteerApprovalStatus.APPROVED,
+                availabilityStatus: VolunteerAvailabilityStatus.AVAILABLE,
+              },
+            });
+          }
+
+          if (volProfile) {
+            const existingAssignment = await this.prisma.rescueAssignment.findFirst({
+              where: { rescueCaseId: id, volunteerId: volProfile.id },
+            });
+            const assignStatus = AssignmentStatus.ACCEPTED;
+            if (!existingAssignment) {
+              await this.prisma.rescueAssignment.create({
+                data: {
+                  rescueCaseId: id,
+                  volunteerId: volProfile.id,
+                  assignedById: validUserId,
+                  status: assignStatus,
+                  isPrimary: true,
+                  respondedAt: new Date(),
+                },
+              });
+            } else {
+              await this.prisma.rescueAssignment.update({
+                where: { id: existingAssignment.id },
+                data: { status: assignStatus, respondedAt: new Date() },
+              });
+            }
+          }
         }
       }
     }
@@ -600,7 +622,12 @@ export class RescuesService {
         : null;
     const volunteerName =
       primaryAssignment?.volunteer?.user?.email?.split('@')[0] ||
-      (dto.status === RescueStatus.RESCUED ? 'Lead Volunteer' : null);
+      (dto.status === RescueStatus.RESCUED ||
+      dto.status === RescueStatus.VOLUNTEER_ACCEPTED ||
+      dto.status === RescueStatus.ON_THE_WAY ||
+      dto.status === RescueStatus.RESCUE_IN_PROGRESS
+        ? 'Lead Volunteer'
+        : null);
     const imageUrl =
       updatedAny.media && updatedAny.media.length > 0 ? updatedAny.media[0].url : updatedAny.imageUrl || null;
 

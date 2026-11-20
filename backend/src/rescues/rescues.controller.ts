@@ -44,7 +44,7 @@ export class RescuesController {
     return this.rescuesService.findOne(id, user);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(OptionalJwtAuthGuard)
   @Patch(':id/status')
   async updateStatus(
     @Param('id') id: string,
